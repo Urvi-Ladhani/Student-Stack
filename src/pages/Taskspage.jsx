@@ -4,32 +4,35 @@ import { useState, useEffect } from "react";
 function Taskspage() {
 
     const savedTasks = localStorage.getItem("tasks");
+    
+
     const [tasks, setTasks] = useState(savedTasks
         ? JSON.parse(savedTasks)
         : [
-        {
-            id: 1,
-            title: "Learn React Components",
-            priority: "High",
-            completed: false
-        },
-        {
-            id: 2,
-            title: "Solve 5 Array Problems",
-            priority: "Medium",
-            completed: false
-        },
-        {
-            id: 3,
-            title: "Update Resume",
-            priority: "Low",
-            completed: false
-        }
-    ]
+            {
+                id: 1,
+                title: "Learn React Components",
+                priority: "High",
+                completed: false
+            },
+            {
+                id: 2,
+                title: "Solve 5 Array Problems",
+                priority: "Medium",
+                completed: false
+            },
+            {
+                id: 3,
+                title: "Update Resume",
+                priority: "Low",
+                completed: false
+            }
+        ]
     );
 
     const [title, setTitle] = useState("");
     const [priority, setPriority] = useState("");
+    const [filter, setFilter] = useState("all");
 
     function addtask() {
         const newe = {
@@ -62,6 +65,30 @@ function Taskspage() {
         });
         setTasks(tasksleft);
     }
+    let filteredTasks = tasks;
+    function allTasks() {
+        setFilter("all");
+    }
+
+    function completedTasks() {
+        setFilter("completed");
+    }
+
+    function pendingTasks() {
+        setFilter("pending");
+    }
+
+    if (filter === "completed") {
+        filteredTasks = tasks.filter((task) => {
+            return task.completed === true;
+        });
+    }
+
+    if (filter === "pending") {
+        filteredTasks = tasks.filter((task) => {
+            return task.completed === false;
+        });
+    }
 
     useEffect(() => {
         localStorage.setItem(
@@ -73,7 +100,7 @@ function Taskspage() {
         <>
             <h1>tasks page</h1>
             {
-                tasks.map((task) =>
+                filteredTasks.map((task) =>
                     <TaskCard id={task.id} title={task.title} priority={task.priority} deleteTask={deleteTask} completeTask={completeTask} completed={task.completed} />
                 )
             }
@@ -81,6 +108,12 @@ function Taskspage() {
             <input value={title} onChange={(event) => { setTitle(event.target.value) }} type="text" placeholder="enter title"></input>
             <input value={priority} onChange={(event) => { setPriority(event.target.value) }} type="text" placeholder="enter priority"></input>
             <button onClick={addtask}>ADD TASK</button>
+
+            <p>filtering</p>
+            <button onClick={allTasks}>SHOW ALL</button>
+            <button onClick={completedTasks}>SHOW COMPLETED</button>
+            <button onClick={pendingTasks}>SHOW PENDING</button>
+            <p>{filter}</p>
 
         </>
     );

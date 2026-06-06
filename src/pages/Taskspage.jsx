@@ -143,6 +143,16 @@ function Taskspage() {
         setEditingId(null);
         setDeadline("");
         setCategory("");
+
+    }
+
+    function cancelEdit(){
+        setPriority("");
+        setTitle("");
+        setDescription("");
+        setEditingId(null);
+        setDeadline("");
+        setCategory("");
     }
 
     const totalTasks=tasks.length;
@@ -183,7 +193,9 @@ function Taskspage() {
             <input type="date" value={deadline} onChange={(event) => setDeadline(event.target.value)} />
             <input value={priority} onChange={(event) => { setPriority(event.target.value) }} type="text" placeholder="enter priority"></input>
             <button onClick={editingId === null ? addtask : updateTask}>{editingId === null ? "ADD TASK" : "UPDATE TASK"}</button>
-
+            {
+                editingId!==null && <button onClick={cancelEdit}>CANCEL</button>
+            }
             <p>filtering</p>
             <button onClick={allTasks}>SHOW ALL</button>
             <button onClick={completedTasks}>SHOW COMPLETED</button>
@@ -197,6 +209,7 @@ function Taskspage() {
             <p>Completed Tasks:{completedLen}</p>
             <p>Pending Tasks:{pendingTaskLen}</p>
             
+
         </>
     );
 }

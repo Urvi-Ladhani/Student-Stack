@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 function Taskspage() {
 
     const savedTasks = localStorage.getItem("tasks");
-    
-
+    const [editingId, setEditingId] = useState(null);
     const [tasks, setTasks] = useState(savedTasks
         ? JSON.parse(savedTasks)
         : [
@@ -90,6 +89,29 @@ function Taskspage() {
         });
     }
 
+    function editTask(id) {
+        setEditingId(id);
+        const taskToEdit = tasks.find((task) => task.id === id);
+        setTitle(taskToEdit.title);
+        setPriority(taskToEdit.priority);
+
+    }
+    function updateTask() {
+        const updatedTasks = tasks.map((task) => {
+            if (task.id === editingId) {
+                return {
+                    ...task,
+                    title: title,
+                    priority: priority
+            };
+            }
+            return task;
+        });
+        setTasks(updatedTasks);
+        setPriority("");
+        setTitle("");
+        setEditingId(null);
+    }
     useEffect(() => {
         localStorage.setItem(
             "tasks",
@@ -101,13 +123,13 @@ function Taskspage() {
             <h1>tasks page</h1>
             {
                 filteredTasks.map((task) =>
-                    <TaskCard id={task.id} title={task.title} priority={task.priority} deleteTask={deleteTask} completeTask={completeTask} completed={task.completed} />
+                    <TaskCard id={task.id} title={task.title} priority={task.priority} deleteTask={deleteTask} completeTask={completeTask} completed={task.completed} editTask={editTask} />
                 )
             }
 
             <input value={title} onChange={(event) => { setTitle(event.target.value) }} type="text" placeholder="enter title"></input>
             <input value={priority} onChange={(event) => { setPriority(event.target.value) }} type="text" placeholder="enter priority"></input>
-            <button onClick={addtask}>ADD TASK</button>
+            <button onClick={editingId === null ? addtask : updateTask}>{editingId === null ? "ADD TASK" : "UPDATE TASK"}</button>
 
             <p>filtering</p>
             <button onClick={allTasks}>SHOW ALL</button>

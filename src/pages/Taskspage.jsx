@@ -12,18 +12,27 @@ function Taskspage() {
                 id: 1,
                 title: "Learn React Components",
                 priority: "High",
+                description: "Build reusable React components and understand how props are used to pass data between them.",
+                category: "Learning",
+                deadline: "2026-06-15",
                 completed: false
             },
             {
                 id: 2,
                 title: "Solve 5 Array Problems",
+                description: "Practice array-based coding problems to improve logic building and problem-solving skills.",
                 priority: "Medium",
+                category: "DSA",
+                deadline: "2026-06-18",
                 completed: false
             },
             {
                 id: 3,
                 title: "Update Resume",
+                description: "Add recent projects, technical skills, and achievements to keep the resume interview-ready.",
                 priority: "Low",
+                category: "Internship",
+                deadline: "2026-06-20",
                 completed: false
             }
         ]
@@ -32,17 +41,26 @@ function Taskspage() {
     const [title, setTitle] = useState("");
     const [priority, setPriority] = useState("");
     const [filter, setFilter] = useState("all");
+    const [description, setDescription] = useState("");
+    const [deadline, setDeadline] = useState("");
+    const [category, setCategory] = useState("Learning");
+    const [search,setSearch]=useState("");
 
     function addtask() {
         const newe = {
             id: tasks.length + 1,
             title: title,
+            description: description,
             priority: priority,
+            deadline: deadline,
+            category: category,
             completed: false
         }
         setTasks([...tasks, newe]);
         setTitle("");
         setPriority("");
+        setDescription("");
+        setDeadline("");
     }
 
     function deleteTask(id) {
@@ -88,11 +106,19 @@ function Taskspage() {
             return task.completed === false;
         });
     }
+    let searchTasks=filteredTasks;
+        searchTasks = filteredTasks.filter((task) => {
+            return task.title.toLowerCase().includes(search.toLowerCase()) || task.description.toLowerCase().includes(search.toLowerCase()) || task.category.toLowerCase().includes(search.toLowerCase());
+    });
+    
 
     function editTask(id) {
         setEditingId(id);
         const taskToEdit = tasks.find((task) => task.id === id);
         setTitle(taskToEdit.title);
+        setDescription(taskToEdit.description);
+        setDeadline(taskToEdit.deadline);
+        setCategory(taskToEdit.category);
         setPriority(taskToEdit.priority);
 
     }
@@ -102,15 +128,21 @@ function Taskspage() {
                 return {
                     ...task,
                     title: title,
+                    description: description,
+                    deadline: deadline,
+                    category: category,
                     priority: priority
-            };
+                };
             }
             return task;
         });
         setTasks(updatedTasks);
         setPriority("");
         setTitle("");
+        setDescription("");
         setEditingId(null);
+        setDeadline("");
+        setCategory("");
     }
     useEffect(() => {
         localStorage.setItem(
@@ -122,12 +154,25 @@ function Taskspage() {
         <>
             <h1>tasks page</h1>
             {
-                filteredTasks.map((task) =>
-                    <TaskCard id={task.id} title={task.title} priority={task.priority} deleteTask={deleteTask} completeTask={completeTask} completed={task.completed} editTask={editTask} />
+                searchTasks.map((task) =>
+                    <TaskCard id={task.id} title={task.title} description={task.description} priority={task.priority} deleteTask={deleteTask} completeTask={completeTask} completed={task.completed} editTask={editTask} deadline={task.deadline} category={task.category} />
                 )
             }
 
             <input value={title} onChange={(event) => { setTitle(event.target.value) }} type="text" placeholder="enter title"></input>
+            <textarea value={description} onChange={(event) => { setDescription(event.target.value) }} type="text" placeholder="enter description"></textarea>
+            <select
+                value={category}
+                onChange={(event) => setCategory(event.target.value)}
+            >
+                <option value="Learning">Learning</option>
+                <option value="DSA">DSA</option>
+                <option value="College">College</option>
+                <option value="Internship">Internship</option>
+                <option value="Project">Project</option>
+                <option value="Personal">Personal</option>
+            </select>
+            <input type="date" value={deadline} onChange={(event) => setDeadline(event.target.value)} />
             <input value={priority} onChange={(event) => { setPriority(event.target.value) }} type="text" placeholder="enter priority"></input>
             <button onClick={editingId === null ? addtask : updateTask}>{editingId === null ? "ADD TASK" : "UPDATE TASK"}</button>
 
@@ -135,8 +180,10 @@ function Taskspage() {
             <button onClick={allTasks}>SHOW ALL</button>
             <button onClick={completedTasks}>SHOW COMPLETED</button>
             <button onClick={pendingTasks}>SHOW PENDING</button>
+            
             <p>{filter}</p>
 
+            <input value={search} onChange={(event) => { setSearch(event.target.value) }} type="text" placeholder="search"></input>
         </>
     );
 }

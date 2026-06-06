@@ -7,6 +7,7 @@ function TaskCard(props){
             <p>Category: {props.category}</p>
             <p>Deadline: {props.deadline}</p>
             <p>Priority:{props.priority}</p>
+            <p>{props.overdue ? "OVERDUE" : "UPCOMING"}</p>
             
             <button onClick={() =>{props.deleteTask(props.id)}}>DELETE</button>
             <button onClick={()=> {props.completeTask(props.id)}}>{props.completed ? "UNDO" : "COMPLETE"}</button>

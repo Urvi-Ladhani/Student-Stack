@@ -162,6 +162,16 @@ function Taskspage() {
     const completedLen=comTasks.length;
     const pendingTaskLen=Number(totalTasks-completedLen);
 
+    function overdue(task){
+        const today=new Date();
+        const deadlineDate=new Date(task.deadline);
+        if(deadlineDate<today && task.completed===false){
+            return true;
+        }else{
+            return false;
+        }
+    } 
+
     useEffect(() => {
         localStorage.setItem(
             "tasks",
@@ -173,7 +183,7 @@ function Taskspage() {
             <h1>tasks page</h1>
             {
                 searchTasks.map((task) =>
-                    <TaskCard id={task.id} title={task.title} description={task.description} priority={task.priority} deleteTask={deleteTask} completeTask={completeTask} completed={task.completed} editTask={editTask} deadline={task.deadline} category={task.category} />
+                    <TaskCard id={task.id} title={task.title} description={task.description} priority={task.priority} deleteTask={deleteTask} completeTask={completeTask} completed={task.completed} editTask={editTask} deadline={task.deadline} category={task.category} overdue={overdue(task)} />
                 )
             }
 
@@ -208,7 +218,6 @@ function Taskspage() {
             <p>Total Tasks:{totalTasks}</p>
             <p>Completed Tasks:{completedLen}</p>
             <p>Pending Tasks:{pendingTaskLen}</p>
-            
 
         </>
     );

@@ -144,6 +144,14 @@ function Taskspage() {
         setDeadline("");
         setCategory("");
     }
+
+    const totalTasks=tasks.length;
+    const comTasks=tasks.filter((task) => {
+            return task.completed === true;
+        });
+    const completedLen=comTasks.length;
+    const pendingTaskLen=Number(totalTasks-completedLen);
+
     useEffect(() => {
         localStorage.setItem(
             "tasks",
@@ -184,6 +192,11 @@ function Taskspage() {
             <p>{filter}</p>
 
             <input value={search} onChange={(event) => { setSearch(event.target.value) }} type="text" placeholder="search"></input>
+            <p>statistics:</p>
+            <p>Total Tasks:{totalTasks}</p>
+            <p>Completed Tasks:{completedLen}</p>
+            <p>Pending Tasks:{pendingTaskLen}</p>
+            
         </>
     );
 }

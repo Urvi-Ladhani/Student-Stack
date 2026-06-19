@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Lock, User, GraduationCap, BookOpen, Target, Eye, EyeOff, AlertCircle, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User, Target, Eye, EyeOff, AlertCircle, ArrowRight, Command } from 'lucide-react';
 
 const AuthPage = ({ onAuthSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,51 +10,97 @@ const AuthPage = ({ onAuthSuccess }) => {
 
   return (
     <div 
-      className="min-h-screen w-full flex items-center justify-center p-6 bg-cover bg-center"
-      style={{ backgroundImage: `url('https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=3540&auto=format&fit=crop')` }}
+      className="min-h-screen w-full flex items-center justify-center p-6 bg-cover bg-center font-sans"
+      style={{ backgroundImage: "url('/mountain-bg.jpg')" }} 
     >
-      {/* ================= TRUE FROSTED GLASS CARD ================= */}
-      {/* backdrop-blur-3xl creates the heavy Apple-style depth */}
-      <div className="w-full max-w-[550px] backdrop-blur-3xl backdrop-saturate-[180%] bg-white/5 border border-white/20 rounded-[40px] p-12 shadow-2xl relative overflow-hidden">
+      {/* ================= TRUE NEUTRAL GLASS CARD ================= */}
+      <div className="w-full max-w-[480px] backdrop-blur-[48px] backdrop-saturate-[150%] bg-white/[0.04] border border-white/[0.15] rounded-[36px] p-10 shadow-[0_24px_64px_rgba(0,0,0,0.5)] relative z-10">
         
         {/* Brand Header */}
-        <div className="mb-10">
-          <h1 className="text-5xl font-bold text-white tracking-tighter mb-4">
-            StudentStack
+        <div className="mb-10 text-center flex flex-col items-center">
+          
+          {/* Sleek Geometric Icon */}
+          <div className="mb-6 flex justify-center p-4 rounded-3xl bg-white/[0.06] border border-white/10 shadow-inner">
+            <Command className="w-8 h-8 text-white stroke-[1.5]" />
+          </div>
+          
+          {/* Stark, Clean Typography */}
+          <h1 className="text-3xl font-semibold text-white tracking-tight mb-2">
+            Student Stack
           </h1>
-          <p className="text-xl text-blue-100 font-medium tracking-wide">
-            {isLogin ? 'Welcome back to your workspace.' : 'Mount your operational profile.'}
+          
+          <p className="text-sm text-white/60 font-medium tracking-wide">
+            {isLogin ? 'Welcome back. Enter your details.' : 'Create your workspace profile.'}
           </p>
         </div>
 
         {/* Form Inputs */}
-        <form className="space-y-6">
+        <form className="space-y-4">
           {!isLogin && (
-            <div className="space-y-6">
-              <input type="text" placeholder="Full Name" className="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-4 text-lg text-white placeholder-blue-100/50 focus:ring-2 focus:ring-blue-400 outline-none" />
+            <div className="space-y-4">
+              <input 
+                type="text" 
+                placeholder="Full Name" 
+                className="w-full bg-black/[0.15] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white font-medium placeholder-white/40 focus:ring-1 focus:ring-white/30 focus:border-white/20 outline-none transition-all" 
+              />
               <div className="grid grid-cols-2 gap-4">
-                <input type="text" placeholder="University" className="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-4 text-lg text-white placeholder-blue-100/50 focus:ring-2 focus:ring-blue-400 outline-none" />
-                <input type="text" placeholder="Major" className="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-4 text-lg text-white placeholder-blue-100/50 focus:ring-2 focus:ring-blue-400 outline-none" />
+                <input 
+                  type="text" 
+                  placeholder="University" 
+                  className="w-full bg-black/[0.15] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white font-medium placeholder-white/40 focus:ring-1 focus:ring-white/30 focus:border-white/20 outline-none transition-all" 
+                />
+                <input 
+                  type="text" 
+                  placeholder="Major" 
+                  className="w-full bg-black/[0.15] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white font-medium placeholder-white/40 focus:ring-1 focus:ring-white/30 focus:border-white/20 outline-none transition-all" 
+                />
               </div>
             </div>
           )}
 
-          <input type="email" placeholder="Email Address" className="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-4 text-lg text-white placeholder-blue-100/50 focus:ring-2 focus:ring-blue-400 outline-none" />
-          <input type="password" placeholder="Password" className="w-full bg-white/10 border border-white/20 rounded-2xl px-6 py-4 text-lg text-white placeholder-blue-100/50 focus:ring-2 focus:ring-blue-400 outline-none" />
+          <input 
+            type="email" 
+            placeholder="Email Address" 
+            className="w-full bg-black/[0.15] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white font-medium placeholder-white/40 focus:ring-1 focus:ring-white/30 focus:border-white/20 outline-none transition-all" 
+          />
+          
+          <div className="relative">
+            <input 
+              type={showPassword ? "text" : "password"} 
+              placeholder="Password" 
+              className="w-full bg-black/[0.15] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white font-medium placeholder-white/40 focus:ring-1 focus:ring-white/30 focus:border-white/20 outline-none transition-all pr-12" 
+            />
+            <button 
+              type="button" 
+              onClick={() => setShowPassword(!showPassword)} 
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+            >
+              {showPassword ? <EyeOff className="w-5 h-5" strokeWidth={1.5} /> : <Eye className="w-5 h-5" strokeWidth={1.5} />}
+            </button>
+          </div>
 
+          {/* Premium High-Contrast Button */}
           <button 
             type="submit"
-            className="w-full bg-blue-600/80 hover:bg-blue-600 text-white font-bold text-lg rounded-2xl py-5 mt-4 transition-all shadow-lg shadow-blue-900/50 flex items-center justify-center gap-3"
+            className="w-full bg-white hover:bg-white/90 text-black font-semibold text-sm rounded-2xl py-4 mt-6 transition-all shadow-[0_4px_14px_rgba(255,255,255,0.2)] flex items-center justify-center gap-2 active:scale-[0.98]"
           >
-            {isLogin ? 'Sign In' : 'Create Account'}
-            <ArrowRight className="w-6 h-6" />
+            {isLogin ? 'Sign In' : 'Continue'}
+            <ArrowRight className="w-4 h-4"/>
           </button>
         </form>
 
-        <div className="mt-8 text-center">
-          <p className="text-white/80 text-lg">
-            {isLogin ? "New here? " : "Already have an account? "}
-            <button onClick={() => setIsLogin(!isLogin)} className="text-white font-bold underline decoration-blue-400 underline-offset-4">
+        {/* Minimalist Footer */}
+        <div className="mt-8 text-center pt-6">
+          <p className="text-white/50 text-sm font-medium">
+            {isLogin ? "Don't have an account? " : "Already registered? "}
+            <button 
+              type="button" 
+              onClick={(e) => {
+                e.preventDefault();
+                setIsLogin(!isLogin);
+              }} 
+              className="text-white hover:text-white/80 transition-colors ml-1 font-semibold"
+            >
               {isLogin ? 'Sign up' : 'Sign in'}
             </button>
           </p>

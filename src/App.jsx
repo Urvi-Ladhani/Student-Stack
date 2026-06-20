@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
-import Taskspage from './pages/Taskspage';
+
+// --- IMPORTANT: Verify these paths match your exact folder structure! ---
+import Taskspage from './pages/Taskspage'; 
 import AuthPage from './components/auth/authpage'; 
+import OnboardingPage from './components/OnboardingPage';
+// ------------------------------------------------------------------------
 
 function App() {
-  // Pull existing session states directly from local persistence layers
   const [token, setToken] = useState(localStorage.getItem('token') || null);
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
 
-  // Unified callback to execute when backend issues authentication tokens
   const handleAuthSuccess = (receivedToken, receivedUser) => {
     localStorage.setItem('token', receivedToken);
     localStorage.setItem('user', JSON.stringify(receivedUser));
-    
     setToken(receivedToken);
     setUser(receivedUser);
   };
@@ -24,15 +25,12 @@ function App() {
     setUser(null);
   };
 
-  // --------------------------------------------------------
-  // WORKSPACE COMPONENT (Protected Route Layout)
-  // --------------------------------------------------------
+  // --- WORKSPACE LAYOUT (Only visible when logged in) ---
   const Workspace = () => (
     <div className="w-full min-h-screen p-6 bg-[#040712]">
       <div className="max-w-6xl mx-auto flex items-center justify-between border-b border-white/[0.06] pb-4 mb-6">
         <div>
           <p className="text-xs text-blue-400 font-semibold tracking-wider uppercase">Active Space</p>
-          {/* Note: Changed fullName to name to match your database schema */}
           <h2 className="text-xl font-bold text-white m-0">Welcome back, {user?.name || 'Student'}</h2>
         </div>
         <button 
@@ -42,8 +40,6 @@ function App() {
           Disconnect Workspace
         </button>
       </div>
-      
-      {/* Core Content Pages Mount Here */}
       <div className="max-w-6xl mx-auto">
         <Taskspage />
       </div>
@@ -54,10 +50,19 @@ function App() {
     <BrowserRouter>
       <div className="w-full min-h-screen bg-[#040712] text-white font-sans">
         <Routes>
-          {/* 1. Base URL Redirection */}
-          <Route path="/" element={<Navigate to={token ? "/dashboard" : "/login"} replace />} />
+          {/* 1. ONBOARDING PAGE (Landing Page) */}
+          <Route 
+            path="/onboarding" 
+            element={token ? <Navigate to="/dashboard" replace /> : <OnboardingPage />} 
+          />
 
-          {/* 2. Public Auth Routes (Redirects to dashboard if already logged in) */}
+          {/* Add a redirect so if someone visits the base URL "/", it sends them to /onboarding */}
+          <Route 
+            path="/" 
+            element={<Navigate to="/onboarding" replace />} 
+          />
+
+          {/* 2. AUTH PAGES */}
           <Route 
             path="/login" 
             element={!token ? <AuthPage onAuthSuccess={handleAuthSuccess} /> : <Navigate to="/dashboard" replace />} 
@@ -67,7 +72,7 @@ function App() {
             element={!token ? <AuthPage onAuthSuccess={handleAuthSuccess} /> : <Navigate to="/dashboard" replace />} 
           />
 
-          {/* 3. Protected Dashboard Route (Redirects to login if NOT logged in) */}
+          {/* 3. PROTECTED DASHBOARD */}
           <Route 
             path="/dashboard" 
             element={token ? <Workspace /> : <Navigate to="/login" replace />} 

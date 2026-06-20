@@ -3,7 +3,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import TaskRightPanel from '../components/tasks/TaskRightPanel';
 import { 
   Plus, LayoutList, Kanban, CalendarDays, Filter, 
-  ArrowDownUp, AlertTriangle, Clock, Tag, MoreHorizontal, Play
+  ArrowDownUp, AlertTriangle, Clock, Tag, MoreHorizontal, Play, X
 } from 'lucide-react';
 
 // ==========================================
@@ -22,9 +22,7 @@ const useTasks = () => {
           'Authorization': `Bearer ${token}`
         }
       });
-      
       if (!response.ok) throw new Error('Failed to fetch tasks');
-      
       const data = await response.json();
       setTasks(data);
     } catch (error) {
@@ -34,10 +32,31 @@ const useTasks = () => {
     }
   };
 
+  const addTask = async (taskData) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(taskData)
+      });
+
+      if (!response.ok) throw new Error('Failed to create task');
+      
+      // Refresh the list immediately after adding
+      fetchTasks();
+      return true; // Return true on success
+    } catch (error) {
+      console.error("Error creating task:", error);
+      return false;
+    }
+  };
+
   const updateTaskStatus = async (taskId, newStatus) => {
-    // Optimistic UI update: instantly change it on screen so it feels blazing fast
     setTasks(tasks.map(t => t._id === taskId ? { ...t, status: newStatus } : t));
-    
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:5000/api/tasks/${taskId}/status`, {
@@ -48,11 +67,9 @@ const useTasks = () => {
         },
         body: JSON.stringify({ status: newStatus })
       });
-
       if (!response.ok) throw new Error('Failed to update task');
     } catch (error) {
       console.error("Error updating status:", error);
-      // Revert if the server fails
       fetchTasks(); 
     }
   };
@@ -61,11 +78,132 @@ const useTasks = () => {
     fetchTasks();
   }, []);
 
-  return { tasks, loading, updateTaskStatus, refreshTasks: fetchTasks };
+  return { tasks, loading, addTask, updateTaskStatus, refreshTasks: fetchTasks };
 };
 
 // ==========================================
-// 2. UI COMPONENTS (Glassmorphic)
+// 2. ADD TASK MODAL (Glassmorphic)
+// ==========================================
+const AddTaskModal = ({ isOpen, onClose, onAdd }) => {
+  const [formData, setFormData] = useState({
+    title: '',
+    category: 'Academic',
+    priority: 'medium',
+    deadline: '',
+    estimatedMinutes: 30
+  });
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const success = await onAdd(formData);
+    if (success) {
+      // Reset form and close
+      setFormData({ title: '', category: 'Academic', priority: 'medium', deadline: '', estimatedMinutes: 30 });
+      onClose();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="w-full max-w-md bg-black/40 border border-white/10 backdrop-blur-2xl rounded-3xl p-6 shadow-2xl">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-white drop-shadow-sm">Create New Task</h3>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Task Title</label>
+            <input 
+              type="text" 
+              required
+              value={formData.title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:border-blue-500/50 outline-none transition-all"
+              placeholder="e.g., Master Sliding Window..."
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Category</label>
+              <select 
+                value={formData.category}
+                onChange={(e) => setFormData({...formData, category: e.target.value})}
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500/50 outline-none transition-all cursor-pointer"
+              >
+                <option value="Academic">Academic</option>
+                <option value="DSA">DSA</option>
+                <option value="Internship">Internship</option>
+                <option value="Personal">Personal</option>
+                <option value="Project">Project</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Priority</label>
+              <select 
+                value={formData.priority}
+                onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500/50 outline-none transition-all cursor-pointer"
+              >
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Deadline</label>
+              <input 
+                type="date" 
+                required
+                value={formData.deadline}
+                onChange={(e) => setFormData({...formData, deadline: e.target.value})}
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500/50 outline-none transition-all cursor-pointer [color-scheme:dark]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Est. Minutes</label>
+              <input 
+                type="number" 
+                min="5"
+                value={formData.estimatedMinutes}
+                onChange={(e) => setFormData({...formData, estimatedMinutes: parseInt(e.target.value)})}
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500/50 outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="pt-4 mt-2 border-t border-white/10 flex gap-3">
+            <button 
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-3 rounded-xl bg-white/5 text-white/70 font-semibold hover:bg-white/10 hover:text-white transition-all border border-transparent"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit"
+              className="flex-1 py-3 rounded-xl bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30 hover:bg-blue-500/30 transition-all shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+            >
+              Create Task
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ==========================================
+// 3. UI COMPONENTS (Glassmorphic Cards)
 // ==========================================
 const PriorityBadge = ({ priority }) => {
   const colors = {
@@ -83,6 +221,8 @@ const PriorityBadge = ({ priority }) => {
 
 const TaskCard = ({ task, onStatusChange }) => {
   const deadline = new Date(task.deadline);
+  // Set time to end of day so tasks don't show overdue prematurely
+  deadline.setHours(23, 59, 59, 999);
   const isOverdue = deadline < new Date() && task.status !== 'done';
 
   return (
@@ -129,13 +269,18 @@ const TaskCard = ({ task, onStatusChange }) => {
 };
 
 // ==========================================
-// 3. MAIN PAGE COMPONENT
+// 4. MAIN PAGE COMPONENT
 // ==========================================
 const Taskspage = () => {
   const [view, setView] = useState('board');
-  const { tasks, loading, updateTaskStatus } = useTasks();
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal State!
+  const { tasks, loading, addTask, updateTaskStatus } = useTasks();
 
-  const overdueCount = tasks.filter(t => new Date(t.deadline) < new Date() && t.status !== 'done').length;
+  const overdueCount = tasks.filter(t => {
+    const d = new Date(t.deadline);
+    d.setHours(23, 59, 59, 999);
+    return d < new Date() && t.status !== 'done';
+  }).length;
 
   if (loading) {
     return (
@@ -175,7 +320,10 @@ const Taskspage = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs font-bold hover:bg-blue-500/30 transition-all shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+              <button 
+                onClick={() => setIsModalOpen(true)} // Open the modal!
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs font-bold hover:bg-blue-500/30 transition-all shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+              >
                 <Plus className="w-4 h-4" /> Add Task
               </button>
             </div>
@@ -210,12 +358,26 @@ const Taskspage = () => {
                   {tasks.filter(t => t.status === status).map(task => (
                     <TaskCard key={task._id} task={task} onStatusChange={updateTaskStatus} />
                   ))}
+                  
+                  {/* Empty state for columns */}
+                  {tasks.filter(t => t.status === status).length === 0 && (
+                     <div className="w-full h-full flex items-center justify-center text-white/20 text-xs uppercase tracking-widest font-bold mt-10">
+                       Empty
+                     </div>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Mount the modal at the bottom */}
+      <AddTaskModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onAdd={addTask} 
+      />
     </DashboardLayout>
   );
 };

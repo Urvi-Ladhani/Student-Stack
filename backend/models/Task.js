@@ -6,10 +6,12 @@ const taskSchema = new mongoose.Schema({
   description: { type: String, default: '' },
   category: { type: String, enum: ['Academic', 'Personal', 'DSA', 'Internship', 'Project'], default: 'Academic' },
   priority: { type: String, enum: ['critical', 'high', 'medium', 'low'], default: 'medium' },
-  status: { type: String, enum: ['todo', 'in_progress', 'blocked', 'done'], default: 'todo' },
+  status: { type: String, enum: ['todo', 'in_progress', 'done'], default: 'todo' },
   deadline: { type: Date, index: true },
-  isOverdue: { type: Boolean, default: false },
-  estimatedMinutes: { type: Number, default: 30 }
+  estimatedMinutes: { type: Number, default: 30 },
+  // New fields for advanced task management
+  isDeleted: { type: Boolean, default: false },
+  isArchived: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Task', taskSchema);

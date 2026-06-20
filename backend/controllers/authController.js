@@ -35,19 +35,20 @@ const signupUser = async (req, res) => {
         );
 
         // Send back BOTH token and profile data to the client
-        res.status(201).json({
-            message: "User created successfully",
-            token,
-            user: {
-                id: user._id,
-                fullName: user.name,
-                email: user.email,
-                university: user.university,
-                branch: user.branch,
-                semester: user.semester,
-                targetRole: user.targetRole
-            }
-        });
+        // ... inside signupUser, change the user object to match the model
+res.status(201).json({
+    message: "User created successfully",
+    token,
+    user: {
+        id: user._id,
+        name: user.name, // Changed from fullName to name
+        email: user.email,
+        university: user.university,
+        branch: user.branch,
+        semester: user.semester,
+        targetRole: user.targetRole
+    }
+});
 
     } catch (error) {
         res.status(500).json({

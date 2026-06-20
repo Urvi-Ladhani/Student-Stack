@@ -1,4 +1,8 @@
 require("dotenv").config();
+if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
+    console.error("FATAL ERROR: .env variables are missing.");
+    process.exit(1);
+}
 
 const express = require("express");
 const cors = require("cors");

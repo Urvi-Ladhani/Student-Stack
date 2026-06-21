@@ -12,6 +12,7 @@ const connectDB = require("./config/db");
 
 const app = express();
 const authRoutes = require("./routes/authRoutes");
+const dsaRoutes = require('./routes/dsaRoutes');
 
 
 connectDB();
@@ -20,6 +21,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use('/api/tasks', require('./routes/taskRoutes'));
+app.use('/api/dsa', dsaRoutes);
 
 app.get("/", (req,res) => {
    res.send("StudentStack Backend Running");

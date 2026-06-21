@@ -6,6 +6,7 @@ import DashboardMain from './components/dashboard/DashboardMain';
 import DashboardRightPanel from './components/dashboard/DashboardRightPanel';
 import Taskspage from './pages/Taskspage'; 
 import AuthPage from './components/auth/authpage'; 
+import DsaPage from './pages/DsaPage';
 import OnboardingPage from './components/OnboardingPage';
 
 function App() {
@@ -75,6 +76,11 @@ function App() {
           <Route 
             path="/tasks" 
             element={token ? <Taskspage /> : <Navigate to="/login" replace />} 
+          />
+
+          <Route 
+            path="/dsa" 
+            element={token ? <DsaPage /> : <Navigate to="/login" replace />} 
           />
         </Routes>
       </div>

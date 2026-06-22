@@ -1,24 +1,32 @@
 const express = require('express');
 const router = express.Router();
 const { 
-  getRoadmaps, 
-  getTopics, 
-  getProblems, 
-  createProblem, 
-  logAttempt 
+  getRoadmaps, getTopics, getProblems, 
+  createProblem, logAttempt, createRoadmap, seedDefaultRoadmaps 
 } = require('../controllers/dsaController');
-const protect = require('../middleware/authMiddleware');
 
-// Roadmap Routes
-router.get('/roadmaps', protect, getRoadmaps);
+// 👇 IMPORTANT: If this crashes, change it to: const { protect } = require('../middleware/authMiddleware');
+const protect = require('../middleware/authMiddleware'); 
+
+router.post('/seed-defaults', protect, seedDefaultRoadmaps);
+
+router.route('/roadmaps')
+  .get(protect, getRoadmaps)
+  .post(protect, createRoadmap);
+
 router.get('/topics/:roadmapId', protect, getTopics);
 
-// Problem Routes
 router.route('/problems')
   .get(protect, getProblems)
   .post(protect, createProblem);
 
-// Attempt Route (The Spaced Repetition Trigger)
 router.post('/problems/:id/attempt', protect, logAttempt);
+
+const { getSyncProfile, updateSyncProfile } = require('../controllers/dsaController'); // add these to your imports
+
+// SYNC PROFILE ROUTES
+router.route('/sync-profile')
+  .get(protect, getSyncProfile)
+  .post(protect, updateSyncProfile);
 
 module.exports = router;

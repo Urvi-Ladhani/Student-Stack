@@ -130,6 +130,115 @@ const problemMatrix = [
   ['NeetCode 150', 'Linked List', 'Remove Nth Node From End of List', 'https://leetcode.com/problems/remove-nth-node-from-end-of-list/', 'medium', 'LeetCode'],
   ['NeetCode 150', 'Linked List', 'Copy List with Random Pointer', 'https://leetcode.com/problems/copy-list-with-random-pointer/', 'medium', 'LeetCode'],
 
+  // --- Trees ---
+  ['NeetCode 150', 'Trees', 'Invert Binary Tree', 'https://leetcode.com/problems/invert-binary-tree/', 'easy', 'LeetCode'],
+  ['NeetCode 150', 'Trees', 'Maximum Depth of Binary Tree', 'https://leetcode.com/problems/maximum-depth-of-binary-tree/', 'easy', 'LeetCode'],
+  ['NeetCode 150', 'Trees', 'Diameter of Binary Tree', 'https://leetcode.com/problems/diameter-of-binary-tree/', 'easy', 'LeetCode'],
+  ['NeetCode 150', 'Trees', 'Balanced Binary Tree', 'https://leetcode.com/problems/balanced-binary-tree/', 'easy', 'LeetCode'],
+  ['NeetCode 150', 'Trees', 'Same Tree', 'https://leetcode.com/problems/same-tree/', 'easy', 'LeetCode'],
+  ['NeetCode 150', 'Trees', 'Subtree of Another Tree', 'https://leetcode.com/problems/subtree-of-another-tree/', 'easy', 'LeetCode'],
+  ['NeetCode 150', 'Trees', 'Lowest Common Ancestor of a BST', 'https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Trees', 'Binary Tree Level Order Traversal', 'https://leetcode.com/problems/binary-tree-level-order-traversal/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Trees', 'Binary Tree Right Side View', 'https://leetcode.com/problems/binary-tree-right-side-view/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Trees', 'Count Good Nodes in Binary Tree', 'https://leetcode.com/problems/count-good-nodes-in-binary-tree/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Trees', 'Validate Binary Search Tree', 'https://leetcode.com/problems/validate-binary-search-tree/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Trees', 'Kth Smallest Element in a BST', 'https://leetcode.com/problems/kth-smallest-element-in-a-bst/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Trees', 'Construct Binary Tree from Preorder and Inorder Traversal', 'https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Trees', 'Binary Tree Maximum Path Sum', 'https://leetcode.com/problems/binary-tree-maximum-path-sum/', 'hard', 'LeetCode'],
+  ['NeetCode 150', 'Trees', 'Serialize and Deserialize Binary Tree', 'https://leetcode.com/problems/serialize-and-deserialize-binary-tree/', 'hard', 'LeetCode'],
+
+  // --- Tries ---
+  ['NeetCode 150', 'Tries', 'Implement Trie (Prefix Tree)', 'https://leetcode.com/problems/implement-trie-prefix-tree/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Tries', 'Design Add and Search Words Data Structure', 'https://leetcode.com/problems/design-add-and-search-words-data-structure/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Tries', 'Word Search II', 'https://leetcode.com/problems/word-search-ii/', 'hard', 'LeetCode'],
+
+  // --- Heap / Priority Queue ---
+  ['NeetCode 150', 'Heap / Priority Queue', 'Kth Largest Element in a Stream', 'https://leetcode.com/problems/kth-largest-element-in-a-stream/', 'easy', 'LeetCode'],
+  ['NeetCode 150', 'Heap / Priority Queue', 'Last Stone Weight', 'https://leetcode.com/problems/last-stone-weight/', 'easy', 'LeetCode'],
+  ['NeetCode 150', 'Heap / Priority Queue', 'K Closest Points to Origin', 'https://leetcode.com/problems/k-closest-points-to-origin/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Heap / Priority Queue', 'Kth Largest Element in an Array', 'https://leetcode.com/problems/kth-largest-element-in-an-array/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Heap / Priority Queue', 'Task Scheduler', 'https://leetcode.com/problems/task-scheduler/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Heap / Priority Queue', 'Design Twitter', 'https://leetcode.com/problems/design-twitter/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Heap / Priority Queue', 'Find Median from Data Stream', 'https://leetcode.com/problems/find-median-from-data-stream/', 'hard', 'LeetCode'],
+
+  // --- Backtracking ---
+  ['NeetCode 150', 'Backtracking', 'Subsets', 'https://leetcode.com/problems/subsets/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Backtracking', 'Combination Sum', 'https://leetcode.com/problems/combination-sum/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Backtracking', 'Permutations', 'https://leetcode.com/problems/permutations/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Backtracking', 'Subsets II', 'https://leetcode.com/problems/subsets-ii/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Backtracking', 'Combination Sum II', 'https://leetcode.com/problems/combination-sum-ii/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Backtracking', 'Word Search', 'https://leetcode.com/problems/word-search/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Backtracking', 'Palindrome Partitioning', 'https://leetcode.com/problems/palindrome-partitioning/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Backtracking', 'Letter Combinations of a Phone Number', 'https://leetcode.com/problems/letter-combinations-of-a-phone-number/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Backtracking', 'N-Queens', 'https://leetcode.com/problems/n-queens/', 'hard', 'LeetCode'],
+
+  // --- Graphs ---
+  ['NeetCode 150', 'Graphs', 'Number of Islands', 'https://leetcode.com/problems/number-of-islands/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Graphs', 'Max Area of Island', 'https://leetcode.com/problems/max-area-of-island/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Graphs', 'Clone Graph', 'https://leetcode.com/problems/clone-graph/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Graphs', 'Rotting Oranges', 'https://leetcode.com/problems/rotting-oranges/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Graphs', 'Pacific Atlantic Water Flow', 'https://leetcode.com/problems/pacific-atlantic-water-flow/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Graphs', 'Surrounded Regions', 'https://leetcode.com/problems/surrounded-regions/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Graphs', 'Course Schedule', 'https://leetcode.com/problems/course-schedule/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Graphs', 'Course Schedule II', 'https://leetcode.com/problems/course-schedule-ii/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Graphs', 'Redundant Connection', 'https://leetcode.com/problems/redundant-connection/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Graphs', 'Word Ladder', 'https://leetcode.com/problems/word-ladder/', 'hard', 'LeetCode'],
+
+  // --- 1-D DP ---
+  ['NeetCode 150', '1-D DP', 'Climbing Stairs', 'https://leetcode.com/problems/climbing-stairs/', 'easy', 'LeetCode'],
+  ['NeetCode 150', '1-D DP', 'Min Cost Climbing Stairs', 'https://leetcode.com/problems/min-cost-climbing-stairs/', 'easy', 'LeetCode'],
+  ['NeetCode 150', '1-D DP', 'House Robber', 'https://leetcode.com/problems/house-robber/', 'medium', 'LeetCode'],
+  ['NeetCode 150', '1-D DP', 'House Robber II', 'https://leetcode.com/problems/house-robber-ii/', 'medium', 'LeetCode'],
+  ['NeetCode 150', '1-D DP', 'Longest Palindromic Substring', 'https://leetcode.com/problems/longest-palindromic-substring/', 'medium', 'LeetCode'],
+  ['NeetCode 150', '1-D DP', 'Palindromic Substrings', 'https://leetcode.com/problems/palindromic-substrings/', 'medium', 'LeetCode'],
+  ['NeetCode 150', '1-D DP', 'Decode Ways', 'https://leetcode.com/problems/decode-ways/', 'medium', 'LeetCode'],
+  ['NeetCode 150', '1-D DP', 'Coin Change', 'https://leetcode.com/problems/coin-change/', 'medium', 'LeetCode'],
+  ['NeetCode 150', '1-D DP', 'Maximum Product Subarray', 'https://leetcode.com/problems/maximum-product-subarray/', 'medium', 'LeetCode'],
+  ['NeetCode 150', '1-D DP', 'Word Break', 'https://leetcode.com/problems/word-break/', 'medium', 'LeetCode'],
+  ['NeetCode 150', '1-D DP', 'Longest Increasing Subsequence', 'https://leetcode.com/problems/longest-increasing-subsequence/', 'medium', 'LeetCode'],
+  ['NeetCode 150', '1-D DP', 'Partition Equal Subset Sum', 'https://leetcode.com/problems/partition-equal-subset-sum/', 'medium', 'LeetCode'],
+
+  // --- 2-D DP ---
+  ['NeetCode 150', '2-D DP', 'Unique Paths', 'https://leetcode.com/problems/unique-paths/', 'medium', 'LeetCode'],
+  ['NeetCode 150', '2-D DP', 'Longest Common Subsequence', 'https://leetcode.com/problems/longest-common-subsequence/', 'medium', 'LeetCode'],
+  ['NeetCode 150', '2-D DP', 'Best Time to Buy and Sell Stock with Cooldown', 'https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-cooldown/', 'medium', 'LeetCode'],
+  ['NeetCode 150', '2-D DP', 'Coin Change II', 'https://leetcode.com/problems/coin-change-ii/', 'medium', 'LeetCode'],
+  ['NeetCode 150', '2-D DP', 'Target Sum', 'https://leetcode.com/problems/target-sum/', 'medium', 'LeetCode'],
+  ['NeetCode 150', '2-D DP', 'Interleaving String', 'https://leetcode.com/problems/interleaving-string/', 'medium', 'LeetCode'],
+  ['NeetCode 150', '2-D DP', 'Longest Increasing Path in a Matrix', 'https://leetcode.com/problems/longest-increasing-path-in-a-matrix/', 'hard', 'LeetCode'],
+  ['NeetCode 150', '2-D DP', 'Distinct Subsequences', 'https://leetcode.com/problems/distinct-subsequences/', 'hard', 'LeetCode'],
+  ['NeetCode 150', '2-D DP', 'Edit Distance', 'https://leetcode.com/problems/edit-distance/', 'hard', 'LeetCode'],
+
+  // --- Greedy ---
+  ['NeetCode 150', 'Greedy', 'Maximum Subarray', 'https://leetcode.com/problems/maximum-subarray/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Greedy', 'Jump Game', 'https://leetcode.com/problems/jump-game/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Greedy', 'Jump Game II', 'https://leetcode.com/problems/jump-game-ii/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Greedy', 'Gas Station', 'https://leetcode.com/problems/gas-station/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Greedy', 'Hand of Straights', 'https://leetcode.com/problems/hand-of-straights/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Greedy', 'Partition Labels', 'https://leetcode.com/problems/partition-labels/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Greedy', 'Valid Parenthesis String', 'https://leetcode.com/problems/valid-parenthesis-string/', 'medium', 'LeetCode'],
+
+  // --- Intervals ---
+  ['NeetCode 150', 'Intervals', 'Insert Interval', 'https://leetcode.com/problems/insert-interval/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Intervals', 'Merge Intervals', 'https://leetcode.com/problems/merge-intervals/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Intervals', 'Non-overlapping Intervals', 'https://leetcode.com/problems/non-overlapping-intervals/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Intervals', 'Meeting Rooms', 'https://leetcode.com/problems/meeting-rooms/', 'easy', 'LeetCode'],
+  ['NeetCode 150', 'Intervals', 'Meeting Rooms II', 'https://leetcode.com/problems/meeting-rooms-ii/', 'medium', 'LeetCode'],
+
+  // --- Math & Geometry + Bit Manipulation ---
+  ['NeetCode 150', 'Math & Geometry', 'Rotate Image', 'https://leetcode.com/problems/rotate-image/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Math & Geometry', 'Spiral Matrix', 'https://leetcode.com/problems/spiral-matrix/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Math & Geometry', 'Set Matrix Zeroes', 'https://leetcode.com/problems/set-matrix-zeroes/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Math & Geometry', 'Happy Number', 'https://leetcode.com/problems/happy-number/', 'easy', 'LeetCode'],
+  ['NeetCode 150', 'Math & Geometry', 'Pow(x, n)', 'https://leetcode.com/problems/powx-n/', 'medium', 'LeetCode'],
+  ['NeetCode 150', 'Bit Manipulation', 'Single Number', 'https://leetcode.com/problems/single-number/', 'easy', 'LeetCode'],
+  ['NeetCode 150', 'Bit Manipulation', 'Number of 1 Bits', 'https://leetcode.com/problems/number-of-1-bits/', 'easy', 'LeetCode'],
+  ['NeetCode 150', 'Bit Manipulation', 'Counting Bits', 'https://leetcode.com/problems/counting-bits/', 'easy', 'LeetCode'],
+  ['NeetCode 150', 'Bit Manipulation', 'Reverse Bits', 'https://leetcode.com/problems/reverse-bits/', 'easy', 'LeetCode'],
+  ['NeetCode 150', 'Bit Manipulation', 'Missing Number', 'https://leetcode.com/problems/missing-number/', 'easy', 'LeetCode'],
+
+
+
   // ==========================================
   // 🔵 STRIVER A2Z (BASICS & ARRAYS)
   // ==========================================
@@ -194,7 +303,7 @@ const problemMatrix = [
   ['Striver A2Z', 'Binary Search', 'Search in Rotated Sorted Array II', 'https://leetcode.com/problems/search-in-rotated-sorted-array-ii/', 'medium', 'LeetCode'],
   ['Striver A2Z', 'Binary Search', 'Find Minimum in Rotated Sorted Array', 'https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/', 'medium', 'LeetCode'],
   ['Striver A2Z', 'Binary Search', 'Single Element in a Sorted Array', 'https://leetcode.com/problems/single-element-in-a-sorted-array/', 'medium', 'LeetCode'],
-  ['Striver A2Z', 'Binary Search', 'Find Peak Element', 'https://leetcode.com/problems/find-peak-element/', 'medium', 'LeetCode']
+  ['Striver A2Z', 'Binary Search', 'Find Peak Element', 'https://leetcode.com/problems/find-peak-element/', 'medium', 'LeetCode'],
   ['Striver A2Z', 'Binary Search', 'Koko Eating Bananas', 'https://leetcode.com/problems/koko-eating-bananas/', 'medium', 'LeetCode'],
   ['Striver A2Z', 'Binary Search', 'Minimum Number of Days to Make m Bouquets', 'https://leetcode.com/problems/minimum-number-of-days-to-make-m-bouquets/', 'medium', 'LeetCode'],
   ['Striver A2Z', 'Binary Search', 'Find the Smallest Divisor Given a Threshold', 'https://leetcode.com/problems/find-the-smallest-divisor-given-a-threshold/', 'medium', 'LeetCode'],
@@ -287,7 +396,133 @@ const problemMatrix = [
   ['Striver A2Z', 'Stack and Queues', 'Largest Rectangle in Histogram', 'https://leetcode.com/problems/largest-rectangle-in-histogram/', 'hard', 'LeetCode'],
   ['Striver A2Z', 'Stack and Queues', 'Sliding Window Maximum', 'https://leetcode.com/problems/sliding-window-maximum/', 'hard', 'LeetCode'],
   ['Striver A2Z', 'Stack and Queues', 'Online Stock Span', 'https://leetcode.com/problems/online-stock-span/', 'medium', 'LeetCode'],
-  ['Striver A2Z', 'Stack and Queues', 'The Celebrity Problem', 'https://practice.geeksforgeeks.org/problems/the-celebrity-problem/1', 'medium', 'GeeksForGeeks']
+  ['Striver A2Z', 'Stack and Queues', 'The Celebrity Problem', 'https://practice.geeksforgeeks.org/problems/the-celebrity-problem/1', 'medium', 'GeeksForGeeks'],
+  // --- Sliding Window & Two Pointer ---
+  ['Striver A2Z', 'Sliding Window & Two Pointer', 'Longest Substring Without Repeating Characters', 'https://leetcode.com/problems/longest-substring-without-repeating-characters/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Sliding Window & Two Pointer', 'Max Consecutive Ones III', 'https://leetcode.com/problems/max-consecutive-ones-iii/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Sliding Window & Two Pointer', 'Fruit Into Baskets', 'https://leetcode.com/problems/fruit-into-baskets/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Sliding Window & Two Pointer', 'Longest Repeating Character Replacement', 'https://leetcode.com/problems/longest-repeating-character-replacement/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Sliding Window & Two Pointer', 'Binary Subarrays With Sum', 'https://leetcode.com/problems/binary-subarrays-with-sum/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Sliding Window & Two Pointer', 'Count Number of Nice Subarrays', 'https://leetcode.com/problems/count-number-of-nice-subarrays/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Sliding Window & Two Pointer', 'Number of Substrings Containing All Three Characters', 'https://leetcode.com/problems/number-of-substrings-containing-all-three-characters/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Sliding Window & Two Pointer', 'Maximum Points You Can Obtain from Cards', 'https://leetcode.com/problems/maximum-points-you-can-obtain-from-cards/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Sliding Window & Two Pointer', 'Subarrays with K Different Integers', 'https://leetcode.com/problems/subarrays-with-k-different-integers/', 'hard', 'LeetCode'],
+  ['Striver A2Z', 'Sliding Window & Two Pointer', 'Minimum Window Substring', 'https://leetcode.com/problems/minimum-window-substring/', 'hard', 'LeetCode'],
+
+  // --- Heaps ---
+  ['Striver A2Z', 'Heaps', 'Kth Largest Element in an Array', 'https://leetcode.com/problems/kth-largest-element-in-an-array/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Heaps', 'Kth Smallest Element in a Sorted Matrix', 'https://leetcode.com/problems/kth-smallest-element-in-a-sorted-matrix/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Heaps', 'Merge k Sorted Lists', 'https://leetcode.com/problems/merge-k-sorted-lists/', 'hard', 'LeetCode'],
+  ['Striver A2Z', 'Heaps', 'Top K Frequent Elements', 'https://leetcode.com/problems/top-k-frequent-elements/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Heaps', 'Task Scheduler', 'https://leetcode.com/problems/task-scheduler/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Heaps', 'Hand of Straights', 'https://leetcode.com/problems/hand-of-straights/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Heaps', 'Design Twitter', 'https://leetcode.com/problems/design-twitter/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Heaps', 'Find Median from Data Stream', 'https://leetcode.com/problems/find-median-from-data-stream/', 'hard', 'LeetCode'],
+
+  // --- Greedy Algorithms ---
+  ['Striver A2Z', 'Greedy Algorithms', 'Assign Cookies', 'https://leetcode.com/problems/assign-cookies/', 'easy', 'LeetCode'],
+  ['Striver A2Z', 'Greedy Algorithms', 'Fractional Knapsack', 'https://practice.geeksforgeeks.org/problems/fractional-knapsack-1587115620/1', 'medium', 'GeeksForGeeks'],
+  ['Striver A2Z', 'Greedy Algorithms', 'Minimum Coins', 'https://practice.geeksforgeeks.org/problems/number-of-coins1824/1', 'medium', 'GeeksForGeeks'],
+  ['Striver A2Z', 'Greedy Algorithms', 'Lemonade Change', 'https://leetcode.com/problems/lemonade-change/', 'easy', 'LeetCode'],
+  ['Striver A2Z', 'Greedy Algorithms', 'Valid Parenthesis String', 'https://leetcode.com/problems/valid-parenthesis-string/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Greedy Algorithms', 'N meetings in one room', 'https://practice.geeksforgeeks.org/problems/n-meetings-in-one-room-1587115620/1', 'medium', 'GeeksForGeeks'],
+  ['Striver A2Z', 'Greedy Algorithms', 'Jump Game', 'https://leetcode.com/problems/jump-game/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Greedy Algorithms', 'Jump Game II', 'https://leetcode.com/problems/jump-game-ii/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Greedy Algorithms', 'Minimum number of platforms required for a railway', 'https://practice.geeksforgeeks.org/problems/minimum-platforms-1587115620/1', 'medium', 'GeeksForGeeks'],
+  ['Striver A2Z', 'Greedy Algorithms', 'Job Sequencing Problem', 'https://practice.geeksforgeeks.org/problems/job-sequencing-problem-1587115620/1', 'medium', 'GeeksForGeeks'],
+  ['Striver A2Z', 'Greedy Algorithms', 'Candy', 'https://leetcode.com/problems/candy/', 'hard', 'LeetCode'],
+
+  // --- Binary Trees ---
+  ['Striver A2Z', 'Binary Trees', 'Binary Tree Representation', 'https://practice.geeksforgeeks.org/problems/binary-tree-representation/1', 'easy', 'GeeksForGeeks'],
+  ['Striver A2Z', 'Binary Trees', 'Binary Tree Preorder Traversal', 'https://leetcode.com/problems/binary-tree-preorder-traversal/', 'easy', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Binary Tree Inorder Traversal', 'https://leetcode.com/problems/binary-tree-inorder-traversal/', 'easy', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Binary Tree Postorder Traversal', 'https://leetcode.com/problems/binary-tree-postorder-traversal/', 'easy', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Binary Tree Level Order Traversal', 'https://leetcode.com/problems/binary-tree-level-order-traversal/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Maximum Depth of Binary Tree', 'https://leetcode.com/problems/maximum-depth-of-binary-tree/', 'easy', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Balanced Binary Tree', 'https://leetcode.com/problems/balanced-binary-tree/', 'easy', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Diameter of Binary Tree', 'https://leetcode.com/problems/diameter-of-binary-tree/', 'easy', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Binary Tree Maximum Path Sum', 'https://leetcode.com/problems/binary-tree-maximum-path-sum/', 'hard', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Same Tree', 'https://leetcode.com/problems/same-tree/', 'easy', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Binary Tree Zigzag Level Order Traversal', 'https://leetcode.com/problems/binary-tree-zigzag-level-order-traversal/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Boundary Traversal of binary tree', 'https://practice.geeksforgeeks.org/problems/boundary-traversal-of-binary-tree/1', 'medium', 'GeeksForGeeks'],
+  ['Striver A2Z', 'Binary Trees', 'Vertical Order Traversal of a Binary Tree', 'https://leetcode.com/problems/vertical-order-traversal-of-a-binary-tree/', 'hard', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Top View of Binary Tree', 'https://practice.geeksforgeeks.org/problems/top-view-of-binary-tree/1', 'medium', 'GeeksForGeeks'],
+  ['Striver A2Z', 'Binary Trees', 'Bottom View of Binary Tree', 'https://practice.geeksforgeeks.org/problems/bottom-view-of-binary-tree/1', 'medium', 'GeeksForGeeks'],
+  ['Striver A2Z', 'Binary Trees', 'Binary Tree Right Side View', 'https://leetcode.com/problems/binary-tree-right-side-view/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Symmetric Tree', 'https://leetcode.com/problems/symmetric-tree/', 'easy', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Root to Leaf Paths', 'https://practice.geeksforgeeks.org/problems/root-to-leaf-paths/1', 'medium', 'GeeksForGeeks'],
+  ['Striver A2Z', 'Binary Trees', 'Lowest Common Ancestor of a Binary Tree', 'https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Maximum Width of Binary Tree', 'https://leetcode.com/problems/maximum-width-of-binary-tree/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Children Sum Property', 'https://practice.geeksforgeeks.org/problems/children-sum-parent/1', 'medium', 'GeeksForGeeks'],
+  ['Striver A2Z', 'Binary Trees', 'All Nodes Distance K in Binary Tree', 'https://leetcode.com/problems/all-nodes-distance-k-in-binary-tree/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Amount of Time for Binary Tree to Be Infected', 'https://leetcode.com/problems/amount-of-time-for-binary-tree-to-be-infected/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Count Complete Tree Nodes', 'https://leetcode.com/problems/count-complete-tree-nodes/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Construct Binary Tree from Preorder and Inorder Traversal', 'https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Construct Binary Tree from Inorder and Postorder Traversal', 'https://leetcode.com/problems/construct-binary-tree-from-inorder-and-postorder-traversal/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Serialize and Deserialize Binary Tree', 'https://leetcode.com/problems/serialize-and-deserialize-binary-tree/', 'hard', 'LeetCode'],
+  ['Striver A2Z', 'Binary Trees', 'Morris Traversal', 'https://practice.geeksforgeeks.org/problems/preorder-traversal/1', 'medium', 'GeeksForGeeks'],
+  ['Striver A2Z', 'Binary Trees', 'Flatten Binary Tree to Linked List', 'https://leetcode.com/problems/flatten-binary-tree-to-linked-list/', 'medium', 'LeetCode'],
+
+  // --- Binary Search Trees ---
+  ['Striver A2Z', 'BST', 'Search in a Binary Search Tree', 'https://leetcode.com/problems/search-in-a-binary-search-tree/', 'easy', 'LeetCode'],
+  ['Striver A2Z', 'BST', 'Find Minimum in BST', 'https://practice.geeksforgeeks.org/problems/minimum-element-in-bst/1', 'easy', 'GeeksForGeeks'],
+  ['Striver A2Z', 'BST', 'Insert into a Binary Search Tree', 'https://leetcode.com/problems/insert-into-a-binary-search-tree/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'BST', 'Delete Node in a BST', 'https://leetcode.com/problems/delete-node-in-a-bst/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'BST', 'Kth Smallest Element in a BST', 'https://leetcode.com/problems/kth-smallest-element-in-a-bst/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'BST', 'Validate Binary Search Tree', 'https://leetcode.com/problems/validate-binary-search-tree/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'BST', 'Lowest Common Ancestor of a Binary Search Tree', 'https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'BST', 'Construct Binary Search Tree from Preorder Traversal', 'https://leetcode.com/problems/construct-binary-search-tree-from-preorder-traversal/', 'medium', 'LeetCode'],
+
+  // --- Graphs ---
+  ['Striver A2Z', 'Graphs', 'Number of Provinces', 'https://leetcode.com/problems/number-of-provinces/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Graphs', 'Rotting Oranges', 'https://leetcode.com/problems/rotting-oranges/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Graphs', 'Flood Fill', 'https://leetcode.com/problems/flood-fill/', 'easy', 'LeetCode'],
+  ['Striver A2Z', 'Graphs', '01 Matrix', 'https://leetcode.com/problems/01-matrix/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Graphs', 'Surrounded Regions', 'https://leetcode.com/problems/surrounded-regions/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Graphs', 'Word Ladder', 'https://leetcode.com/problems/word-ladder/', 'hard', 'LeetCode'],
+  ['Striver A2Z', 'Graphs', 'Is Graph Bipartite?', 'https://leetcode.com/problems/is-graph-bipartite/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Graphs', 'Course Schedule', 'https://leetcode.com/problems/course-schedule/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Graphs', 'Course Schedule II', 'https://leetcode.com/problems/course-schedule-ii/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Graphs', 'Network Delay Time', 'https://leetcode.com/problems/network-delay-time/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Graphs', 'Cheapest Flights Within K Stops', 'https://leetcode.com/problems/cheapest-flights-within-k-stops/', 'medium', 'LeetCode'],
+
+  // --- Dynamic Programming ---
+  ['Striver A2Z', 'Dynamic Programming', 'Climbing Stairs', 'https://leetcode.com/problems/climbing-stairs/', 'easy', 'LeetCode'],
+  ['Striver A2Z', 'Dynamic Programming', 'Frog Jump', 'https://practice.geeksforgeeks.org/problems/geek-jump/1', 'easy', 'GeeksForGeeks'],
+  ['Striver A2Z', 'Dynamic Programming', 'House Robber', 'https://leetcode.com/problems/house-robber/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Dynamic Programming', 'House Robber II', 'https://leetcode.com/problems/house-robber-ii/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Dynamic Programming', 'Unique Paths', 'https://leetcode.com/problems/unique-paths/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Dynamic Programming', 'Unique Paths II', 'https://leetcode.com/problems/unique-paths-ii/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Dynamic Programming', 'Minimum Path Sum', 'https://leetcode.com/problems/minimum-path-sum/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Dynamic Programming', 'Subset Sum Equal To K', 'https://practice.geeksforgeeks.org/problems/subset-sum-problem-1611555638/1', 'medium', 'GeeksForGeeks'],
+  ['Striver A2Z', 'Dynamic Programming', 'Partition Equal Subset Sum', 'https://leetcode.com/problems/partition-equal-subset-sum/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Dynamic Programming', 'Coin Change', 'https://leetcode.com/problems/coin-change/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Dynamic Programming', 'Longest Common Subsequence', 'https://leetcode.com/problems/longest-common-subsequence/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Dynamic Programming', 'Longest Palindromic Subsequence', 'https://leetcode.com/problems/longest-palindromic-subsequence/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Dynamic Programming', 'Longest Increasing Subsequence', 'https://leetcode.com/problems/longest-increasing-subsequence/', 'medium', 'LeetCode'],
+  
+  // --- Tries ---
+  ['Striver A2Z', 'Tries', 'Implement Trie (Prefix Tree)', 'https://leetcode.com/problems/implement-trie-prefix-tree/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Tries', 'Design Add and Search Words Data Structure', 'https://leetcode.com/problems/design-add-and-search-words-data-structure/', 'medium', 'LeetCode'],
+  ['Striver A2Z', 'Tries', 'Maximum XOR of Two Numbers in an Array', 'https://leetcode.com/problems/maximum-xor-of-two-numbers-in-an-array/', 'medium', 'LeetCode'],
+  // ==========================================
+  // 🟠 FAANG CRASH COURSE & DP MASTERCLASS 
+  // ==========================================
+  ['FAANG Crash Course', 'Data Structure Design', 'LRU Cache', 'https://leetcode.com/problems/lru-cache/', 'medium', 'LeetCode'],
+  ['FAANG Crash Course', 'Data Structure Design', 'LFU Cache', 'https://leetcode.com/problems/lfu-cache/', 'hard', 'LeetCode'],
+  ['FAANG Crash Course', 'Data Structure Design', 'Design Tic-Tac-Toe', 'https://leetcode.com/problems/design-tic-tac-toe/', 'medium', 'LeetCode'],
+  ['FAANG Crash Course', 'Fast & Slow Pointers', 'Middle of the Linked List', 'https://leetcode.com/problems/middle-of-the-linked-list/', 'easy', 'LeetCode'],
+  ['FAANG Crash Course', 'Fast & Slow Pointers', 'Linked List Cycle', 'https://leetcode.com/problems/linked-list-cycle/', 'easy', 'LeetCode'],
+  ['FAANG Crash Course', 'Cyclic Sort', 'Missing Number', 'https://leetcode.com/problems/missing-number/', 'easy', 'LeetCode'],
+  ['FAANG Crash Course', 'Cyclic Sort', 'Find All Numbers Disappeared in an Array', 'https://leetcode.com/problems/find-all-numbers-disappeared-in-an-array/', 'easy', 'LeetCode'],
+  
+  ['DP Masterclass', '1D Dynamic Programming', 'Climbing Stairs', 'https://leetcode.com/problems/climbing-stairs/', 'easy', 'LeetCode'],
+  ['DP Masterclass', '1D Dynamic Programming', 'House Robber', 'https://leetcode.com/problems/house-robber/', 'medium', 'LeetCode'],
+  ['DP Masterclass', '2D Dynamic Programming', 'Unique Paths', 'https://leetcode.com/problems/unique-paths/', 'medium', 'LeetCode'],
+  ['DP Masterclass', '2D Dynamic Programming', 'Longest Common Subsequence', 'https://leetcode.com/problems/longest-common-subsequence/', 'medium', 'LeetCode'],
+  ['DP Masterclass', 'DP on Stocks', 'Best Time to Buy and Sell Stock', 'https://leetcode.com/problems/best-time-to-buy-and-sell-stock/', 'easy', 'LeetCode'],
+  ['DP Masterclass', 'DP on Stocks', 'Best Time to Buy and Sell Stock II', 'https://leetcode.com/problems/best-time-to-buy-and-sell-stock-ii/', 'medium', 'LeetCode'],
+  ['DP Masterclass', 'DP on Stocks', 'Best Time to Buy and Sell Stock III', 'https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iii/', 'hard', 'LeetCode']
 ];
 
 module.exports = { problemMatrix };

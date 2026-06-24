@@ -76,23 +76,27 @@ const useDSA = () => {
   // ----------------------------------------------------
   // EXTENSION TRIGGER: Replaces the old auto-sync API
   // ----------------------------------------------------
-  const triggerAutoSync = async () => {
+  // Change the function definition to accept 'handles'
+  const triggerAutoSync = async (handles) => { 
     const token = localStorage.getItem('token');
     
-    // Start the loading spinner!
     setIsSyncing(true); 
 
-    window.postMessage({ type: "START_LEETCODE_SYNC", token: token }, "*");
+    window.postMessage({ 
+      type: "START_LEETCODE_SYNC", 
+      token: token,
+      handles: handles // Pass it right here!
+    }, "*");
 
     window.addEventListener("message", function listener(event) {
       if (event.data.type === "SYNC_SUCCESS") {
-        setIsSyncing(false); // Stop loading
+        setIsSyncing(false); 
         alert(`Massive W! Checked ${event.data.count} problems from your history.`);
         fetchData(); 
         window.removeEventListener("message", listener);
       } 
       else if (event.data.type === "SYNC_ERROR") {
-        setIsSyncing(false); // Stop loading
+        setIsSyncing(false); 
         alert("Sync Failed: " + event.data.message);
         window.removeEventListener("message", listener);
       }
@@ -117,7 +121,8 @@ const AnalyticsPanel = ({ problems }) => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const solvedCount = problems.filter(p => p.status === 'solved').length;
-  const totalProblems = problems.length || 1; 
+  // Fallback to 438 if problems array hasn't loaded yet
+  const totalProblems = problems.length > 0 ? problems.length : 438; 
   
   const rawPercent = (solvedCount / totalProblems) * 100;
   const displayPercent = rawPercent > 0 && rawPercent < 1 ? rawPercent.toFixed(1) : Math.floor(rawPercent);
@@ -200,19 +205,19 @@ const AnalyticsPanel = ({ problems }) => {
   return (
     <div className="flex flex-col gap-6 mt-4 animate-in fade-in slide-in-from-top-4">
       
-      {/* TOTAL SCORE BANNER */}
+      {/* TOTAL SCORE BANNER - Exact Match to Screenshot */}
       <div className="p-6 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl flex items-center justify-between">
-        <div className="w-1/2">
-          <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest mb-2">
+        <div className="w-1/2 flex flex-col justify-center">
+          <h3 className="text-[11px] font-bold text-white/50 uppercase tracking-widest mb-1">
             Total Score
           </h3>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-white">{solvedCount}</span>
-            <span className="text-3xl font-bold text-white/40">/ {totalProblems}</span>
+            <span className="text-4xl font-extrabold text-white">{solvedCount}</span>
+            <span className="text-sm font-bold text-white/40">/ {totalProblems} Solved</span>
           </div>
         </div>
         <div className="w-1/2 flex flex-col items-end gap-2">
-          <span className="text-xs font-bold text-blue-400">{displayPercent}% Completed</span>
+          <span className="text-sm font-bold text-blue-400">{displayPercent}% Completed</span>
           <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
             <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: `${barWidth}%` }}></div>
           </div>
@@ -340,20 +345,9 @@ const DsaPage = () => {
         {/* ==========================================
             ANALYTICS TAB
             ========================================== */}
-        <div className="flex justify-around py-4">
-  {[
-    { name: 'LeetCode', color: 'text-amber-400', count: problems.filter(p => p.platform === 'LeetCode' && p.status === 'solved').length },
-    { name: 'Codeforces', color: 'text-blue-400', count: problems.filter(p => p.platform === 'Codeforces' && p.status === 'solved').length },
-    { name: 'GFG', color: 'text-emerald-400', count: problems.filter(p => p.platform === 'GeeksForGeeks' && p.status === 'solved').length }
-  ].map((p, i) => (
-    <div key={i} className="flex flex-col items-center gap-2">
-      <div className={`w-20 h-20 rounded-full border-4 border-white/5 flex items-center justify-center font-bold text-lg ${p.color}`}>
-        {p.count}
-      </div>
-      <span className="text-[10px] uppercase font-bold text-white/50 tracking-widest">{p.name}</span>
-    </div>
-  ))}
-</div>
+        {activeTab === 'analytics' && (
+          <AnalyticsPanel problems={problems} />
+        )}
 
         {/* ==========================================
             ROADMAPS TAB
@@ -459,7 +453,7 @@ const DsaPage = () => {
                     {/* NEW: Dynamic Loading Button */}
                     <button 
                       type="button" 
-                      onClick={triggerAutoSync} 
+                      onClick={() => triggerAutoSync(localSyncParams)} 
                       disabled={isSyncing}
                       className={`px-6 py-3 rounded-xl border text-sm font-bold flex items-center gap-2 transition-all ${
                         isSyncing 

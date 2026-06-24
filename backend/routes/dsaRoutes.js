@@ -1,11 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const { 
-  getRoadmaps, getTopics, getProblems, 
-  createProblem, logAttempt, createRoadmap, seedDefaultRoadmaps 
+  getRoadmaps, 
+  getTopics, 
+  getProblems, 
+  createProblem, 
+  logAttempt, 
+  createRoadmap, 
+  seedDefaultRoadmaps,
+  getSyncProfile, 
+  updateSyncProfile,
+  extensionSync // 🔥 NEW: The Chrome Extension function
 } = require('../controllers/dsaController');
 
-// 👇 IMPORTANT: If this crashes, change it to: const { protect } = require('../middleware/authMiddleware');
 const protect = require('../middleware/authMiddleware'); 
 
 router.post('/seed-defaults', protect, seedDefaultRoadmaps);
@@ -22,11 +29,14 @@ router.route('/problems')
 
 router.post('/problems/:id/attempt', protect, logAttempt);
 
-const { getSyncProfile, updateSyncProfile } = require('../controllers/dsaController'); // add these to your imports
-
 // SYNC PROFILE ROUTES
 router.route('/sync-profile')
   .get(protect, getSyncProfile)
   .post(protect, updateSyncProfile);
+
+// ==========================================
+// EXTENSION SYNC ROUTE
+// ==========================================
+router.post('/extension-sync', protect, extensionSync);
 
 module.exports = router;

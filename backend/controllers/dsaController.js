@@ -206,3 +206,52 @@ exports.runAutoSync = async (req, res) => {
     }
   } catch (error) { res.status(500).json({ message: 'Server error during sync.' }); }
 };
+
+exports.extensionSync = async (req, res) => {
+  try {
+    const { submissions } = req.body; 
+    
+    if (!submissions || submissions.length === 0) {
+      return res.status(400).json({ message: "No submissions received from extension." });
+    }
+
+    console.log(`📡 Backend received ${submissions.length} problems. Processing...`);
+
+    let problemsUpdated = 0;
+
+    // Loop through every unique solved problem the extension found
+    for (let sub of submissions) {
+      // Find the matching problem in your database by title
+      const problem = await DSAProblem.findOne({ 
+        userId: req.user._id, 
+        title: sub.title 
+      });
+
+      // If we found the problem in their roadmap AND it's not marked solved yet
+      if (problem && problem.status !== 'solved') {
+        problem.status = 'solved';
+        
+        // Convert LeetCode's Unix timestamp to a real JS Date
+        const exactDate = new Date(sub.timestamp * 1000);
+        
+        // Push the historical attempt to light up the Heatmap
+        problem.attempts.push({
+          date: exactDate,
+          outcome: 'solved',
+          confidenceRating: 3, 
+          timeTakenMinutes: 0
+        });
+        
+        await problem.save();
+        problemsUpdated++;
+      }
+    }
+
+    console.log(`✅ Successfully updated ${problemsUpdated} new problems in the DB!`);
+    res.status(200).json({ message: "Sync complete!", updated: problemsUpdated });
+
+  } catch (error) {
+    console.error("❌ Extension Sync Error:", error);
+    res.status(500).json({ message: "Server error during sync." });
+  }
+};

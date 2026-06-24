@@ -22,6 +22,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use('/api/tasks', require('./routes/taskRoutes'));
 app.use('/api/dsa', dsaRoutes);
+app.use(express.json({ limit: '50mb' }));
 
 app.get("/", (req,res) => {
    res.send("StudentStack Backend Running");

@@ -3,7 +3,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import DsaRightPanel from '../components/dsa/DsaRightPanel';
 import { 
   Code2, Layers, ChevronRight, Play, CheckCircle2, 
-  Circle, X, Activity, Trophy, GitBranch, BrainCircuit, 
+  Circle, X, BarChart2, Trophy, GitBranch, BrainCircuit, 
   LayoutGrid, ArrowDownUp, Plus, Library, BookOpen, Link2, RefreshCcw, Database
 } from 'lucide-react';
 
@@ -16,6 +16,7 @@ const useDSA = () => {
   const [problems, setProblems] = useState([]);
   const [syncProfile, setSyncProfile] = useState({ leetcode: '', codeforces: '', geeksforgeeks: '' });
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -72,14 +73,30 @@ const useDSA = () => {
     if (success) alert("Credentials saved permanently to database.");
   };
 
+  // ----------------------------------------------------
+  // EXTENSION TRIGGER: Replaces the old auto-sync API
+  // ----------------------------------------------------
   const triggerAutoSync = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/dsa/sync-engine/run`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
-      const data = await res.json();
-      alert(`Sync Complete! Updated ${data.problemsUpdated} problems.`);
-      fetchData(); 
-    } catch (err) { alert("Failed to run sync engine."); }
+    const token = localStorage.getItem('token');
+    
+    // Start the loading spinner!
+    setIsSyncing(true); 
+
+    window.postMessage({ type: "START_LEETCODE_SYNC", token: token }, "*");
+
+    window.addEventListener("message", function listener(event) {
+      if (event.data.type === "SYNC_SUCCESS") {
+        setIsSyncing(false); // Stop loading
+        alert(`Massive W! Checked ${event.data.count} problems from your history.`);
+        fetchData(); 
+        window.removeEventListener("message", listener);
+      } 
+      else if (event.data.type === "SYNC_ERROR") {
+        setIsSyncing(false); // Stop loading
+        alert("Sync Failed: " + event.data.message);
+        window.removeEventListener("message", listener);
+      }
+    });
   };
 
   const fetchTopicsForRoadmap = async (roadmapId) => {
@@ -90,21 +107,22 @@ const useDSA = () => {
 
   useEffect(() => { fetchData(); }, []);
 
-  return { roadmaps, topics, problems, syncProfile, loading, toggleProblem, fetchTopicsForRoadmap, saveSyncProfile, triggerAutoSync };
+  return { roadmaps, topics, problems, syncProfile, loading, isSyncing, toggleProblem, fetchTopicsForRoadmap, saveSyncProfile, triggerAutoSync };
 };
 
 // ==========================================
-// 2. ANALYTICS & HEATMAP COMPONENT (Perfectly Spaced Clone)
+// 2. ANALYTICS & HEATMAP COMPONENT 
 // ==========================================
 const AnalyticsPanel = ({ problems }) => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-  // 1. Calculate Overall Total Score
   const solvedCount = problems.filter(p => p.status === 'solved').length;
   const totalProblems = problems.length || 1; 
-  const progressPercent = Math.round((solvedCount / totalProblems) * 100);
+  
+  const rawPercent = (solvedCount / totalProblems) * 100;
+  const displayPercent = rawPercent > 0 && rawPercent < 1 ? rawPercent.toFixed(1) : Math.floor(rawPercent);
+  const barWidth = solvedCount > 0 ? Math.max(rawPercent, 1.5) : 0;
 
-  // 2. FORCE AT LEAST THE LAST 5 YEARS INTO THE DROPDOWN
   const currentYear = new Date().getFullYear();
   const activeYears = new Set([currentYear, currentYear - 1, currentYear - 2, currentYear - 3, currentYear - 4]);
   problems.forEach(p => {
@@ -114,7 +132,6 @@ const AnalyticsPanel = ({ problems }) => {
   });
   const yearsArray = Array.from(activeYears).sort((a, b) => b - a);
 
-  // 3. Count submissions strictly for the selected year
   let submissionsInYear = 0;
   problems.forEach(p => {
     if (p.attempts) {
@@ -124,7 +141,6 @@ const AnalyticsPanel = ({ problems }) => {
     }
   });
 
-  // 4. Generate the full 12-month calendar (DO NOT SKIP FUTURE DAYS)
   const generateHeatmapForYear = (year) => {
     const today = new Date();
     const monthsData = [];
@@ -139,10 +155,8 @@ const AnalyticsPanel = ({ problems }) => {
 
       for (let d = 1; d <= daysInMonth; d++) {
         const currentDate = new Date(year, monthIndex, d);
-        
         let activityLevel = 0;
         
-        // Only count activity if it's not a future date
         if (currentDate <= today) {
           problems.forEach(p => {
             if (p.attempts) {
@@ -164,7 +178,6 @@ const AnalyticsPanel = ({ problems }) => {
         }
       }
 
-      // Pad the end of the month with nulls to keep the grid square
       if (currentWeek.length > 0 && currentWeek.length < 7) {
         while (currentWeek.length < 7) currentWeek.push(null);
         weeks.push(currentWeek);
@@ -177,12 +190,11 @@ const AnalyticsPanel = ({ problems }) => {
 
   const heatmapMonths = generateHeatmapForYear(selectedYear);
 
-  // 5. Exactly 3 Shades of Blue (Plus Empty State)
   const getActivityColor = (level) => {
-    if (level === 0) return 'bg-[#161b22] border-white/5';   // Empty
-    if (level === 1) return 'bg-[#0969da] border-[#0969da]'; // Blue 1 (Light)
-    if (level === 2) return 'bg-[#54aeff] border-[#54aeff]'; // Blue 2 (Mid)
-    if (level >= 3) return 'bg-[#b6e3ff] border-[#b6e3ff]';  // Blue 3 (Brightest)
+    if (level === 0) return 'bg-[#161b22] border-white/5';   
+    if (level === 1) return 'bg-[#0969da] border-[#0969da]'; 
+    if (level === 2) return 'bg-[#54aeff] border-[#54aeff]'; 
+    if (level >= 3) return 'bg-[#b6e3ff] border-[#b6e3ff]';  
   };
 
   return (
@@ -190,28 +202,27 @@ const AnalyticsPanel = ({ problems }) => {
       
       {/* TOTAL SCORE BANNER */}
       <div className="p-6 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl flex items-center justify-between">
-        <div>
-          <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest mb-1">
+        <div className="w-1/2">
+          <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest mb-2">
             Total Score
           </h3>
-          <div className="flex items-end gap-2">
-            <span className="text-4xl font-black text-white">{solvedCount}</span>
-            <span className="text-sm font-bold text-white/40 mb-1">/ {totalProblems} Solved</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-bold text-white">{solvedCount}</span>
+            <span className="text-3xl font-bold text-white/40">/ {totalProblems}</span>
           </div>
         </div>
         <div className="w-1/2 flex flex-col items-end gap-2">
-          <span className="text-xs font-bold text-blue-400">{progressPercent}% Completed</span>
+          <span className="text-xs font-bold text-blue-400">{displayPercent}% Completed</span>
           <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
-            <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: `${progressPercent}%` }}></div>
+            <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: `${barWidth}%` }}></div>
           </div>
         </div>
       </div>
 
       {/* HEATMAP CALENDAR */}
-      <div className="p-6 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl overflow-hidden">
+      <div className="p-6 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl flex flex-col">
         
-        {/* Dynamic Header & Year Dropdown */}
-        <div className="flex justify-between items-center mb-6 min-w-[800px]">
+        <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             {submissionsInYear} submissions in {selectedYear}
           </h3>
@@ -226,57 +237,51 @@ const AnalyticsPanel = ({ problems }) => {
           </select>
         </div>
 
-        {/* Scrollable Container */}
-        <div className="w-full overflow-x-auto scrollbar-hide pb-4">
-          <div className="min-w-max flex flex-col">
-            
-            {/* 12 MONTH BLOCKS WITH GAPS */}
-            <div className="flex gap-4"> 
-              {heatmapMonths.map((month, mIndex) => (
-                <div key={mIndex} className="flex flex-col items-center">
-                  <div className="flex gap-[3px] mb-2">
-                    {month.weeks.map((week, wIndex) => (
-                      <div key={wIndex} className="flex flex-col gap-[3px]">
-                        {week.map((day, dIndex) => {
-                          if (!day) return <div key={`empty-${dIndex}`} className="w-3 h-3 rounded-[3px] opacity-0"></div>;
-                          return (
-                            <div 
-                              key={day.date} 
-                              title={`${day.date}: ${day.level} problems solved`} 
-                              className={`w-3 h-3 rounded-[3px] border transition-colors hover:border-white/40 cursor-pointer ${getActivityColor(day.level)}`}
-                            ></div>
-                          );
-                        })}
-                      </div>
-                    ))}
-                  </div>
-                  <span className="text-[10px] text-white/40 font-medium">{month.name}</span>
+        <div className="w-full overflow-x-auto scrollbar-hide pb-2">
+          <div className="min-w-max flex gap-4"> 
+            {heatmapMonths.map((month, mIndex) => (
+              <div key={mIndex} className="flex flex-col items-center">
+                <div className="flex gap-[3px] mb-2">
+                  {month.weeks.map((week, wIndex) => (
+                    <div key={wIndex} className="flex flex-col gap-[3px]">
+                      {week.map((day, dIndex) => {
+                        if (!day) return <div key={`empty-${dIndex}`} className="w-3 h-3 rounded-[3px] opacity-0"></div>;
+                        return (
+                          <div 
+                            key={day.date} 
+                            title={`${day.date}: ${day.level} problems solved`} 
+                            className={`w-3 h-3 rounded-[3px] border transition-colors hover:border-white/40 cursor-pointer ${getActivityColor(day.level)}`}
+                          ></div>
+                        );
+                      })}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-
-            {/* 3-SHADE LEGEND */}
-            <div className="flex items-center justify-end gap-1.5 text-[10px] text-white/40 mt-6 mr-2">
-              Less 
-              <span className="w-3 h-3 rounded-[3px] border border-white/5 bg-[#161b22] ml-1"></span>
-              <span className="w-3 h-3 rounded-[3px] bg-[#0969da]"></span>
-              <span className="w-3 h-3 rounded-[3px] bg-[#54aeff]"></span>
-              <span className="w-3 h-3 rounded-[3px] bg-[#b6e3ff] mr-1"></span> 
-              More
-            </div>
-
+                <span className="text-[10px] text-white/40 font-medium">{month.name}</span>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
 
+        <div className="flex items-center justify-end gap-1.5 text-[10px] text-white/40 mt-4 pt-4 border-t border-white/5">
+          Less 
+          <span className="w-3 h-3 rounded-[3px] border border-white/5 bg-[#161b22] ml-1"></span>
+          <span className="w-3 h-3 rounded-[3px] bg-[#0969da]"></span>
+          <span className="w-3 h-3 rounded-[3px] bg-[#54aeff]"></span>
+          <span className="w-3 h-3 rounded-[3px] bg-[#b6e3ff] mr-1"></span> 
+          More
+        </div>
+
+      </div>
     </div>
   );
 };
+
 // ==========================================
 // 3. MAIN PAGE COMPONENT
 // ==========================================
 const DsaPage = () => {
-  const { roadmaps, topics, problems, syncProfile, loading, toggleProblem, fetchTopicsForRoadmap, saveSyncProfile, triggerAutoSync } = useDSA();
+  const { roadmaps, topics, problems, syncProfile, loading, isSyncing, toggleProblem, fetchTopicsForRoadmap, saveSyncProfile, triggerAutoSync } = useDSA();
   
   const [activeTab, setActiveTab] = useState('roadmaps'); 
   const [roadmapView, setRoadmapView] = useState('library'); 
@@ -316,7 +321,7 @@ const DsaPage = () => {
             <div className="flex bg-black/40 border border-white/10 rounded-lg p-1">
               {[ 
                 { id: 'roadmaps', label: 'Roadmaps', icon: GitBranch }, 
-                { id: 'analytics', label: 'Analytics', icon: Activity }, // NEW TAB
+                { id: 'analytics', label: 'Analytics', icon: BarChart2 }, 
                 { id: 'patterns', label: 'Patterns', icon: LayoutGrid }, 
                 { id: 'sync', label: 'Sync Engine', icon: RefreshCcw } 
               ].map(v => (
@@ -335,9 +340,20 @@ const DsaPage = () => {
         {/* ==========================================
             ANALYTICS TAB
             ========================================== */}
-        {activeTab === 'analytics' && (
-          <AnalyticsPanel problems={problems} />
-        )}
+        <div className="flex justify-around py-4">
+  {[
+    { name: 'LeetCode', color: 'text-amber-400', count: problems.filter(p => p.platform === 'LeetCode' && p.status === 'solved').length },
+    { name: 'Codeforces', color: 'text-blue-400', count: problems.filter(p => p.platform === 'Codeforces' && p.status === 'solved').length },
+    { name: 'GFG', color: 'text-emerald-400', count: problems.filter(p => p.platform === 'GeeksForGeeks' && p.status === 'solved').length }
+  ].map((p, i) => (
+    <div key={i} className="flex flex-col items-center gap-2">
+      <div className={`w-20 h-20 rounded-full border-4 border-white/5 flex items-center justify-center font-bold text-lg ${p.color}`}>
+        {p.count}
+      </div>
+      <span className="text-[10px] uppercase font-bold text-white/50 tracking-widest">{p.name}</span>
+    </div>
+  ))}
+</div>
 
         {/* ==========================================
             ROADMAPS TAB
@@ -430,12 +446,29 @@ const DsaPage = () => {
                   <label className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2 flex items-center gap-2">Codeforces Handle</label>
                   <input type="text" value={localSyncParams.codeforces} onChange={(e) => setLocalSyncParams({...localSyncParams, codeforces: e.target.value})} className="w-full bg-black/40 border border-white/10 focus:border-blue-500/50 rounded-xl px-4 py-3 text-sm text-white outline-none" placeholder="e.g. tourist" />
                 </div>
+                {/* NEW: GeeksForGeeks Field */}
+                <div>
+                  <label className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">GeeksForGeeks Handle</label>
+                  <input type="text" value={localSyncParams.geeksforgeeks} onChange={(e) => setLocalSyncParams({...localSyncParams, geeksforgeeks: e.target.value})} className="w-full bg-black/40 border border-white/10 focus:border-emerald-500/50 rounded-xl px-4 py-3 text-sm text-white outline-none" placeholder="e.g. urvi123" />
+                </div>
+                
                 <div className="pt-4 border-t border-white/10 flex justify-between items-center">
                   <span className="text-xs text-white/40">Status: {syncProfile.leetcode ? 'Connected' : 'Not Connected'}</span>
                   <div className="flex gap-3">
                     <button type="submit" className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition-all">Save Credentials</button>
-                    <button type="button" onClick={triggerAutoSync} className="px-6 py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 text-sm font-bold flex items-center gap-2 transition-all">
-                      <RefreshCcw className="w-4 h-4" /> Run Sync Now
+                    {/* NEW: Dynamic Loading Button */}
+                    <button 
+                      type="button" 
+                      onClick={triggerAutoSync} 
+                      disabled={isSyncing}
+                      className={`px-6 py-3 rounded-xl border text-sm font-bold flex items-center gap-2 transition-all ${
+                        isSyncing 
+                          ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 cursor-not-allowed' 
+                          : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border-emerald-500/30'
+                      }`}
+                    >
+                      <RefreshCcw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-blue-400' : ''}`} />
+                      {isSyncing ? 'Heist in Progress...' : 'Run Sync Now'}
                     </button>
                   </div>
                 </div>

@@ -117,11 +117,10 @@ const useDSA = () => {
 // ==========================================
 // 2. ANALYTICS & HEATMAP COMPONENT 
 // ==========================================
-const AnalyticsPanel = ({ problems }) => {
+const AnalyticsPanel = ({ problems, syncStats = { leetcode: 232, codeforces: 6, gfg: 0 } }) => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const solvedCount = problems.filter(p => p.status === 'solved').length;
-  // Fallback to 438 if problems array hasn't loaded yet
   const totalProblems = problems.length > 0 ? problems.length : 438; 
   
   const rawPercent = (solvedCount / totalProblems) * 100;
@@ -205,7 +204,7 @@ const AnalyticsPanel = ({ problems }) => {
   return (
     <div className="flex flex-col gap-6 mt-4 animate-in fade-in slide-in-from-top-4">
       
-      {/* TOTAL SCORE BANNER - Exact Match to Screenshot */}
+      {/* TOTAL SCORE BANNER */}
       <div className="p-6 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl flex items-center justify-between">
         <div className="w-1/2 flex flex-col justify-center">
           <h3 className="text-[11px] font-bold text-white/50 uppercase tracking-widest mb-1">
@@ -226,7 +225,6 @@ const AnalyticsPanel = ({ problems }) => {
 
       {/* HEATMAP CALENDAR */}
       <div className="p-6 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl flex flex-col">
-        
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             {submissionsInYear} submissions in {selectedYear}
@@ -276,8 +274,29 @@ const AnalyticsPanel = ({ problems }) => {
           <span className="w-3 h-3 rounded-[3px] bg-[#b6e3ff] mr-1"></span> 
           More
         </div>
-
       </div>
+
+      {/* GLOBAL PLATFORM STATS (Raw Extension Data) */}
+      <div className="flex flex-col gap-4 mt-2">
+        <h3 className="text-[11px] font-bold text-white/50 uppercase tracking-widest pl-2">
+          Global Lifetime Sync
+        </h3>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="p-5 rounded-2xl bg-black/20 border border-amber-500/10 flex flex-col items-center justify-center gap-2 hover:border-amber-500/30 transition-all">
+            <span className="text-3xl font-extrabold text-amber-400">{syncStats.leetcode}</span>
+            <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">LeetCode</span>
+          </div>
+          <div className="p-5 rounded-2xl bg-black/20 border border-blue-500/10 flex flex-col items-center justify-center gap-2 hover:border-blue-500/30 transition-all">
+            <span className="text-3xl font-extrabold text-blue-400">{syncStats.codeforces}</span>
+            <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Codeforces</span>
+          </div>
+          <div className="p-5 rounded-2xl bg-black/20 border border-emerald-500/10 flex flex-col items-center justify-center gap-2 hover:border-emerald-500/30 transition-all">
+            <span className="text-3xl font-extrabold text-emerald-400">{syncStats.gfg}</span>
+            <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">GeeksForGeeks</span>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 };

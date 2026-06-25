@@ -22,6 +22,7 @@ const dsaProblemSchema = new mongoose.Schema({
   },
   difficulty: { type: String, enum: ['easy', 'medium', 'hard'], required: true },
   status: { type: String, enum: ['unsolved', 'attempted', 'solved'], default: 'unsolved' },
+  isStarred: { type: Boolean, default: false },
   patterns: [{ type: String }], // e.g., ['Sliding Window', 'Two Pointer']
   
   attempts: [attemptSchema], // The embedded array of attempts

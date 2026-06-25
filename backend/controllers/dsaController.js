@@ -102,6 +102,20 @@ exports.createProblem = async (req, res) => {
   try { res.status(201).json(await DSAProblem.create({ ...req.body, userId: req.user._id })); } 
   catch (err) { res.status(500).json({ message: 'Error creating problem' }); }
 };
+// 🔥 NEW: Toggle Star Status
+exports.toggleStar = async (req, res) => {
+  try {
+    const problem = await DSAProblem.findOne({ _id: req.params.id, userId: req.user._id });
+    if (!problem) return res.status(404).json({ message: 'Not found' });
+
+    problem.isStarred = !problem.isStarred;
+    await problem.save();
+    
+    res.json(problem);
+  } catch (err) { 
+    res.status(500).json({ message: 'Error toggling star' }); 
+  }
+};
 
 exports.logAttempt = async (req, res) => {
   try {

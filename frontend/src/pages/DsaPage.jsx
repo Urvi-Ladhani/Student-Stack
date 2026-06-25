@@ -4,7 +4,7 @@ import DsaRightPanel from '../components/dsa/DsaRightPanel';
 import { 
   Code2, Layers, ChevronRight, Play, CheckCircle2, 
   Circle, X, BarChart2, Trophy, GitBranch, BrainCircuit, 
-  LayoutGrid, ArrowDownUp, Plus, Library, BookOpen, Link2, RefreshCcw, Database
+  LayoutGrid, ArrowDownUp, Plus, Library, BookOpen, Link2, RefreshCcw, Database, Star // 🔥 STAR IMPORTED
 } from 'lucide-react';
 
 // ==========================================
@@ -72,6 +72,11 @@ const useDSA = () => {
     await execute(`/problems/${problem._id}/attempt`, 'POST', { outcome: newOutcome, confidenceRating: 3, timeTakenMinutes: 0 });
   };
 
+  // 🔥 THE MISSING LINK: The toggleStar function
+  const toggleStar = async (problem) => {
+    await execute(`/problems/${problem._id}/star`, 'PUT');
+  };
+
   const saveSyncProfile = async (data) => {
     const success = await execute('/sync-profile', 'POST', data);
     if (success) {
@@ -116,12 +121,14 @@ const useDSA = () => {
     }
   }, [syncProfile.leetcode, syncProfile.codeforces, syncProfile.geeksforgeeks]);
 
-  return { roadmaps, topics, problems, syncProfile, syncStats, loading, isSyncing, toggleProblem, fetchTopicsForRoadmap, saveSyncProfile, triggerAutoSync };
+  // 🔥 ADDED toggleStar to the export!
+  return { roadmaps, topics, problems, syncProfile, syncStats, loading, isSyncing, toggleProblem, toggleStar, fetchTopicsForRoadmap, saveSyncProfile, triggerAutoSync };
 };
 
 // ==========================================
 // 2. ANALYTICS & HEATMAP COMPONENT 
 // ==========================================
+// (Kept exactly the same as before)
 const AnalyticsPanel = ({ problems, syncStats }) => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
@@ -208,8 +215,6 @@ const AnalyticsPanel = ({ problems, syncStats }) => {
 
   return (
     <div className="flex flex-col gap-6 mt-4 animate-in fade-in slide-in-from-top-4">
-      
-      {/* TOTAL SCORE BANNER */}
       <div className="p-6 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl flex items-center justify-between">
         <div className="w-1/2 flex flex-col justify-center">
           <h3 className="text-[11px] font-bold text-white/50 uppercase tracking-widest mb-1">Total Score</h3>
@@ -226,7 +231,6 @@ const AnalyticsPanel = ({ problems, syncStats }) => {
         </div>
       </div>
 
-      {/* HEATMAP CALENDAR */}
       <div className="p-6 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl flex flex-col">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
@@ -237,9 +241,7 @@ const AnalyticsPanel = ({ problems, syncStats }) => {
             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
             className="bg-black/40 border border-white/10 text-white text-xs font-bold px-3 py-1.5 rounded-lg outline-none cursor-pointer hover:border-white/30 transition-all"
           >
-            {yearsArray.map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
+            {yearsArray.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
 
@@ -253,11 +255,7 @@ const AnalyticsPanel = ({ problems, syncStats }) => {
                       {week.map((day, dIndex) => {
                         if (!day) return <div key={`empty-${dIndex}`} className="w-3 h-3 rounded-[3px] opacity-0"></div>;
                         return (
-                          <div 
-                            key={day.date} 
-                            title={`${day.date}: ${day.level} problems solved`} 
-                            className={`w-3 h-3 rounded-[3px] border transition-colors hover:border-white/40 cursor-pointer ${getActivityColor(day.level)}`}
-                          ></div>
+                          <div key={day.date} title={`${day.date}: ${day.level} problems solved`} className={`w-3 h-3 rounded-[3px] border transition-colors hover:border-white/40 cursor-pointer ${getActivityColor(day.level)}`}></div>
                         );
                       })}
                     </div>
@@ -270,11 +268,8 @@ const AnalyticsPanel = ({ problems, syncStats }) => {
         </div>
       </div>
 
-      {/* GLOBAL PLATFORM STATS */}
       <div className="flex flex-col gap-4 mt-2">
-        <h3 className="text-[11px] font-bold text-white/50 uppercase tracking-widest pl-2">
-          Global Lifetime Sync
-        </h3>
+        <h3 className="text-[11px] font-bold text-white/50 uppercase tracking-widest pl-2">Global Lifetime Sync</h3>
         <div className="grid grid-cols-3 gap-4">
           <div className="p-5 rounded-2xl bg-black/20 border border-amber-500/10 flex flex-col items-center justify-center gap-2 hover:border-amber-500/30 transition-all">
             <span className="text-3xl font-extrabold text-amber-400">{syncStats.leetcode}</span>
@@ -298,30 +293,34 @@ const AnalyticsPanel = ({ problems, syncStats }) => {
 // 3. MAIN PAGE COMPONENT
 // ==========================================
 const DsaPage = () => {
-  const { roadmaps, topics, problems, syncProfile, syncStats, loading, isSyncing, toggleProblem, fetchTopicsForRoadmap, saveSyncProfile, triggerAutoSync } = useDSA();
+  // 🔥 toggleStar IS NOW SUCCESSFULLY DESTRUCTURED HERE
+  const { roadmaps, topics, problems, syncProfile, syncStats, loading, isSyncing, toggleProblem, toggleStar, fetchTopicsForRoadmap, saveSyncProfile, triggerAutoSync } = useDSA();
   
   const [activeTab, setActiveTab] = useState('roadmaps'); 
   const [roadmapView, setRoadmapView] = useState('library'); 
   const [activeRoadmapId, setActiveRoadmapId] = useState(null);
   const [activeTopicId, setActiveTopicId] = useState(null); 
   
+  // 🔥 NEW: The Vault State!
+  const [showStarredOnly, setShowStarredOnly] = useState(false);
+  
   const [localSyncParams, setLocalSyncParams] = useState({ leetcode: '', codeforces: '', geeksforgeeks: '' });
-  // 🔥 NEW: State to manage when the user wants to edit their handles
   const [isEditingSync, setIsEditingSync] = useState(false);
 
   useEffect(() => { if (roadmaps.length > 0 && !activeRoadmapId) setActiveRoadmapId(roadmaps[0]._id); }, [roadmaps]);
-  
-  // Keep the local inputs populated with whatever is in the DB
   useEffect(() => { setLocalSyncParams({ leetcode: syncProfile.leetcode, codeforces: syncProfile.codeforces, geeksforgeeks: syncProfile.geeksforgeeks }); }, [syncProfile]);
 
   const activeRoadmap = roadmaps.find(r => r._id === activeRoadmapId);
   const activeTopic = topics.find(t => t._id === activeTopicId);
-  const topicProblems = problems.filter(p => p.topicId === activeTopicId);
   const systemRoadmaps = roadmaps.filter(r => r.type === 'system');
 
-  const handleRoadmapSwitch = (id) => { setActiveRoadmapId(id); setActiveTopicId(null); fetchTopicsForRoadmap(id); setRoadmapView('workspace'); };
+  const handleRoadmapSwitch = (id) => { 
+    setActiveRoadmapId(id); 
+    setActiveTopicId(null); 
+    fetchTopicsForRoadmap(id); 
+    setRoadmapView('workspace'); 
+  };
   
-  // Save credentials and exit edit mode
   const handleSaveCredentials = async (e) => { 
     e.preventDefault(); 
     const success = await saveSyncProfile(localSyncParams); 
@@ -368,7 +367,7 @@ const DsaPage = () => {
         {/* ANALYTICS TAB */}
         {activeTab === 'analytics' && <AnalyticsPanel problems={problems} syncStats={syncStats} />}
 
-        {/* ROADMAPS TAB */}
+        {/* ROADMAPS TAB - LIBRARY VIEW */}
         {activeTab === 'roadmaps' && roadmapView === 'library' && (
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in">
              {systemRoadmaps.map(rm => (
@@ -381,24 +380,47 @@ const DsaPage = () => {
            </div>
         )}
 
+        {/* ROADMAPS TAB - WORKSPACE VIEW */}
         {activeTab === 'roadmaps' && roadmapView === 'workspace' && (
            <div className="flex flex-col gap-6 animate-in fade-in">
+             
+             {/* THE WORKSPACE HEADER & VAULT BUTTON */}
              <div className="flex items-center justify-between mb-2">
                <div>
                  <h2 className="text-2xl font-bold text-white">{activeRoadmap?.name}</h2>
                  <p className="text-sm text-white/50">{activeTopicId ? activeTopic?.name : 'Select a module to view problems.'}</p>
                </div>
-               <button onClick={() => setRoadmapView('library')} className="px-4 py-2 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 transition-all text-xs font-bold flex items-center gap-2 border border-white/10">
-                 <ArrowDownUp className="w-4 h-4 rotate-90" /> Back to Roadmaps
-               </button>
+               <div className="flex items-center gap-3">
+                 <button 
+                   onClick={() => setShowStarredOnly(!showStarredOnly)} 
+                   className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all ${
+                     showStarredOnly 
+                       ? 'bg-amber-500/10 text-amber-400 border-amber-500/30 shadow-[0_0_15px_rgba(251,191,36,0.15)]' 
+                       : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white'
+                   }`}
+                 >
+                   <Star className={`w-4 h-4 ${showStarredOnly ? 'fill-amber-400' : ''}`} /> 
+                   Starred
+                 </button>
+                 <button onClick={() => {setRoadmapView('library'); setShowStarredOnly(false);}} className="px-4 py-2 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 transition-all text-xs font-bold flex items-center gap-2 border border-white/10">
+                   <ArrowDownUp className="w-4 h-4 rotate-90" /> Back to Roadmaps
+                 </button>
+               </div>
              </div>
 
+             {/* MODULE VIEW */}
              {!activeTopicId ? (
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                  {topics.map(topic => {
-                   const topicProbs = problems.filter(p => p.topicId === topic._id);
+                   // Filter the topic problems based on Vault status!
+                   const topicProbs = problems.filter(p => p.topicId === topic._id && (!showStarredOnly || p.isStarred));
+                   
+                   // If Vault is active and this topic has NO starred problems, hide the folder entirely to keep it clean!
+                   if (showStarredOnly && topicProbs.length === 0) return null;
+
                    const solved = topicProbs.filter(p => p.status === 'solved').length;
                    const progress = topicProbs.length > 0 ? (solved / topicProbs.length) * 100 : 0;
+                   
                    return (
                      <div key={topic._id} onClick={() => setActiveTopicId(topic._id)} className="p-4 rounded-xl bg-black/30 border border-white/10 shadow-lg hover:bg-black/40 cursor-pointer group">
                        <div className="flex justify-between items-start mb-4"><h3 className="text-sm font-medium text-white group-hover:text-blue-300">{topic.name}</h3><span className="text-[10px] font-bold text-white/50">{solved}/{topicProbs.length}</span></div>
@@ -408,9 +430,12 @@ const DsaPage = () => {
                  })}
                </div>
              ) : (
+               /* PROBLEM LIST VIEW */
                <div className="space-y-3">
                  <button onClick={() => setActiveTopicId(null)} className="mb-2 text-xs font-bold text-white/50 hover:text-white flex items-center gap-1"><ChevronRight className="w-3 h-3 rotate-180" /> Back to Modules</button>
-                 {topicProblems.map(p => (
+                 
+                 {/* Only map over problems that pass the Vault filter */}
+                 {problems.filter(p => p.topicId === activeTopicId && (!showStarredOnly || p.isStarred)).map(p => (
                    <div key={p._id} className="grid grid-cols-12 gap-4 p-4 rounded-xl bg-black/30 border border-white/10 items-center group hover:bg-black/40 transition-all">
                      <div className="col-span-1 flex justify-center">
                        <button onClick={() => toggleProblem(p)} className="hover:scale-110 transition-transform">
@@ -420,21 +445,34 @@ const DsaPage = () => {
                          }
                        </button>
                      </div>
-                     <div className="col-span-5"><a href={p.url} target="_blank" rel="noreferrer" className="text-sm font-medium text-white/90 hover:text-blue-400 truncate block">{p.title}</a></div>
+                     <div className="col-span-5 flex items-center gap-3">
+                       <a href={p.url} target="_blank" rel="noreferrer" className="text-sm font-medium text-white/90 hover:text-blue-400 truncate">{p.title}</a>
+                       <button onClick={() => toggleStar(p)} className="focus:outline-none transition-transform hover:scale-110 shrink-0">
+                         <Star className={`w-4 h-4 transition-colors ${p.isStarred ? 'fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'text-white/20 hover:text-amber-400/50'}`} />
+                       </button>
+                     </div>
                      <div className="col-span-3"><span className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${getPlatformStyle(p.platform)}`}>{p.platform}</span></div>
                      <div className="col-span-3"><span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${p.difficulty === 'easy' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : p.difficulty === 'medium' ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'}`}>{p.difficulty}</span></div>
                    </div>
                  ))}
+
+                 {/* Displayed if the Vault is active but there are no starred problems in this specific module */}
+                 {showStarredOnly && problems.filter(p => p.topicId === activeTopicId && p.isStarred).length === 0 && (
+                   <div className="p-8 text-center border border-white/5 rounded-xl bg-black/20">
+                     <Star className="w-8 h-8 text-white/10 mx-auto mb-3" />
+                     <p className="text-sm text-white/40">You haven't starred any problems in this module yet.</p>
+                   </div>
+                 )}
                </div>
              )}
            </div>
         )}
 
         {/* SYNC ENGINE TAB */}
+        {/* (Kept exactly the same as before) */}
         {activeTab === 'sync' && (
           <div className="max-w-2xl mx-auto mt-10 animate-in fade-in slide-in-from-bottom-4">
             <div className="p-8 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-2xl">
-              
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
                   <Database className="w-8 h-8 text-blue-400" />
@@ -445,7 +483,6 @@ const DsaPage = () => {
                 </div>
               </div>
 
-              {/* IF NOT CONNECTED -OR- IF IN EDIT MODE */}
               {(!syncProfile.leetcode && !syncProfile.codeforces && !syncProfile.geeksforgeeks) || isEditingSync ? (
                 <form onSubmit={handleSaveCredentials} className="space-y-6">
                   <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 mb-6">
@@ -465,7 +502,6 @@ const DsaPage = () => {
                   </div>
                   
                   <div className="pt-4 border-t border-white/10 flex justify-end gap-3">
-                    {/* Only show Cancel button if they already have an active profile they are just editing */}
                     {syncProfile.leetcode || syncProfile.codeforces ? (
                       <button type="button" onClick={() => setIsEditingSync(false)} className="px-6 py-3 rounded-xl hover:bg-white/5 text-white/50 text-sm font-bold transition-all">Cancel</button>
                     ) : null}
@@ -473,8 +509,6 @@ const DsaPage = () => {
                   </div>
                 </form>
               ) : (
-
-                /* IF ALREADY CONNECTED (THE AUTO-SYNC DASHBOARD) */
                 <div className="space-y-6">
                   <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -505,21 +539,9 @@ const DsaPage = () => {
                   </div>
 
                   <div className="pt-6 border-t border-white/10 flex justify-between items-center">
-                    <button 
-                      onClick={() => setIsEditingSync(true)} 
-                      className="text-xs font-bold text-white/40 hover:text-white transition-colors"
-                    >
-                      Edit Credentials
-                    </button>
-                    <button 
-                      onClick={() => triggerAutoSync(syncProfile, false)} 
-                      disabled={isSyncing}
-                      className={`px-6 py-2.5 rounded-xl border text-sm font-bold flex items-center gap-2 transition-all ${
-                        isSyncing ? 'bg-white/5 text-white/30 border-white/10 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20 text-white border-white/10'
-                      }`}
-                    >
-                      <RefreshCcw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                      Force Manual Sync
+                    <button onClick={() => setIsEditingSync(true)} className="text-xs font-bold text-white/40 hover:text-white transition-colors">Edit Credentials</button>
+                    <button onClick={() => triggerAutoSync(syncProfile, false)} disabled={isSyncing} className={`px-6 py-2.5 rounded-xl border text-sm font-bold flex items-center gap-2 transition-all ${isSyncing ? 'bg-white/5 text-white/30 border-white/10 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20 text-white border-white/10'}`}>
+                      <RefreshCcw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} /> Force Manual Sync
                     </button>
                   </div>
                 </div>

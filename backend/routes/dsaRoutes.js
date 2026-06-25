@@ -1,16 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const { 
-  getRoadmaps, 
-  getTopics, 
-  getProblems, 
-  createProblem, 
-  logAttempt, 
-  createRoadmap, 
+const {
+  getRoadmaps,
+  getTopics,
+  getProblems,
+  createProblem,
+  logAttempt,
+  createRoadmap,
   seedDefaultRoadmaps,
-  getSyncProfile, 
+  getSyncProfile,
   updateSyncProfile,
-  extensionSync // 🔥 NEW: The Chrome Extension function
+  extensionSync,
+  toggleStar
 } = require('../controllers/dsaController');
 
 const protect = require('../middleware/authMiddleware'); 
@@ -26,6 +27,7 @@ router.get('/topics/:roadmapId', protect, getTopics);
 router.route('/problems')
   .get(protect, getProblems)
   .post(protect, createProblem);
+router.put('/problems/:id/star', protect, toggleStar);
 
 router.post('/problems/:id/attempt', protect, logAttempt);
 

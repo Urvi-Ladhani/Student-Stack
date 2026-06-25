@@ -14,7 +14,8 @@ const useDSA = () => {
   const [roadmaps, setRoadmaps] = useState([]);
   const [topics, setTopics] = useState([]);
   const [problems, setProblems] = useState([]);
-  const [syncProfile, setSyncProfile] = useState({ leetcode: '', codeforces: '', geeksforgeeks: '' });
+  const [syncProfile, setSyncProfile] = useState({ leetcode: '', codeforces: '', geeksforgeeks: '', lastSyncAt: null });
+  const [syncStats, setSyncStats] = useState({ leetcode: 0, codeforces: 0, gfg: 0 });
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -25,13 +26,11 @@ const useDSA = () => {
 
       let rmRes = await fetch('http://localhost:5000/api/dsa/roadmaps', { headers });
       let dbRoadmaps = await rmRes.json();
-
       if (dbRoadmaps.length === 0) {
         await fetch('http://localhost:5000/api/dsa/seed-defaults', { method: 'POST', headers });
         rmRes = await fetch('http://localhost:5000/api/dsa/roadmaps', { headers });
         dbRoadmaps = await rmRes.json();
       }
-
       setRoadmaps(dbRoadmaps);
 
       if (dbRoadmaps.length > 0) {
@@ -45,9 +44,14 @@ const useDSA = () => {
       const syncRes = await fetch('http://localhost:5000/api/dsa/sync-profile', { headers });
       if (syncRes.ok) {
         const profile = await syncRes.json();
-        setSyncProfile({ leetcode: profile.leetcode || '', codeforces: profile.codeforces || '', geeksforgeeks: profile.geeksforgeeks || '' });
+        setSyncProfile({ 
+          leetcode: profile.leetcode || '', 
+          codeforces: profile.codeforces || '', 
+          geeksforgeeks: profile.geeksforgeeks || '',
+          lastSyncAt: profile.lastSyncAt || null
+        });
+        if (profile.rawStats) setSyncStats(profile.rawStats);
       }
-
     } catch (error) { console.error("Error fetching data:", error); } 
     finally { setLoading(false); }
   };
@@ -70,34 +74,29 @@ const useDSA = () => {
 
   const saveSyncProfile = async (data) => {
     const success = await execute('/sync-profile', 'POST', data);
-    if (success) alert("Credentials saved permanently to database.");
+    if (success) {
+      triggerAutoSync(data, true);
+      return true;
+    }
+    return false;
   };
 
-  // ----------------------------------------------------
-  // EXTENSION TRIGGER: Replaces the old auto-sync API
-  // ----------------------------------------------------
-  // Change the function definition to accept 'handles'
-  const triggerAutoSync = async (handles) => { 
+  const triggerAutoSync = async (handles, isSilent = false) => {
     const token = localStorage.getItem('token');
-    
     setIsSyncing(true); 
 
-    window.postMessage({ 
-      type: "START_LEETCODE_SYNC", 
-      token: token,
-      handles: handles // Pass it right here!
-    }, "*");
+    window.postMessage({ type: "START_LEETCODE_SYNC", token: token, handles: handles }, "*");
 
     window.addEventListener("message", function listener(event) {
       if (event.data.type === "SYNC_SUCCESS") {
         setIsSyncing(false); 
-        alert(`Massive W! Checked ${event.data.count} problems from your history.`);
+        if (!isSilent) alert(`Auto-Sync Complete! Verified ${event.data.count} lifetime solutions.`);
         fetchData(); 
         window.removeEventListener("message", listener);
       } 
       else if (event.data.type === "SYNC_ERROR") {
         setIsSyncing(false); 
-        alert("Sync Failed: " + event.data.message);
+        if (!isSilent) alert("Sync Failed: " + event.data.message);
         window.removeEventListener("message", listener);
       }
     });
@@ -111,13 +110,19 @@ const useDSA = () => {
 
   useEffect(() => { fetchData(); }, []);
 
-  return { roadmaps, topics, problems, syncProfile, loading, isSyncing, toggleProblem, fetchTopicsForRoadmap, saveSyncProfile, triggerAutoSync };
+  useEffect(() => {
+    if (syncProfile.leetcode || syncProfile.codeforces || syncProfile.geeksforgeeks) {
+      triggerAutoSync(syncProfile, true); 
+    }
+  }, [syncProfile.leetcode, syncProfile.codeforces, syncProfile.geeksforgeeks]);
+
+  return { roadmaps, topics, problems, syncProfile, syncStats, loading, isSyncing, toggleProblem, fetchTopicsForRoadmap, saveSyncProfile, triggerAutoSync };
 };
 
 // ==========================================
 // 2. ANALYTICS & HEATMAP COMPONENT 
 // ==========================================
-const AnalyticsPanel = ({ problems, syncStats = { leetcode: 232, codeforces: 6, gfg: 0 } }) => {
+const AnalyticsPanel = ({ problems, syncStats }) => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const solvedCount = problems.filter(p => p.status === 'solved').length;
@@ -207,9 +212,7 @@ const AnalyticsPanel = ({ problems, syncStats = { leetcode: 232, codeforces: 6, 
       {/* TOTAL SCORE BANNER */}
       <div className="p-6 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl flex items-center justify-between">
         <div className="w-1/2 flex flex-col justify-center">
-          <h3 className="text-[11px] font-bold text-white/50 uppercase tracking-widest mb-1">
-            Total Score
-          </h3>
+          <h3 className="text-[11px] font-bold text-white/50 uppercase tracking-widest mb-1">Total Score</h3>
           <div className="flex items-baseline gap-2">
             <span className="text-4xl font-extrabold text-white">{solvedCount}</span>
             <span className="text-sm font-bold text-white/40">/ {totalProblems} Solved</span>
@@ -265,18 +268,9 @@ const AnalyticsPanel = ({ problems, syncStats = { leetcode: 232, codeforces: 6, 
             ))}
           </div>
         </div>
-
-        <div className="flex items-center justify-end gap-1.5 text-[10px] text-white/40 mt-4 pt-4 border-t border-white/5">
-          Less 
-          <span className="w-3 h-3 rounded-[3px] border border-white/5 bg-[#161b22] ml-1"></span>
-          <span className="w-3 h-3 rounded-[3px] bg-[#0969da]"></span>
-          <span className="w-3 h-3 rounded-[3px] bg-[#54aeff]"></span>
-          <span className="w-3 h-3 rounded-[3px] bg-[#b6e3ff] mr-1"></span> 
-          More
-        </div>
       </div>
 
-      {/* GLOBAL PLATFORM STATS (Raw Extension Data) */}
+      {/* GLOBAL PLATFORM STATS */}
       <div className="flex flex-col gap-4 mt-2">
         <h3 className="text-[11px] font-bold text-white/50 uppercase tracking-widest pl-2">
           Global Lifetime Sync
@@ -296,7 +290,6 @@ const AnalyticsPanel = ({ problems, syncStats = { leetcode: 232, codeforces: 6, 
           </div>
         </div>
       </div>
-
     </div>
   );
 };
@@ -305,16 +298,21 @@ const AnalyticsPanel = ({ problems, syncStats = { leetcode: 232, codeforces: 6, 
 // 3. MAIN PAGE COMPONENT
 // ==========================================
 const DsaPage = () => {
-  const { roadmaps, topics, problems, syncProfile, loading, isSyncing, toggleProblem, fetchTopicsForRoadmap, saveSyncProfile, triggerAutoSync } = useDSA();
+  const { roadmaps, topics, problems, syncProfile, syncStats, loading, isSyncing, toggleProblem, fetchTopicsForRoadmap, saveSyncProfile, triggerAutoSync } = useDSA();
   
   const [activeTab, setActiveTab] = useState('roadmaps'); 
   const [roadmapView, setRoadmapView] = useState('library'); 
   const [activeRoadmapId, setActiveRoadmapId] = useState(null);
   const [activeTopicId, setActiveTopicId] = useState(null); 
+  
   const [localSyncParams, setLocalSyncParams] = useState({ leetcode: '', codeforces: '', geeksforgeeks: '' });
+  // 🔥 NEW: State to manage when the user wants to edit their handles
+  const [isEditingSync, setIsEditingSync] = useState(false);
 
   useEffect(() => { if (roadmaps.length > 0 && !activeRoadmapId) setActiveRoadmapId(roadmaps[0]._id); }, [roadmaps]);
-  useEffect(() => { setLocalSyncParams(syncProfile); }, [syncProfile]);
+  
+  // Keep the local inputs populated with whatever is in the DB
+  useEffect(() => { setLocalSyncParams({ leetcode: syncProfile.leetcode, codeforces: syncProfile.codeforces, geeksforgeeks: syncProfile.geeksforgeeks }); }, [syncProfile]);
 
   const activeRoadmap = roadmaps.find(r => r._id === activeRoadmapId);
   const activeTopic = topics.find(t => t._id === activeTopicId);
@@ -322,7 +320,13 @@ const DsaPage = () => {
   const systemRoadmaps = roadmaps.filter(r => r.type === 'system');
 
   const handleRoadmapSwitch = (id) => { setActiveRoadmapId(id); setActiveTopicId(null); fetchTopicsForRoadmap(id); setRoadmapView('workspace'); };
-  const handleSaveCredentials = (e) => { e.preventDefault(); saveSyncProfile(localSyncParams); };
+  
+  // Save credentials and exit edit mode
+  const handleSaveCredentials = async (e) => { 
+    e.preventDefault(); 
+    const success = await saveSyncProfile(localSyncParams); 
+    if (success) setIsEditingSync(false);
+  };
 
   const getPlatformStyle = (platform) => {
     switch(platform) {
@@ -361,16 +365,10 @@ const DsaPage = () => {
           </div>
         </div>
 
-        {/* ==========================================
-            ANALYTICS TAB
-            ========================================== */}
-        {activeTab === 'analytics' && (
-          <AnalyticsPanel problems={problems} />
-        )}
+        {/* ANALYTICS TAB */}
+        {activeTab === 'analytics' && <AnalyticsPanel problems={problems} syncStats={syncStats} />}
 
-        {/* ==========================================
-            ROADMAPS TAB
-            ========================================== */}
+        {/* ROADMAPS TAB */}
         {activeTab === 'roadmaps' && roadmapView === 'library' && (
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in">
              {systemRoadmaps.map(rm => (
@@ -385,8 +383,6 @@ const DsaPage = () => {
 
         {activeTab === 'roadmaps' && roadmapView === 'workspace' && (
            <div className="flex flex-col gap-6 animate-in fade-in">
-             
-             {/* Dynamic Header & Back Button */}
              <div className="flex items-center justify-between mb-2">
                <div>
                  <h2 className="text-2xl font-bold text-white">{activeRoadmap?.name}</h2>
@@ -416,7 +412,6 @@ const DsaPage = () => {
                  <button onClick={() => setActiveTopicId(null)} className="mb-2 text-xs font-bold text-white/50 hover:text-white flex items-center gap-1"><ChevronRight className="w-3 h-3 rotate-180" /> Back to Modules</button>
                  {topicProblems.map(p => (
                    <div key={p._id} className="grid grid-cols-12 gap-4 p-4 rounded-xl bg-black/30 border border-white/10 items-center group hover:bg-black/40 transition-all">
-                     
                      <div className="col-span-1 flex justify-center">
                        <button onClick={() => toggleProblem(p)} className="hover:scale-110 transition-transform">
                          {p.status === 'solved' ? 
@@ -425,7 +420,6 @@ const DsaPage = () => {
                          }
                        </button>
                      </div>
-
                      <div className="col-span-5"><a href={p.url} target="_blank" rel="noreferrer" className="text-sm font-medium text-white/90 hover:text-blue-400 truncate block">{p.title}</a></div>
                      <div className="col-span-3"><span className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${getPlatformStyle(p.platform)}`}>{p.platform}</span></div>
                      <div className="col-span-3"><span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${p.difficulty === 'easy' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : p.difficulty === 'medium' ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'}`}>{p.difficulty}</span></div>
@@ -436,56 +430,100 @@ const DsaPage = () => {
            </div>
         )}
 
-        {/* ==========================================
-            SYNC ENGINE TAB
-            ========================================== */}
+        {/* SYNC ENGINE TAB */}
         {activeTab === 'sync' && (
           <div className="max-w-2xl mx-auto mt-10 animate-in fade-in slide-in-from-bottom-4">
             <div className="p-8 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-2xl">
+              
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center"><Database className="w-8 h-8 text-blue-400" /></div>
+                <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                  <Database className="w-8 h-8 text-blue-400" />
+                </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-1">Platform Credentials</h2>
-                  <p className="text-sm text-white/50">Save your usernames once. Our auto-sync engine will verify your solved problems continuously.</p>
+                  <h2 className="text-2xl font-bold text-white mb-1">Sync Engine</h2>
+                  <p className="text-sm text-white/50">Your multi-platform data pipeline.</p>
                 </div>
               </div>
 
-              <form onSubmit={handleSaveCredentials} className="space-y-6">
-                <div>
-                  <label className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-2">LeetCode Username</label>
-                  <input type="text" value={localSyncParams.leetcode} onChange={(e) => setLocalSyncParams({...localSyncParams, leetcode: e.target.value})} className="w-full bg-black/40 border border-white/10 focus:border-amber-500/50 rounded-xl px-4 py-3 text-sm text-white outline-none" placeholder="e.g. urvicf" />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2 flex items-center gap-2">Codeforces Handle</label>
-                  <input type="text" value={localSyncParams.codeforces} onChange={(e) => setLocalSyncParams({...localSyncParams, codeforces: e.target.value})} className="w-full bg-black/40 border border-white/10 focus:border-blue-500/50 rounded-xl px-4 py-3 text-sm text-white outline-none" placeholder="e.g. tourist" />
-                </div>
-                {/* NEW: GeeksForGeeks Field */}
-                <div>
-                  <label className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">GeeksForGeeks Handle</label>
-                  <input type="text" value={localSyncParams.geeksforgeeks} onChange={(e) => setLocalSyncParams({...localSyncParams, geeksforgeeks: e.target.value})} className="w-full bg-black/40 border border-white/10 focus:border-emerald-500/50 rounded-xl px-4 py-3 text-sm text-white outline-none" placeholder="e.g. urvi123" />
-                </div>
-                
-                <div className="pt-4 border-t border-white/10 flex justify-between items-center">
-                  <span className="text-xs text-white/40">Status: {syncProfile.leetcode ? 'Connected' : 'Not Connected'}</span>
-                  <div className="flex gap-3">
-                    <button type="submit" className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition-all">Save Credentials</button>
-                    {/* NEW: Dynamic Loading Button */}
+              {/* IF NOT CONNECTED -OR- IF IN EDIT MODE */}
+              {(!syncProfile.leetcode && !syncProfile.codeforces && !syncProfile.geeksforgeeks) || isEditingSync ? (
+                <form onSubmit={handleSaveCredentials} className="space-y-6">
+                  <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 mb-6">
+                    <p className="text-sm text-blue-200">Connect your handles once. The Sync Engine will automatically verify your progress silently in the background.</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-2">LeetCode Username</label>
+                    <input type="text" value={localSyncParams.leetcode} onChange={(e) => setLocalSyncParams({...localSyncParams, leetcode: e.target.value})} className="w-full bg-black/40 border border-white/10 focus:border-amber-500/50 rounded-xl px-4 py-3 text-sm text-white outline-none" placeholder="e.g. urvicf" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2 flex items-center gap-2">Codeforces Handle</label>
+                    <input type="text" value={localSyncParams.codeforces} onChange={(e) => setLocalSyncParams({...localSyncParams, codeforces: e.target.value})} className="w-full bg-black/40 border border-white/10 focus:border-blue-500/50 rounded-xl px-4 py-3 text-sm text-white outline-none" placeholder="e.g. tourist" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">GeeksForGeeks Handle</label>
+                    <input type="text" value={localSyncParams.geeksforgeeks} onChange={(e) => setLocalSyncParams({...localSyncParams, geeksforgeeks: e.target.value})} className="w-full bg-black/40 border border-white/10 focus:border-emerald-500/50 rounded-xl px-4 py-3 text-sm text-white outline-none" placeholder="e.g. urvi123" />
+                  </div>
+                  
+                  <div className="pt-4 border-t border-white/10 flex justify-end gap-3">
+                    {/* Only show Cancel button if they already have an active profile they are just editing */}
+                    {syncProfile.leetcode || syncProfile.codeforces ? (
+                      <button type="button" onClick={() => setIsEditingSync(false)} className="px-6 py-3 rounded-xl hover:bg-white/5 text-white/50 text-sm font-bold transition-all">Cancel</button>
+                    ) : null}
+                    <button type="submit" className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition-all">Lock & Sync Data</button>
+                  </div>
+                </form>
+              ) : (
+
+                /* IF ALREADY CONNECTED (THE AUTO-SYNC DASHBOARD) */
+                <div className="space-y-6">
+                  <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]"></div>
+                      <div>
+                        <h3 className="text-lg font-bold text-emerald-400">Auto-Sync Active</h3>
+                        <p className="text-xs text-emerald-400/60 font-medium mt-1">
+                          {isSyncing ? "Background sync in progress..." : `Last synced: ${syncProfile.lastSyncAt ? new Date(syncProfile.lastSyncAt).toLocaleString() : 'Just now'}`}
+                        </p>
+                      </div>
+                    </div>
+                    {isSyncing && <RefreshCcw className="w-5 h-5 text-emerald-400 animate-spin" />}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="p-4 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-1">
+                      <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">LeetCode</span>
+                      <span className="text-sm font-medium text-white truncate">{syncProfile.leetcode || 'Not Linked'}</span>
+                    </div>
+                    <div className="p-4 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-1">
+                      <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Codeforces</span>
+                      <span className="text-sm font-medium text-white truncate">{syncProfile.codeforces || 'Not Linked'}</span>
+                    </div>
+                    <div className="p-4 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-1">
+                      <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">GFG</span>
+                      <span className="text-sm font-medium text-white truncate">{syncProfile.geeksforgeeks || 'Not Linked'}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-white/10 flex justify-between items-center">
                     <button 
-                      type="button" 
-                      onClick={() => triggerAutoSync(localSyncParams)} 
+                      onClick={() => setIsEditingSync(true)} 
+                      className="text-xs font-bold text-white/40 hover:text-white transition-colors"
+                    >
+                      Edit Credentials
+                    </button>
+                    <button 
+                      onClick={() => triggerAutoSync(syncProfile, false)} 
                       disabled={isSyncing}
-                      className={`px-6 py-3 rounded-xl border text-sm font-bold flex items-center gap-2 transition-all ${
-                        isSyncing 
-                          ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 cursor-not-allowed' 
-                          : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border-emerald-500/30'
+                      className={`px-6 py-2.5 rounded-xl border text-sm font-bold flex items-center gap-2 transition-all ${
+                        isSyncing ? 'bg-white/5 text-white/30 border-white/10 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20 text-white border-white/10'
                       }`}
                     >
-                      <RefreshCcw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-blue-400' : ''}`} />
-                      {isSyncing ? 'Heist in Progress...' : 'Run Sync Now'}
+                      <RefreshCcw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                      Force Manual Sync
                     </button>
                   </div>
                 </div>
-              </form>
+              )}
             </div>
           </div>
         )}

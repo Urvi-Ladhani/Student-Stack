@@ -207,6 +207,9 @@ exports.runAutoSync = async (req, res) => {
   } catch (error) { res.status(500).json({ message: 'Server error during sync.' }); }
 };
 
+// ==========================================
+// THE UPDATED EXTENSION SYNC
+// ==========================================
 exports.extensionSync = async (req, res) => {
   try {
     const { submissions } = req.body; 
@@ -219,22 +222,19 @@ exports.extensionSync = async (req, res) => {
 
     let problemsUpdated = 0;
 
-    // Loop through every unique solved problem the extension found
+    // 1. UPDATE ROADMAP PROBLEMS
     for (let sub of submissions) {
-      // Find the matching problem in your database by title
       const problem = await DSAProblem.findOne({ 
         userId: req.user._id, 
         title: sub.title 
       });
 
-      // If we found the problem in their roadmap AND it's not marked solved yet
       if (problem && problem.status !== 'solved') {
         problem.status = 'solved';
         
-        // Convert LeetCode's Unix timestamp to a real JS Date
-        const exactDate = new Date(sub.timestamp * 1000);
+        // Convert Unix timestamp to a real JS Date, or use current date if missing
+        const exactDate = sub.timestamp ? new Date(sub.timestamp * 1000) : new Date();
         
-        // Push the historical attempt to light up the Heatmap
         problem.attempts.push({
           date: exactDate,
           outcome: 'solved',
@@ -247,8 +247,31 @@ exports.extensionSync = async (req, res) => {
       }
     }
 
-    console.log(`✅ Successfully updated ${problemsUpdated} new problems in the DB!`);
-    res.status(200).json({ message: "Sync complete!", updated: problemsUpdated });
+    // 2. CALCULATE GLOBAL STATS
+    const leetcodeCount = submissions.filter(p => p.platform === 'LeetCode').length;
+    const codeforcesCount = submissions.filter(p => p.platform === 'Codeforces').length;
+    const gfgCount = submissions.filter(p => p.platform === 'GeeksForGeeks').length;
+
+    // 3. SAVE TO SYNC PROFILE
+    await DSASyncProfile.findOneAndUpdate(
+      { userId: req.user._id }, 
+      { 
+        'rawStats.leetcode': leetcodeCount,
+        'rawStats.codeforces': codeforcesCount,
+        'rawStats.gfg': gfgCount,
+        lastSyncAt: new Date() 
+      },
+      { new: true, upsert: true }
+    );
+
+    console.log(`✅ Successfully updated ${problemsUpdated} roadmap problems and saved global stats!`);
+    
+    // Return the stats back to the frontend
+    res.status(200).json({ 
+      message: "Sync complete!", 
+      updated: problemsUpdated,
+      stats: { leetcode: leetcodeCount, codeforces: codeforcesCount, gfg: gfgCount }
+    });
 
   } catch (error) {
     console.error("❌ Extension Sync Error:", error);

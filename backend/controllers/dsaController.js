@@ -3,6 +3,7 @@ const DSATopic = require('../models/DSATopic');
 const DSAProblem = require('../models/DSAProblem');
 const DSASyncProfile = require('../models/DSASyncProfile');
 const { problemMatrix } = require('../data/roadmapData');
+const DSAContest = require('../models/DSAContest');
 
 // ==========================================
 // ROADMAP & TOPIC CONTROLLERS
@@ -93,9 +94,57 @@ exports.seedDefaultRoadmaps = async (req, res) => {
 // ==========================================
 // PROBLEM LOGGING CONTROLLERS
 // ==========================================
+// ==========================================
+// PROBLEM LOGGING CONTROLLERS
+// ==========================================
 exports.getProblems = async (req, res) => {
-  try { res.json(await DSAProblem.find({ userId: req.user._id }).sort({ createdAt: -1 })); } 
-  catch (err) { res.status(500).json({ message: 'Error fetching problems' }); }
+  try { 
+    let problems = await DSAProblem.find({ userId: req.user._id }).sort({ createdAt: -1 }); 
+
+    // 🔥 THE FIX: Auto-Initialize problems for NEW accounts!
+    if (problems.length === 0) {
+      console.log(`🌱 Initializing 438 Roadmap Problems for new user...`);
+      
+      // Grab all system roadmaps and topics to build the map
+      const systemRoadmaps = await DSARoadmap.find({ type: 'system' });
+      const systemTopics = await DSATopic.find({ roadmapId: { $in: systemRoadmaps.map(r => r._id) } });
+      
+      const topicMap = {};
+      systemTopics.forEach(t => {
+        const rm = systemRoadmaps.find(r => r._id.toString() === t.roadmapId.toString());
+        if (rm) topicMap[`${rm.name}-${t.name}`] = t._id;
+      });
+
+      // Map the user's specific problem documents to the global topics
+      const finalProblems = problemMatrix.map(row => {
+        const [roadmapName, topicName, title, url, difficulty, platform] = row;
+        const topicId = topicMap[`${roadmapName}-${topicName}`];
+        
+        return {
+          userId: req.user._id,
+          topicId: topicId,
+          title: title,
+          url: url,
+          difficulty: difficulty,
+          platform: platform,
+          status: 'unsolved'
+        };
+      }).filter(p => p.topicId); 
+
+      // Save them and return the newly generated list
+      if (finalProblems.length > 0) {
+        await DSAProblem.insertMany(finalProblems);
+        problems = await DSAProblem.find({ userId: req.user._id }).sort({ createdAt: -1 });
+        console.log(`✅ Successfully mapped ${problems.length} problems for the new user!`);
+      }
+    }
+    
+    res.json(problems);
+  } 
+  catch (err) { 
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching problems' }); 
+  }
 };
 
 exports.createProblem = async (req, res) => {
@@ -290,5 +339,109 @@ exports.extensionSync = async (req, res) => {
   } catch (error) {
     console.error("❌ Extension Sync Error:", error);
     res.status(500).json({ message: "Server error during sync." });
+  }
+};
+
+exports.syncContests = async (req, res) => {
+  try {
+    console.log("🚀 CONTEST SYNC STARTED FOR USER:", req.user._id);
+    const profile = await DSASyncProfile.findOne({ userId: req.user._id });
+    
+    if (!profile) {
+      console.log("❌ No sync profile found! Did you save your handles?");
+      return res.status(400).json({ message: 'No sync profile found.' });
+    }
+    
+    console.log(`✅ Profile found! LC: [${profile.leetcode}], CF: [${profile.codeforces}]`);
+    let contestsAdded = 0;
+
+    // 1. SYNC LEETCODE CONTESTS
+    if (profile.leetcode) {
+      console.log(`📡 Fetching LeetCode contests for username: ${profile.leetcode}...`);
+      try {
+        const lcRes = await fetch('https://leetcode.com/graphql', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' // 🔥 Bypasses LC Bot Protection
+          },
+          body: JSON.stringify({
+            query: `query userContestRankingHistory($username: String!) { userContestRankingHistory(username: $username) { attended trendDirection problemsSolved contest { title startTime } rating ranking } }`,
+            variables: { username: profile.leetcode }
+          })
+        });
+        
+        const lcData = await lcRes.json();
+        console.log(`📦 LeetCode API Response Check:`, lcData.data ? "Success" : lcData.errors);
+        
+        if (lcData.data?.userContestRankingHistory) {
+          const attended = lcData.data.userContestRankingHistory.filter(c => c.attended);
+          console.log(`🎯 Found ${attended.length} attended LC contests!`);
+          
+          for (let i = 0; i < attended.length; i++) {
+            const contest = attended[i];
+            const prevRating = i > 0 ? attended[i-1].rating : 1500; 
+            
+            await DSAContest.updateOne(
+              { userId: req.user._id, platform: 'LeetCode', contestName: contest.contest.title },
+              {
+                $setOnInsert: {
+                  date: new Date(contest.contest.startTime * 1000),
+                  rank: contest.ranking,
+                  ratingChange: Math.round(contest.rating - prevRating),
+                  newRating: Math.round(contest.rating)
+                }
+              },
+              { upsert: true }
+            );
+            contestsAdded++;
+          }
+        }
+      } catch (err) { console.error('🚨 LC Contest Sync Error:', err.message); }
+    }
+
+    // 2. SYNC CODEFORCES CONTESTS
+    if (profile.codeforces) {
+      console.log(`📡 Fetching CF contests for username: ${profile.codeforces}...`);
+      try {
+        const cfRes = await fetch(`https://codeforces.com/api/user.rating?handle=${profile.codeforces}`);
+        const cfData = await cfRes.json();
+        
+        if (cfData.status === 'OK') {
+          console.log(`🎯 Found ${cfData.result.length} CF contests!`);
+          for (let contest of cfData.result) {
+            await DSAContest.updateOne(
+              { userId: req.user._id, platform: 'Codeforces', contestName: contest.contestName },
+              {
+                $set: { // ✅ ...to exactly this!
+                  date: new Date(contest.contest.startTime * 1000),
+                  rank: contest.ranking,
+                  ratingChange: Math.round(contest.rating - prevRating),
+                  newRating: Math.round(contest.rating)
+                }
+              },
+              { upsert: true }
+            );
+            contestsAdded++;
+          }
+        }
+      } catch (err) { console.error('🚨 CF Contest Sync Error:', err.message); }
+    }
+
+    console.log(`🎉 Sync Complete! Processed ${contestsAdded} contests into the database.`);
+    res.status(200).json({ message: "Contest Sync Complete!", newContests: contestsAdded });
+  } catch (error) {
+    console.error("🔥 Contest Sync Fatal Error:", error);
+    res.status(500).json({ message: "Server error during contest sync." });
+  }
+};
+
+exports.getContests = async (req, res) => {
+  try {
+    const contests = await DSAContest.find({ userId: req.user._id }).sort({ date: -1 });
+    res.json(contests);
+  } catch (error) {
+    console.error("Error fetching contests:", error);
+    res.status(500).json({ message: 'Error fetching contests' });
   }
 };

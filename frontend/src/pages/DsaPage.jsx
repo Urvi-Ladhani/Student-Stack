@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 // ==========================================
-// 1. DATA HOOK
+// 1. DATA HOOK & ENGINE
 // ==========================================
 const useDSA = () => {
   const [roadmaps, setRoadmaps] = useState([]);
@@ -21,20 +21,60 @@ const useDSA = () => {
   
   const [upcomingContests, setUpcomingContests] = useState([]);
   const [contestHistory, setContestHistory] = useState([]);
+  const [dailyChallenges, setDailyChallenges] = useState([]);
   
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // Fetches Real Upcoming Contests from Codeforces API
+  // --- DAILY CHALLENGE ENGINE ---
+  const generateChallenges = (allProblems) => {
+    if (!allProblems || allProblems.length === 0) return;
+    
+    const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    
+    const unsolved = allProblems.filter(p => p.status !== 'solved');
+    const easyPool = unsolved.filter(p => p.difficulty === 'easy');
+    const medHardPool = unsolved.filter(p => p.difficulty === 'medium' || p.difficulty === 'hard');
+    const solvedPool = allProblems.filter(p => p.status === 'solved');
+    
+    const warmup = pickRandom(easyPool) || pickRandom(unsolved);
+    const boss = pickRandom(medHardPool) || pickRandom(unsolved);
+    const revision = pickRandom(solvedPool) || pickRandom(allProblems);
+
+    setDailyChallenges([
+      { ...warmup, questType: 'Easy Warm-up', questIcon: '☕', targetTime: '15 Minutes', status: 'pending' },
+      { ...boss, questType: 'Weekly Boss Challenge', questIcon: '🐉', targetTime: '45 Minutes', status: 'pending' },
+      { ...revision, questType: 'Revision Challenge', questIcon: '🧠', targetTime: '20 Minutes', status: 'pending' }
+    ].filter(c => c && c._id)); 
+  };
+
+  const replaceChallenge = (index) => {
+    const unsolved = problems.filter(p => p.status !== 'solved');
+    if (unsolved.length === 0) return;
+    
+    const updated = [...dailyChallenges];
+    const newProb = unsolved[Math.floor(Math.random() * unsolved.length)];
+    updated[index] = { ...newProb, questType: 'Swapped Challenge', questIcon: '🎲', targetTime: '30 Minutes', status: 'pending' };
+    
+    setDailyChallenges(updated);
+  };
+
+  const skipChallenge = (index) => {
+    const updated = [...dailyChallenges];
+    updated[index].status = 'skipped';
+    setDailyChallenges(updated);
+  };
+
+  // --- FETCHERS ---
   const fetchLiveContests = async () => {
     try {
       const res = await fetch('https://codeforces.com/api/contest.list');
       if (res.ok) {
         const data = await res.json();
         const liveContests = data.result
-          .filter(c => c.phase === 'BEFORE') // Only future contests
-          .sort((a, b) => a.startTimeSeconds - b.startTimeSeconds) // Sort by soonest
-          .slice(0, 5) // Grab next 5
+          .filter(c => c.phase === 'BEFORE')
+          .sort((a, b) => a.startTimeSeconds - b.startTimeSeconds)
+          .slice(0, 5)
           .map((c, index) => {
             const startDate = new Date(c.startTimeSeconds * 1000);
             return {
@@ -73,7 +113,14 @@ const useDSA = () => {
       }
 
       const probRes = await fetch('http://localhost:5000/api/dsa/problems', { headers });
-      if (probRes.ok) setProblems(await probRes.json());
+      if (probRes.ok) {
+        const pData = await probRes.json();
+        setProblems(pData);
+        if (dailyChallenges.length === 0) generateChallenges(pData);
+      }
+
+      const histRes = await fetch('http://localhost:5000/api/dsa/contests', { headers });
+      if (histRes.ok) setContestHistory(await histRes.json());
 
       const syncRes = await fetch('http://localhost:5000/api/dsa/sync-profile', { headers });
       if (syncRes.ok) {
@@ -86,9 +133,6 @@ const useDSA = () => {
         });
         if (profile.rawStats) setSyncStats(profile.rawStats);
       }
-
-      const histRes = await fetch('http://localhost:5000/api/dsa/contests', { headers });
-      if (histRes.ok) setContestHistory(await histRes.json());
 
     } catch (error) { console.error("Error fetching data:", error); } 
     finally { setLoading(false); }
@@ -110,13 +154,15 @@ const useDSA = () => {
     await execute(`/problems/${problem._id}/attempt`, 'POST', { outcome: newOutcome, confidenceRating: 3, timeTakenMinutes: 0 });
   };
 
-  const toggleStar = async (problem) => { await execute(`/problems/${problem._id}/star`, 'PUT'); };
+  const toggleStar = async (problem) => { 
+    await execute(`/problems/${problem._id}/star`, 'PUT'); 
+  };
 
   const handleReview = async (problem, rating) => {
     await execute(`/problems/${problem._id}/attempt`, 'POST', { outcome: 'solved', confidenceRating: rating, timeTakenMinutes: 0 });
   };
 
-  // Connects Contest to Task Calendar
+  // --- CALENDAR INTEGRATION ---
   const handleAddToCalendar = async (contest) => {
     try {
       const token = localStorage.getItem('token');
@@ -126,9 +172,7 @@ const useDSA = () => {
         body: JSON.stringify({
           title: `🏆 ${contest.platform} Contest: ${contest.name}`,
           description: `Duration: ${contest.duration}\nLink: ${contest.url}`,
-          
-          // 🔥 THE FIX: These 4 lines now perfectly match your Task.js Schema
-          deadline: new Date(contest.rawDate), 
+          deadline: new Date(contest.rawDate),
           category: 'DSA',     
           priority: 'high',    
           status: 'todo'       
@@ -150,7 +194,7 @@ const useDSA = () => {
     return false;
   };
 
-  // 🔥 UNIFIED AUTO-SYNC ENGINE (Problems + Contests together)
+  // --- FULL UNIFIED SYNC PIPELINE ---
   const triggerAutoSync = async (handles, isSilent = false) => {
     const token = localStorage.getItem('token');
     setIsSyncing(true); 
@@ -160,13 +204,19 @@ const useDSA = () => {
       if (event.data.type === "SYNC_SUCCESS") {
         window.removeEventListener("message", listener);
         
-        // 🔥 THIS IS THE FIX: Instantly trigger the backend contest sync
-        await execute('/contests/sync', 'POST'); 
+        try {
+          await fetch('http://localhost:5000/api/dsa/contests/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+          });
+        } catch (err) { console.error("Contest sync failed", err); }
         
-        // Fetch all updated data (Problems + Contests) to reflect in UI
+        // Update local state so UI reflects the exact moment sync finished
+        setSyncProfile(prev => ({ ...prev, lastSyncAt: new Date().toISOString() }));
+        
         fetchData(); 
-        
         setIsSyncing(false); 
+        
         if (!isSilent) alert(`Auto-Sync Complete! Verified ${event.data.count} solutions and updated Contest History.`);
       } 
       else if (event.data.type === "SYNC_ERROR") {
@@ -184,7 +234,10 @@ const useDSA = () => {
     if (res.ok) setTopics(await res.json());
   };
 
-  useEffect(() => { fetchData(); fetchLiveContests(); }, []);
+  useEffect(() => { 
+    fetchData(); 
+    fetchLiveContests(); 
+  }, []);
 
   useEffect(() => {
     if (syncProfile.leetcode || syncProfile.codeforces || syncProfile.geeksforgeeks) {
@@ -194,16 +247,18 @@ const useDSA = () => {
 
   return { 
     roadmaps, topics, problems, syncProfile, syncStats, loading, isSyncing, 
-    upcomingContests, contestHistory, 
-    toggleProblem, toggleStar, handleReview, fetchTopicsForRoadmap, 
-    saveSyncProfile, triggerAutoSync, handleAddToCalendar 
+    upcomingContests, contestHistory, dailyChallenges,
+    replaceChallenge, skipChallenge, toggleProblem, toggleStar, 
+    handleReview, fetchTopicsForRoadmap, saveSyncProfile, 
+    triggerAutoSync, handleAddToCalendar 
   };
 };
 
 // ==========================================
-// 2. ANALYTICS PANEL
+// 2. UI PANELS
 // ==========================================
-const AnalyticsPanel = ({ problems, syncStats }) => {
+
+const AnalyticsPanel = ({ problems, syncStats, contestHistory }) => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const solvedCount = problems.filter(p => p.status === 'solved').length;
   const totalProblems = problems.length > 0 ? problems.length : 438; 
@@ -217,33 +272,60 @@ const AnalyticsPanel = ({ problems, syncStats }) => {
   const yearsArray = Array.from(activeYears).sort((a, b) => b - a);
 
   let submissionsInYear = 0;
-  problems.forEach(p => { if (p.attempts) p.attempts.forEach(a => { if (new Date(a.date).getFullYear() === selectedYear) submissionsInYear++; }); });
+  problems.forEach(p => { 
+    if (p.attempts) {
+      p.attempts.forEach(a => { 
+        if (new Date(a.date).getFullYear() === selectedYear) submissionsInYear++; 
+      });
+    }
+  });
 
   const generateHeatmapForYear = (year) => {
-    const today = new Date(); const monthsData = [];
+    const today = new Date(); 
+    const monthsData = [];
     for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
       const monthName = new Date(year, monthIndex, 1).toLocaleString('default', { month: 'short' });
       const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
       const firstDayOfWeek = new Date(year, monthIndex, 1).getDay();
-      const weeks = []; let currentWeek = Array(firstDayOfWeek).fill(null);
+      
+      const weeks = []; 
+      let currentWeek = Array(firstDayOfWeek).fill(null);
+      
       for (let d = 1; d <= daysInMonth; d++) {
-        const currentDate = new Date(year, monthIndex, d); let activityLevel = 0;
+        const currentDate = new Date(year, monthIndex, d); 
+        let activityLevel = 0;
+        
         if (currentDate <= today) {
-          problems.forEach(p => { if (p.attempts) p.attempts.forEach(attempt => {
-            const aDate = new Date(attempt.date);
-            if (aDate.getFullYear() === year && aDate.getMonth() === monthIndex && aDate.getDate() === d) activityLevel++;
-          });});
+          problems.forEach(p => { 
+            if (p.attempts) {
+              p.attempts.forEach(attempt => {
+                const aDate = new Date(attempt.date);
+                if (aDate.getFullYear() === year && aDate.getMonth() === monthIndex && aDate.getDate() === d) {
+                  activityLevel++;
+                }
+              });
+            }
+          });
         }
+        
         currentWeek.push({ date: currentDate.toDateString(), level: activityLevel });
-        if (currentWeek.length === 7) { weeks.push(currentWeek); currentWeek = []; }
+        if (currentWeek.length === 7) { 
+          weeks.push(currentWeek); 
+          currentWeek = []; 
+        }
       }
-      if (currentWeek.length > 0 && currentWeek.length < 7) { while (currentWeek.length < 7) currentWeek.push(null); weeks.push(currentWeek); }
+      
+      if (currentWeek.length > 0 && currentWeek.length < 7) { 
+        while (currentWeek.length < 7) currentWeek.push(null); 
+        weeks.push(currentWeek); 
+      }
       monthsData.push({ name: monthName, weeks });
     }
     return monthsData;
   };
 
   const heatmapMonths = generateHeatmapForYear(selectedYear);
+  
   const getActivityColor = (level) => {
     if (level === 0) return 'bg-[#161b22] border-white/5';   
     if (level === 1) return 'bg-[#0969da] border-[#0969da]'; 
@@ -253,6 +335,8 @@ const AnalyticsPanel = ({ problems, syncStats }) => {
 
   return (
     <div className="flex flex-col gap-6 mt-4 animate-in fade-in slide-in-from-top-4">
+      
+      {/* Total Score Card */}
       <div className="p-6 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl flex items-center justify-between">
         <div className="w-1/2 flex flex-col justify-center">
           <h3 className="text-[11px] font-bold text-white/50 uppercase tracking-widest mb-1">Total Score</h3>
@@ -269,10 +353,15 @@ const AnalyticsPanel = ({ problems, syncStats }) => {
         </div>
       </div>
 
+      {/* Heatmap Card */}
       <div className="p-6 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl flex flex-col">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">{submissionsInYear} submissions in {selectedYear}</h3>
-          <select value={selectedYear} onChange={(e) => setSelectedYear(parseInt(e.target.value))} className="bg-black/40 border border-white/10 text-white text-xs font-bold px-3 py-1.5 rounded-lg outline-none cursor-pointer hover:border-white/30 transition-all">
+          <select 
+            value={selectedYear} 
+            onChange={(e) => setSelectedYear(parseInt(e.target.value))} 
+            className="bg-black/40 border border-white/10 text-white text-xs font-bold px-3 py-1.5 rounded-lg outline-none cursor-pointer hover:border-white/30 transition-all"
+          >
             {yearsArray.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
@@ -285,7 +374,13 @@ const AnalyticsPanel = ({ problems, syncStats }) => {
                     <div key={wIndex} className="flex flex-col gap-[3px]">
                       {week.map((day, dIndex) => {
                         if (!day) return <div key={`empty-${dIndex}`} className="w-3 h-3 rounded-[3px] opacity-0"></div>;
-                        return (<div key={day.date} title={`${day.date}: ${day.level} problems solved`} className={`w-3 h-3 rounded-[3px] border transition-colors hover:border-white/40 cursor-pointer ${getActivityColor(day.level)}`}></div>);
+                        return (
+                          <div 
+                            key={day.date} 
+                            title={`${day.date}: ${day.level} problems solved`} 
+                            className={`w-3 h-3 rounded-[3px] border transition-colors hover:border-white/40 cursor-pointer ${getActivityColor(day.level)}`}
+                          ></div>
+                        );
                       })}
                     </div>
                   ))}
@@ -297,33 +392,41 @@ const AnalyticsPanel = ({ problems, syncStats }) => {
         </div>
       </div>
 
+      {/* Global Sync Cards */}
       <div className="flex flex-col gap-4 mt-2">
         <h3 className="text-[11px] font-bold text-white/50 uppercase tracking-widest pl-2">Global Lifetime Sync</h3>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-5 rounded-2xl bg-black/20 border border-amber-500/10 flex flex-col items-center justify-center gap-2 hover:border-amber-500/30 transition-all">
-            <span className="text-3xl font-extrabold text-amber-400">{syncStats.leetcode}</span><span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">LeetCode</span>
+            <span className="text-3xl font-extrabold text-amber-400">{syncStats.leetcode}</span>
+            <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">LeetCode</span>
           </div>
           <div className="p-5 rounded-2xl bg-black/20 border border-blue-500/10 flex flex-col items-center justify-center gap-2 hover:border-blue-500/30 transition-all">
-            <span className="text-3xl font-extrabold text-blue-400">{syncStats.codeforces}</span><span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Codeforces</span>
+            <span className="text-3xl font-extrabold text-blue-400">{syncStats.codeforces}</span>
+            <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Codeforces</span>
           </div>
           <div className="p-5 rounded-2xl bg-black/20 border border-emerald-500/10 flex flex-col items-center justify-center gap-2 hover:border-emerald-500/30 transition-all">
-            <span className="text-3xl font-extrabold text-emerald-400">{syncStats.gfg}</span><span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">GeeksForGeeks</span>
+            <span className="text-3xl font-extrabold text-emerald-400">{syncStats.gfg}</span>
+            <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">GeeksForGeeks</span>
+          </div>
+          <div className="p-5 rounded-2xl bg-black/20 border border-purple-500/10 flex flex-col items-center justify-center gap-2 hover:border-purple-500/30 transition-all">
+            <span className="text-3xl font-extrabold text-purple-400">{contestHistory?.length || 0}</span>
+            <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Contests</span>
           </div>
         </div>
       </div>
+      
     </div>
   );
 };
 
-// ==========================================
-// 3. CONTEST HUB PANEL
-// ==========================================
 const ContestHubPanel = ({ upcomingContests, contestHistory, handleAddToCalendar }) => {
   const maxRating = contestHistory.length > 0 ? Math.max(...contestHistory.map(c => c.newRating || 0)) : 0;
   const avgRank = contestHistory.length > 0 ? Math.floor(contestHistory.reduce((acc, c) => acc + (c.rank || 0), 0) / contestHistory.length) : 0;
 
   return (
     <div className="flex flex-col gap-6 mt-4 animate-in fade-in slide-in-from-bottom-4">
+      
+      {/* Analytics Banner */}
       <div className="grid grid-cols-3 gap-4">
         <div className="p-5 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl flex flex-col items-center justify-center gap-1 shadow-lg">
           <TrendingUp className="w-6 h-6 text-emerald-400 mb-1" />
@@ -343,7 +446,8 @@ const ContestHubPanel = ({ upcomingContests, contestHistory, handleAddToCalendar
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* LEFT COLUMN: UPCOMING LIVE CONTESTS */}
+        
+        {/* Upcoming Contests */}
         <div className="lg:col-span-5 flex flex-col gap-4">
           <div className="flex items-center gap-2 pl-2">
             <Calendar className="w-4 h-4 text-white/50" />
@@ -390,7 +494,7 @@ const ContestHubPanel = ({ upcomingContests, contestHistory, handleAddToCalendar
           </div>
         </div>
 
-        {/* RIGHT COLUMN: HISTORY */}
+        {/* History Table */}
         <div className="lg:col-span-7 flex flex-col gap-4">
           <div className="flex items-center justify-between pl-2">
             <div className="flex items-center gap-2">
@@ -445,15 +549,100 @@ const ContestHubPanel = ({ upcomingContests, contestHistory, handleAddToCalendar
   );
 };
 
+const DailyChallengePanel = ({ dailyChallenges, replaceChallenge, skipChallenge, toggleStar }) => {
+  return (
+    <div className="max-w-5xl mx-auto mt-6 animate-in fade-in slide-in-from-bottom-4 w-full">
+      
+      <div className="flex items-center gap-4 mb-6">
+        <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+          <Target className="w-7 h-7 text-indigo-400" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-1">Today's Arena</h2>
+          <p className="text-sm text-white/50">Your personalized daily quests. Extension will auto-track your time on submit.</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {dailyChallenges.map((challenge, index) => {
+          
+          // Render a skipped card placeholder
+          if (challenge.status === 'skipped') {
+            return (
+              <div key={index} className="p-6 rounded-3xl bg-black/20 border border-white/5 flex flex-col items-center justify-center min-h-[300px]">
+                <span className="text-white/20 mb-2">Skipped</span>
+                <button onClick={() => replaceChallenge(index)} className="text-xs text-indigo-400 hover:text-indigo-300">Generate New</button>
+              </div>
+            );
+          }
+
+          // Render the active quest card
+          return (
+            <div key={index} className="p-6 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl flex flex-col relative overflow-hidden group hover:border-indigo-500/30 transition-all">
+              
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              
+              <div className="flex justify-between items-start mb-4">
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/80 flex items-center gap-1">
+                  {challenge.questIcon} {challenge.questType}
+                </span>
+              </div>
+
+              <h3 className="text-lg font-bold text-white mb-2 line-clamp-2 min-h-[56px]">{challenge.title}</h3>
+              
+              <div className="flex flex-wrap gap-2 mb-6">
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${challenge.difficulty === 'easy' ? 'text-emerald-400 bg-emerald-500/10' : challenge.difficulty === 'medium' ? 'text-amber-400 bg-amber-500/10' : 'text-red-400 bg-red-500/10'}`}>
+                  {challenge.difficulty}
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider text-blue-400 bg-blue-500/10">
+                  {challenge.platform}
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider text-indigo-400 bg-indigo-500/10 flex items-center gap-1">
+                  <Timer className="w-3 h-3" /> {challenge.targetTime}
+                </span>
+              </div>
+
+              <div className="mt-auto flex flex-col gap-2">
+                <a 
+                  href={challenge.url} 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="w-full py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold flex justify-center items-center gap-2 transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)]"
+                >
+                  <Play className="w-4 h-4 fill-current" /> Solve Now
+                </a>
+                
+                <div className="grid grid-cols-3 gap-2 mt-1">
+                  <button onClick={() => replaceChallenge(index)} className="py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-[10px] font-bold flex justify-center items-center gap-1 transition-all">
+                    <RefreshCcw className="w-3 h-3" /> Replace
+                  </button>
+                  <button onClick={() => toggleStar(challenge)} className="py-2 rounded-xl bg-white/5 hover:bg-amber-500/10 text-white/60 hover:text-amber-400 text-[10px] font-bold flex justify-center items-center gap-1 transition-all">
+                    <Star className="w-3 h-3" /> Revision
+                  </button>
+                  <button onClick={() => skipChallenge(index)} className="py-2 rounded-xl bg-white/5 hover:bg-red-500/10 text-white/60 hover:text-red-400 text-[10px] font-bold flex justify-center items-center gap-1 transition-all">
+                    <X className="w-3 h-3" /> Skip
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+
 // ==========================================
-// 4. MAIN PAGE COMPONENT
+// 3. MAIN PAGE COMPONENT
 // ==========================================
 const DsaPage = () => {
   const { 
     roadmaps, topics, problems, syncProfile, syncStats, loading, isSyncing, 
-    upcomingContests, contestHistory, 
-    toggleProblem, toggleStar, handleReview, fetchTopicsForRoadmap, 
-    saveSyncProfile, triggerAutoSync, handleAddToCalendar 
+    upcomingContests, contestHistory, dailyChallenges,
+    replaceChallenge, skipChallenge, toggleProblem, toggleStar, 
+    fetchTopicsForRoadmap, saveSyncProfile, triggerAutoSync, handleAddToCalendar 
   } = useDSA();
   
   const [activeTab, setActiveTab] = useState('roadmaps'); 
@@ -464,19 +653,30 @@ const DsaPage = () => {
   const [localSyncParams, setLocalSyncParams] = useState({ leetcode: '', codeforces: '', geeksforgeeks: '' });
   const [isEditingSync, setIsEditingSync] = useState(false);
 
-  useEffect(() => { if (roadmaps.length > 0 && !activeRoadmapId) setActiveRoadmapId(roadmaps[0]._id); }, [roadmaps]);
-  useEffect(() => { setLocalSyncParams({ leetcode: syncProfile.leetcode, codeforces: syncProfile.codeforces, geeksforgeeks: syncProfile.geeksforgeeks }); }, [syncProfile]);
+  useEffect(() => { 
+    if (roadmaps.length > 0 && !activeRoadmapId) setActiveRoadmapId(roadmaps[0]._id); 
+  }, [roadmaps]);
+  
+  useEffect(() => { 
+    setLocalSyncParams({ leetcode: syncProfile.leetcode, codeforces: syncProfile.codeforces, geeksforgeeks: syncProfile.geeksforgeeks }); 
+  }, [syncProfile]);
 
   const activeRoadmap = roadmaps.find(r => r._id === activeRoadmapId);
   const activeTopic = topics.find(t => t._id === activeTopicId);
   const systemRoadmaps = roadmaps.filter(r => r.type === 'system');
 
-  const today = new Date();
-  const reviewQueue = problems.filter(p => p.status === 'solved' && p.revisionSchedule?.nextRevisionDate && new Date(p.revisionSchedule.nextRevisionDate) <= today);
-
-  const handleRoadmapSwitch = (id) => { setActiveRoadmapId(id); setActiveTopicId(null); fetchTopicsForRoadmap(id); setRoadmapView('workspace'); };
+  const handleRoadmapSwitch = (id) => { 
+    setActiveRoadmapId(id); 
+    setActiveTopicId(null); 
+    fetchTopicsForRoadmap(id); 
+    setRoadmapView('workspace'); 
+  };
   
-  const handleSaveCredentials = async (e) => { e.preventDefault(); const success = await saveSyncProfile(localSyncParams); if (success) setIsEditingSync(false); };
+  const handleSaveCredentials = async (e) => { 
+    e.preventDefault(); 
+    const success = await saveSyncProfile(localSyncParams); 
+    if (success) setIsEditingSync(false); 
+  };
 
   const getPlatformStyle = (platform) => {
     switch(platform) {
@@ -487,7 +687,15 @@ const DsaPage = () => {
     }
   };
 
-  if (loading) return <DashboardLayout><div className="w-full h-full flex items-center justify-center text-white/50 animate-pulse">Loading OS...</div></DashboardLayout>;
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="w-full h-full flex items-center justify-center text-white/50 animate-pulse">
+          Loading OS...
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout rightPanelContent={<DsaRightPanel problems={problems} />}>
@@ -501,15 +709,18 @@ const DsaPage = () => {
                 { id: 'roadmaps', label: 'Roadmaps', icon: GitBranch }, 
                 { id: 'analytics', label: 'Analytics', icon: BarChart2 }, 
                 { id: 'contests', label: 'Contest Hub', icon: Trophy }, 
-                { id: 'review', label: `Daily Review (${reviewQueue.length})`, icon: Clock }, 
+                { id: 'arena', label: `Daily Arena`, icon: Target }, 
                 { id: 'sync', label: 'Sync Engine', icon: RefreshCcw } 
               ].map(v => (
                 <button 
                   key={v.id} 
-                  onClick={() => { setActiveTab(v.id); if (v.id === 'roadmaps') setRoadmapView('library'); }} 
+                  onClick={() => { 
+                    setActiveTab(v.id); 
+                    if (v.id === 'roadmaps') setRoadmapView('library'); 
+                  }} 
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${activeTab === v.id ? 'bg-white/10 text-white shadow border border-white/5' : 'text-white/40 hover:text-white/80'}`}
                 >
-                  <v.icon className={`w-4 h-4 ${v.id === 'review' && reviewQueue.length > 0 ? 'text-amber-400' : ''}`} /> {v.label}
+                  <v.icon className="w-4 h-4" /> {v.label}
                 </button>
               ))}
             </div>
@@ -517,15 +728,24 @@ const DsaPage = () => {
         </div>
 
         {/* TABS RENDER */}
-        {activeTab === 'analytics' && <AnalyticsPanel problems={problems} syncStats={syncStats} />}
+        {activeTab === 'analytics' && <AnalyticsPanel problems={problems} syncStats={syncStats} contestHistory={contestHistory} />}
         {activeTab === 'contests' && <ContestHubPanel upcomingContests={upcomingContests} contestHistory={contestHistory} handleAddToCalendar={handleAddToCalendar} />}
+        {activeTab === 'arena' && <DailyChallengePanel dailyChallenges={dailyChallenges} replaceChallenge={replaceChallenge} skipChallenge={skipChallenge} toggleStar={toggleStar} />}
 
         {/* ROADMAPS TAB - LIBRARY VIEW */}
         {activeTab === 'roadmaps' && roadmapView === 'library' && (
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in">
              {systemRoadmaps.map(rm => (
-               <div key={rm._id} onClick={() => handleRoadmapSwitch(rm._id)} className="p-5 rounded-2xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl hover:border-blue-500/50 cursor-pointer transition-all">
-                 <div className="flex justify-between items-start mb-6"><div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20"><BookOpen className="w-5 h-5 text-blue-400" /></div></div>
+               <div 
+                 key={rm._id} 
+                 onClick={() => handleRoadmapSwitch(rm._id)} 
+                 className="p-5 rounded-2xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl hover:border-blue-500/50 cursor-pointer transition-all"
+               >
+                 <div className="flex justify-between items-start mb-6">
+                   <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                     <BookOpen className="w-5 h-5 text-blue-400" />
+                   </div>
+                 </div>
                  <h3 className="text-lg font-bold text-white mb-1">{rm.name}</h3>
                  <p className="text-xs text-white/40">{rm.totalTopics} Modules • Pre-loaded</p>
                </div>
@@ -542,10 +762,16 @@ const DsaPage = () => {
                  <p className="text-sm text-white/50">{activeTopicId ? activeTopic?.name : 'Select a module to view problems.'}</p>
                </div>
                <div className="flex items-center gap-3">
-                 <button onClick={() => setShowStarredOnly(!showStarredOnly)} className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all ${showStarredOnly ? 'bg-amber-500/10 text-amber-400 border-amber-500/30 shadow-[0_0_15px_rgba(251,191,36,0.15)]' : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white'}`}>
+                 <button 
+                   onClick={() => setShowStarredOnly(!showStarredOnly)} 
+                   className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all ${showStarredOnly ? 'bg-amber-500/10 text-amber-400 border-amber-500/30 shadow-[0_0_15px_rgba(251,191,36,0.15)]' : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white'}`}
+                 >
                    <Star className={`w-4 h-4 ${showStarredOnly ? 'fill-amber-400' : ''}`} /> Starred
                  </button>
-                 <button onClick={() => {setRoadmapView('library'); setShowStarredOnly(false);}} className="px-4 py-2 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 transition-all text-xs font-bold flex items-center gap-2 border border-white/10">
+                 <button 
+                   onClick={() => {setRoadmapView('library'); setShowStarredOnly(false);}} 
+                   className="px-4 py-2 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 transition-all text-xs font-bold flex items-center gap-2 border border-white/10"
+                 >
                    <ArrowDownUp className="w-4 h-4 rotate-90" /> Back to Roadmaps
                  </button>
                </div>
@@ -559,16 +785,30 @@ const DsaPage = () => {
                    const solved = topicProbs.filter(p => p.status === 'solved').length;
                    const progress = topicProbs.length > 0 ? (solved / topicProbs.length) * 100 : 0;
                    return (
-                     <div key={topic._id} onClick={() => setActiveTopicId(topic._id)} className="p-4 rounded-xl bg-black/30 border border-white/10 shadow-lg hover:bg-black/40 cursor-pointer group">
-                       <div className="flex justify-between items-start mb-4"><h3 className="text-sm font-medium text-white group-hover:text-blue-300">{topic.name}</h3><span className="text-[10px] font-bold text-white/50">{solved}/{topicProbs.length}</span></div>
-                       <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${progress}%` }}></div></div>
+                     <div 
+                       key={topic._id} 
+                       onClick={() => setActiveTopicId(topic._id)} 
+                       className="p-4 rounded-xl bg-black/30 border border-white/10 shadow-lg hover:bg-black/40 cursor-pointer group"
+                     >
+                       <div className="flex justify-between items-start mb-4">
+                         <h3 className="text-sm font-medium text-white group-hover:text-blue-300">{topic.name}</h3>
+                         <span className="text-[10px] font-bold text-white/50">{solved}/{topicProbs.length}</span>
+                       </div>
+                       <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                         <div className="h-full bg-blue-500 rounded-full" style={{ width: `${progress}%` }}></div>
+                       </div>
                      </div>
                    )
                  })}
                </div>
              ) : (
                <div className="space-y-3">
-                 <button onClick={() => setActiveTopicId(null)} className="mb-2 text-xs font-bold text-white/50 hover:text-white flex items-center gap-1"><ChevronRight className="w-3 h-3 rotate-180" /> Back to Modules</button>
+                 <button 
+                   onClick={() => setActiveTopicId(null)} 
+                   className="mb-2 text-xs font-bold text-white/50 hover:text-white flex items-center gap-1"
+                 >
+                   <ChevronRight className="w-3 h-3 rotate-180" /> Back to Modules
+                 </button>
                  {problems.filter(p => p.topicId === activeTopicId && (!showStarredOnly || p.isStarred)).map(p => (
                    <div key={p._id} className="grid grid-cols-12 gap-4 p-4 rounded-xl bg-black/30 border border-white/10 items-center group hover:bg-black/40 transition-all">
                      <div className="col-span-1 flex justify-center">
@@ -578,10 +818,16 @@ const DsaPage = () => {
                      </div>
                      <div className="col-span-5 flex items-center gap-3">
                        <a href={p.url} target="_blank" rel="noreferrer" className="text-sm font-medium text-white/90 hover:text-blue-400 truncate">{p.title}</a>
-                       <button onClick={() => toggleStar(p)} className="focus:outline-none transition-transform hover:scale-110 shrink-0"><Star className={`w-4 h-4 transition-colors ${p.isStarred ? 'fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'text-white/20 hover:text-amber-400/50'}`} /></button>
+                       <button onClick={() => toggleStar(p)} className="focus:outline-none transition-transform hover:scale-110 shrink-0">
+                         <Star className={`w-4 h-4 transition-colors ${p.isStarred ? 'fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'text-white/20 hover:text-amber-400/50'}`} />
+                       </button>
                      </div>
-                     <div className="col-span-3"><span className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${getPlatformStyle(p.platform)}`}>{p.platform}</span></div>
-                     <div className="col-span-3"><span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${p.difficulty === 'easy' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : p.difficulty === 'medium' ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'}`}>{p.difficulty}</span></div>
+                     <div className="col-span-3">
+                       <span className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${getPlatformStyle(p.platform)}`}>{p.platform}</span>
+                     </div>
+                     <div className="col-span-3">
+                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${p.difficulty === 'easy' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : p.difficulty === 'medium' ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'}`}>{p.difficulty}</span>
+                     </div>
                    </div>
                  ))}
                </div>
@@ -589,44 +835,7 @@ const DsaPage = () => {
            </div>
         )}
 
-        {/* DAILY REVIEW TAB */}
-        {activeTab === 'review' && (
-          <div className="max-w-4xl mx-auto mt-6 animate-in fade-in slide-in-from-bottom-4 w-full">
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center"><BrainCircuit className="w-7 h-7 text-amber-400" /></div>
-                <div><h2 className="text-2xl font-bold text-white mb-1">Spaced Repetition Queue</h2><p className="text-sm text-white/50">Problems due for memory reinforcement today.</p></div>
-              </div>
-              {reviewQueue.length === 0 ? (
-                <div className="p-12 text-center border border-emerald-500/20 rounded-3xl bg-emerald-500/5 backdrop-blur-xl">
-                  <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-4 drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]" />
-                  <h3 className="text-xl font-bold text-white mb-2">Memory Bank Secure</h3><p className="text-sm text-white/50">You have no pending revisions for today.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {reviewQueue.map(p => (
-                    <div key={p._id} className="p-5 rounded-2xl bg-black/30 border border-white/10 flex items-center justify-between group hover:bg-black/40 transition-all">
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-3">
-                          <a href={p.url} target="_blank" rel="noreferrer" className="text-lg font-bold text-white hover:text-blue-400 transition-colors">{p.title}</a>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${p.difficulty === 'easy' ? 'text-emerald-400 bg-emerald-500/10' : p.difficulty === 'medium' ? 'text-amber-400 bg-amber-500/10' : 'text-red-400 bg-red-500/10'}`}>{p.difficulty}</span>
-                        </div>
-                        <p className="text-xs text-white/40">Last reviewed: {p.attempts && p.attempts.length > 0 ? new Date(p.attempts[p.attempts.length-1].date).toLocaleDateString() : 'Never'}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => handleReview(p, 1)} className="px-4 py-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-xs font-bold transition-all">Hard</button>
-                        <button onClick={() => handleReview(p, 3)} className="px-4 py-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 text-xs font-bold transition-all">Good</button>
-                        <button onClick={() => handleReview(p, 5)} className="px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-xs font-bold transition-all">Easy</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* 🔥 THE ORIGINAL, RESTORED SYNC ENGINE TAB UI 🔥 */}
+        {/* SYNC ENGINE TAB UI */}
         {activeTab === 'sync' && (
           <div className="max-w-2xl mx-auto mt-10 animate-in fade-in slide-in-from-bottom-4">
             <div className="p-8 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-2xl">
@@ -647,15 +856,33 @@ const DsaPage = () => {
                   </div>
                   <div>
                     <label className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-2">LeetCode Username</label>
-                    <input type="text" value={localSyncParams.leetcode} onChange={(e) => setLocalSyncParams({...localSyncParams, leetcode: e.target.value})} className="w-full bg-black/40 border border-white/10 focus:border-amber-500/50 rounded-xl px-4 py-3 text-sm text-white outline-none" placeholder="e.g. urvicf" />
+                    <input 
+                      type="text" 
+                      value={localSyncParams.leetcode} 
+                      onChange={(e) => setLocalSyncParams({...localSyncParams, leetcode: e.target.value})} 
+                      className="w-full bg-black/40 border border-white/10 focus:border-amber-500/50 rounded-xl px-4 py-3 text-sm text-white outline-none" 
+                      placeholder="e.g. urvicf" 
+                    />
                   </div>
                   <div>
                     <label className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2 flex items-center gap-2">Codeforces Handle</label>
-                    <input type="text" value={localSyncParams.codeforces} onChange={(e) => setLocalSyncParams({...localSyncParams, codeforces: e.target.value})} className="w-full bg-black/40 border border-white/10 focus:border-blue-500/50 rounded-xl px-4 py-3 text-sm text-white outline-none" placeholder="e.g. tourist" />
+                    <input 
+                      type="text" 
+                      value={localSyncParams.codeforces} 
+                      onChange={(e) => setLocalSyncParams({...localSyncParams, codeforces: e.target.value})} 
+                      className="w-full bg-black/40 border border-white/10 focus:border-blue-500/50 rounded-xl px-4 py-3 text-sm text-white outline-none" 
+                      placeholder="e.g. tourist" 
+                    />
                   </div>
                   <div>
                     <label className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">GeeksForGeeks Handle</label>
-                    <input type="text" value={localSyncParams.geeksforgeeks} onChange={(e) => setLocalSyncParams({...localSyncParams, geeksforgeeks: e.target.value})} className="w-full bg-black/40 border border-white/10 focus:border-emerald-500/50 rounded-xl px-4 py-3 text-sm text-white outline-none" placeholder="e.g. urvi123" />
+                    <input 
+                      type="text" 
+                      value={localSyncParams.geeksforgeeks} 
+                      onChange={(e) => setLocalSyncParams({...localSyncParams, geeksforgeeks: e.target.value})} 
+                      className="w-full bg-black/40 border border-white/10 focus:border-emerald-500/50 rounded-xl px-4 py-3 text-sm text-white outline-none" 
+                      placeholder="e.g. urvi123" 
+                    />
                   </div>
                   
                   <div className="pt-4 border-t border-white/10 flex justify-end gap-3">
@@ -697,8 +924,11 @@ const DsaPage = () => {
 
                   <div className="pt-6 border-t border-white/10 flex justify-between items-center">
                     <button onClick={() => setIsEditingSync(true)} className="text-xs font-bold text-white/40 hover:text-white transition-colors">Edit Credentials</button>
-                    {/* THIS UNIFIED BUTTON SYNCS PROBLEMS AND CONTESTS */}
-                    <button onClick={() => triggerAutoSync(syncProfile, false)} disabled={isSyncing} className={`px-6 py-2.5 rounded-xl border text-sm font-bold flex items-center gap-2 transition-all ${isSyncing ? 'bg-white/5 text-white/30 border-white/10 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20 text-white border-white/10'}`}>
+                    <button 
+                      onClick={() => triggerAutoSync(syncProfile, false)} 
+                      disabled={isSyncing} 
+                      className={`px-6 py-2.5 rounded-xl border text-sm font-bold flex items-center gap-2 transition-all ${isSyncing ? 'bg-white/5 text-white/30 border-white/10 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20 text-white border-white/10'}`}
+                    >
                       <RefreshCcw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} /> Force Manual Sync
                     </button>
                   </div>

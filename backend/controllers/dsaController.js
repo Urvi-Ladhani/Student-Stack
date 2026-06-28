@@ -91,9 +91,7 @@ exports.seedDefaultRoadmaps = async (req, res) => {
   }
 };
 
-// ==========================================
-// PROBLEM LOGGING CONTROLLERS
-// ==========================================
+
 // ==========================================
 // PROBLEM LOGGING CONTROLLERS
 // ==========================================
@@ -346,33 +344,22 @@ exports.syncContests = async (req, res) => {
   try {
     console.log("🚀 CONTEST SYNC STARTED FOR USER:", req.user._id);
     const profile = await DSASyncProfile.findOne({ userId: req.user._id });
+    if (!profile) return res.status(400).json({ message: 'No sync profile found.' });
     
-    if (!profile) {
-      console.log("❌ No sync profile found! Did you save your handles?");
-      return res.status(400).json({ message: 'No sync profile found.' });
-    }
-    
-    console.log(`✅ Profile found! LC: [${profile.leetcode}], CF: [${profile.codeforces}]`);
     let contestsAdded = 0;
 
     // 1. SYNC LEETCODE CONTESTS
     if (profile.leetcode) {
-      console.log(`📡 Fetching LeetCode contests for username: ${profile.leetcode}...`);
       try {
         const lcRes = await fetch('https://leetcode.com/graphql', {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' // 🔥 Bypasses LC Bot Protection
-          },
+          headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0' },
           body: JSON.stringify({
             query: `query userContestRankingHistory($username: String!) { userContestRankingHistory(username: $username) { attended trendDirection problemsSolved contest { title startTime } rating ranking } }`,
             variables: { username: profile.leetcode }
           })
         });
-        
         const lcData = await lcRes.json();
-        console.log(`📦 LeetCode API Response Check:`, lcData.data ? "Success" : lcData.errors);
         
         if (lcData.data?.userContestRankingHistory) {
           const attended = lcData.data.userContestRankingHistory.filter(c => c.attended);
@@ -382,27 +369,31 @@ exports.syncContests = async (req, res) => {
             const contest = attended[i];
             const prevRating = i > 0 ? attended[i-1].rating : 1500; 
             
-            await DSAContest.updateOne(
-              { userId: req.user._id, platform: 'LeetCode', contestName: contest.contest.title },
-              {
-                $setOnInsert: {
-                  date: new Date(contest.contest.startTime * 1000),
-                  rank: contest.ranking,
-                  ratingChange: Math.round(contest.rating - prevRating),
-                  newRating: Math.round(contest.rating)
-                }
-              },
-              { upsert: true }
-            );
-            contestsAdded++;
+            try {
+              await DSAContest.updateOne(
+                { userId: req.user._id, platform: 'LeetCode', contestName: contest.contest.title },
+                {
+                  $set: {
+                    date: new Date(contest.contest.startTime * 1000),
+                    rank: contest.ranking,
+                    ratingChange: Math.round(contest.rating - prevRating),
+                    newRating: Math.round(contest.rating)
+                  }
+                },
+                { upsert: true }
+              );
+              contestsAdded++;
+              console.log(`✅ Saved LeetCode Contest: ${contest.contest.title}`);
+            } catch (dbErr) {
+              console.error(`❌ DB REJECTED LEETCODE CONTEST:`, dbErr.message);
+            }
           }
         }
-      } catch (err) { console.error('🚨 LC Contest Sync Error:', err.message); }
+      } catch (err) { console.error('🚨 LC Sync Error:', err.message); }
     }
 
     // 2. SYNC CODEFORCES CONTESTS
     if (profile.codeforces) {
-      console.log(`📡 Fetching CF contests for username: ${profile.codeforces}...`);
       try {
         const cfRes = await fetch(`https://codeforces.com/api/user.rating?handle=${profile.codeforces}`);
         const cfData = await cfRes.json();
@@ -410,38 +401,85 @@ exports.syncContests = async (req, res) => {
         if (cfData.status === 'OK') {
           console.log(`🎯 Found ${cfData.result.length} CF contests!`);
           for (let contest of cfData.result) {
-            await DSAContest.updateOne(
-              { userId: req.user._id, platform: 'Codeforces', contestName: contest.contestName },
-              {
-                $set: { // ✅ ...to exactly this!
-                  date: new Date(contest.contest.startTime * 1000),
-                  rank: contest.ranking,
-                  ratingChange: Math.round(contest.rating - prevRating),
-                  newRating: Math.round(contest.rating)
-                }
-              },
-              { upsert: true }
-            );
-            contestsAdded++;
+            // 🔥 DB SAVE TRACKER
+            try {
+              await DSAContest.updateOne(
+                { userId: req.user._id, platform: 'Codeforces', contestName: contest.contestName },
+                {
+                  $set: {
+                    date: new Date(contest.ratingUpdateTimeSeconds * 1000),
+                    rank: contest.rank,
+                    ratingChange: contest.newRating - contest.oldRating,
+                    newRating: contest.newRating
+                  }
+                },
+                { upsert: true }
+              );
+              contestsAdded++;
+              console.log(`✅ Saved Codeforces Contest: ${contest.contestName}`);
+            } catch (dbErr) {
+              console.error(`❌ DB REJECTED CODEFORCES CONTEST:`, dbErr.message);
+            }
           }
         }
-      } catch (err) { console.error('🚨 CF Contest Sync Error:', err.message); }
+      } catch (err) { console.error('🚨 CF Sync Error:', err.message); }
     }
+
+    const DSASyncProfile = require('../models/DSASyncProfile'); // Ensure this is imported at the top!
+    await DSASyncProfile.updateOne(
+      { userId: req.user._id },
+      { $set: { lastSyncAt: new Date() } }
+    );
 
     console.log(`🎉 Sync Complete! Processed ${contestsAdded} contests into the database.`);
     res.status(200).json({ message: "Contest Sync Complete!", newContests: contestsAdded });
-  } catch (error) {
-    console.error("🔥 Contest Sync Fatal Error:", error);
-    res.status(500).json({ message: "Server error during contest sync." });
-  }
+  } catch (error) { res.status(500).json({ message: "Server error during contest sync." }); }
 };
 
+// ==========================================
+// GET CONTEST HISTORY
+// ==========================================
 exports.getContests = async (req, res) => {
   try {
     const contests = await DSAContest.find({ userId: req.user._id }).sort({ date: -1 });
+    console.log(`📡 Frontend requested history. Sending ${contests.length} contests from database.`);
     res.json(contests);
-  } catch (error) {
+  } catch (error) { 
     console.error("Error fetching contests:", error);
-    res.status(500).json({ message: 'Error fetching contests' });
+    res.status(500).json({ message: 'Error fetching contests' }); 
+  }
+};
+
+// ==========================================
+// LIVE SUBMISSION TRACKER (Hit by Extension)
+// ==========================================
+exports.trackLiveSubmission = async (req, res) => {
+  try {
+    const { problemUrl, platform, runtime, memory, isAccepted } = req.body;
+    if (!isAccepted) return res.status(200).json({ message: "Ignored failed submission" });
+
+    // Clean LeetCode URL to match database format (strip trailing slashes, etc.)
+    const cleanedUrl = problemUrl.split('/description')[0].split('/submissions')[0];
+
+    // Find the problem in user's database
+    const problem = await DSAProblem.findOne({ userId: req.user._id, url: { $regex: cleanedUrl, $options: 'i' } });
+    if (!problem) return res.status(404).json({ message: "Problem not found in StudentStack database" });
+
+    // Update to solved and log the attempt details
+    problem.status = 'solved';
+    problem.attempts.push({
+      date: new Date(),
+      outcome: 'solved',
+      timeTakenMinutes: req.body.timeTakenMinutes || 15, // Optional: if you add a timer later
+      notes: `Runtime: ${runtime || 'N/A'}, Memory: ${memory || 'N/A'}`
+    });
+    
+    await problem.save();
+    console.log(`🚀 Live Tracked: Solved [${problem.title}] with ${runtime} & ${memory}`);
+    
+    res.status(200).json({ message: "Problem marked solved live!", title: problem.title });
+  } catch (error) {
+    console.error("Error in live tracking:", error);
+    res.status(500).json({ message: "Server Error Tracking Live Submission" });
   }
 };

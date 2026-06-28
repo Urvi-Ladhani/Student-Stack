@@ -6,7 +6,8 @@ import {
   Circle, X, BarChart2, Trophy, GitBranch, BrainCircuit, 
   LayoutGrid, ArrowDownUp, Plus, Library, BookOpen, Link2, 
   RefreshCcw, Database, Star, Clock, Calendar, Timer, 
-  ExternalLink, TrendingUp, Target, Award, History, Edit3, CalendarPlus
+  ExternalLink, TrendingUp, Target, Award, History, Edit3, CalendarPlus,
+  Zap, Cpu 
 } from 'lucide-react';
 
 // ==========================================
@@ -27,26 +28,61 @@ const useDSA = () => {
   const [isSyncing, setIsSyncing] = useState(false);
 
   // --- DAILY CHALLENGE ENGINE ---
+  // --- DAILY CHALLENGE ENGINE (WITH LOCALSTORAGE LOCK) ---
   const generateChallenges = (allProblems) => {
     if (!allProblems || allProblems.length === 0) return;
     
     const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
-    
     const unsolved = allProblems.filter(p => p.status !== 'solved');
     const easyPool = unsolved.filter(p => p.difficulty === 'easy');
     const medHardPool = unsolved.filter(p => p.difficulty === 'medium' || p.difficulty === 'hard');
     const solvedPool = allProblems.filter(p => p.status === 'solved');
     
-    const warmup = pickRandom(easyPool) || pickRandom(unsolved);
-    const boss = pickRandom(medHardPool) || pickRandom(unsolved);
-    const revision = pickRandom(solvedPool) || pickRandom(allProblems);
-
-    setDailyChallenges([
-      { ...warmup, questType: 'Easy Warm-up', questIcon: '☕', targetTime: '15 Minutes', status: 'pending' },
-      { ...boss, questType: 'Weekly Boss Challenge', questIcon: '🐉', targetTime: '45 Minutes', status: 'pending' },
-      { ...revision, questType: 'Revision Challenge', questIcon: '🧠', targetTime: '20 Minutes', status: 'pending' }
-    ].filter(c => c && c._id)); 
+    const quests = [
+      { ...(pickRandom(easyPool) || pickRandom(unsolved) || pickRandom(allProblems)), questType: 'Easy Warm-up', questIcon: '☕', targetTime: '15 Minutes' },
+      { ...(pickRandom(medHardPool) || pickRandom(unsolved) || pickRandom(allProblems)), questType: 'Weekly Boss Challenge', questIcon: '🐉', targetTime: '45 Minutes' },
+      { ...(pickRandom(solvedPool) || pickRandom(allProblems)), questType: 'Revision Challenge', questIcon: '🧠', targetTime: '20 Minutes' }
+    ].filter(c => c && c._id); 
+    
+    // Lock them into local storage
+    localStorage.setItem('daily_quests_date', new Date().toDateString());
+    localStorage.setItem('daily_quests_ids', JSON.stringify(quests.map(q => q._id)));
+    setDailyChallenges(quests);
   };
+
+  // 🔥 THE MAGIC SYNC LISTENER
+  // Every time 'problems' updates (like when you tab back and fetchData runs), this checks the lock!
+  useEffect(() => {
+    if (problems.length === 0) return;
+
+    const todayStr = new Date().toDateString();
+    const savedDate = localStorage.getItem('daily_quests_date');
+    const savedIds = JSON.parse(localStorage.getItem('daily_quests_ids') || '[]');
+
+    // If we have locked quests for today, hydrate them with the FRESH database stats!
+    if (savedDate === todayStr && savedIds.length === 3) {
+      const restored = savedIds.map((id, index) => {
+        // Find the absolute freshest version of this problem from the DB
+        const freshProb = problems.find(p => p._id === id);
+        if (!freshProb) return null;
+        
+        return {
+          ...freshProb,
+          questType: ['Easy Warm-up', 'Weekly Boss Challenge', 'Revision Challenge'][index],
+          questIcon: ['☕', '🐉', '🧠'][index],
+          targetTime: ['15 Minutes', '45 Minutes', '20 Minutes'][index]
+        };
+      }).filter(Boolean);
+
+      if (restored.length === 3) {
+        setDailyChallenges(restored);
+        return;
+      }
+    }
+
+    // If no quests are locked for today, generate new ones
+    generateChallenges(problems);
+  }, [problems]);
 
   const replaceChallenge = (index) => {
     const unsolved = problems.filter(p => p.status !== 'solved');
@@ -56,13 +92,25 @@ const useDSA = () => {
     const newProb = unsolved[Math.floor(Math.random() * unsolved.length)];
     updated[index] = { ...newProb, questType: 'Swapped Challenge', questIcon: '🎲', targetTime: '30 Minutes', status: 'pending' };
     
+    // Update the lock
+    localStorage.setItem('daily_quests_ids', JSON.stringify(updated.map(q => q._id)));
     setDailyChallenges(updated);
   };
+
+  
 
   const skipChallenge = (index) => {
     const updated = [...dailyChallenges];
     updated[index].status = 'skipped';
     setDailyChallenges(updated);
+  };
+
+  // 🔥 THE NEW STOPWATCH FUNCTION (Pop-up Safe)
+  const startQuestTimer = (challenge) => {
+    console.log("🚀 Starting Quest Timer for:", challenge.title);
+    if (!localStorage.getItem(`quest_start_${challenge._id}`)) {
+      localStorage.setItem(`quest_start_${challenge._id}`, Date.now());
+    }
   };
 
   // --- FETCHERS ---
@@ -115,8 +163,9 @@ const useDSA = () => {
       const probRes = await fetch('http://localhost:5000/api/dsa/problems', { headers });
       if (probRes.ok) {
         const pData = await probRes.json();
-        setProblems(pData);
-        if (dailyChallenges.length === 0) generateChallenges(pData);
+        setProblems(pData); 
+        // 🔥 FIX: We removed the messy setDailyChallenges block from here. 
+        // We will let a dedicated useEffect handle it below!
       }
 
       const histRes = await fetch('http://localhost:5000/api/dsa/contests', { headers });
@@ -237,6 +286,21 @@ const useDSA = () => {
   useEffect(() => { 
     fetchData(); 
     fetchLiveContests(); 
+    
+    // 🔥 THE FIX: Blast the token to the Chrome Extension so it can talk to the backend
+    const token = localStorage.getItem('token');
+    if (token) {
+      window.postMessage({ type: "SAVE_EXTENSION_TOKEN", token: token }, "*");
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleTabFocus = () => {
+      console.log("Welcome back! Fetching live stats from LeetCode submission...");
+      fetchData();
+    };
+    window.addEventListener('focus', handleTabFocus);
+    return () => window.removeEventListener('focus', handleTabFocus);
   }, []);
 
   useEffect(() => {
@@ -250,9 +314,10 @@ const useDSA = () => {
     upcomingContests, contestHistory, dailyChallenges,
     replaceChallenge, skipChallenge, toggleProblem, toggleStar, 
     handleReview, fetchTopicsForRoadmap, saveSyncProfile, 
-    triggerAutoSync, handleAddToCalendar 
+    triggerAutoSync, handleAddToCalendar, 
+    startQuestTimer
   };
-};
+}; // <-- This is the end of useDSA()
 
 // ==========================================
 // 2. UI PANELS
@@ -549,37 +614,164 @@ const ContestHubPanel = ({ upcomingContests, contestHistory, handleAddToCalendar
   );
 };
 
-const DailyChallengePanel = ({ dailyChallenges, replaceChallenge, skipChallenge, toggleStar }) => {
+// Helper to safely extract stats from the DB string
+const extractStats = (notes) => {
+  let runtime = "N/A", memory = "N/A";
+  if (!notes) return { runtime, memory };
+  
+  const rMatch = notes.match(/Runtime:\s*([^,]+)/i);
+  const mMatch = notes.match(/Memory:\s*(.+)/i); // Grabs everything after Memory:
+  
+  if (rMatch) runtime = rMatch[1].trim();
+  if (mMatch) memory = mMatch[1].trim();
+  
+  return { runtime, memory };
+};
+
+/// ==========================================
+// DAILY CHALLENGE PANEL & REPORT
+// ==========================================
+
+// Helper to check if it was actually solved TODAY
+const isQuestCompletedToday = (challenge) => {
+  if (challenge.status === 'skipped') return true; // Treat skipped as completed for board clearing
+  if (!challenge.attempts || challenge.attempts.length === 0) return false;
+  
+  const lastAttempt = challenge.attempts[challenge.attempts.length - 1];
+  const attemptDate = new Date(lastAttempt.date).toDateString();
+  const todayStr = new Date().toDateString();
+  
+  return attemptDate === todayStr && lastAttempt.outcome === 'solved';
+};
+
+const DailyChallengePanel = ({ dailyChallenges, replaceChallenge, skipChallenge, toggleStar, startQuestTimer }) => {
+  
+  // 🔥 FIX: Now uses the Today check instead of generic status
+  const isBoardCleared = dailyChallenges.length === 3 && dailyChallenges.every(c => isQuestCompletedToday(c));
+  const completedTodayChallenges = dailyChallenges.filter(c => isQuestCompletedToday(c) && c.status !== 'skipped');
+
   return (
     <div className="max-w-5xl mx-auto mt-6 animate-in fade-in slide-in-from-bottom-4 w-full">
       
-      <div className="flex items-center gap-4 mb-6">
-        <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-          <Target className="w-7 h-7 text-indigo-400" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-1">Today's Arena</h2>
-          <p className="text-sm text-white/50">Your personalized daily quests. Extension will auto-track your time on submit.</p>
-        </div>
-      </div>
+      {/* 🏆 THE DAILY POST-MATCH REPORT */}
+      {isBoardCleared && (
+        <div className="mb-8 p-6 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/30 backdrop-blur-xl shadow-[0_0_30px_rgba(99,102,241,0.15)] animate-in zoom-in-95 duration-500">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/40 shadow-inner">
+              <Trophy className="w-8 h-8 text-indigo-400" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-extrabold text-white">Arena Cleared!</h2>
+              <p className="text-indigo-200/70 font-medium">Daily post-match report generated.</p>
+            </div>
+          </div>
 
+          {completedTodayChallenges.length === 0 ? (
+            <div className="p-4 rounded-xl bg-black/40 text-center text-white/50 text-sm">
+              You skipped all challenges today. Rest up and hit the arena tomorrow!
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {completedTodayChallenges.map((c, i) => {
+                const lastAttempt = c.attempts?.[c.attempts.length - 1];
+                const { runtime, memory } = extractStats(lastAttempt?.notes);
+                return (
+                  <div key={i} className="p-4 rounded-2xl bg-black/40 border border-white/5 flex flex-col gap-3">
+                    <span className="text-xs font-bold text-white/70 truncate">{c.title}</span>
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-1.5 text-emerald-400"><Zap className="w-4 h-4" /><span className="text-sm font-bold">{runtime}</span></div>
+                      <div className="flex items-center gap-1.5 text-blue-400"><Cpu className="w-4 h-4" /><span className="text-sm font-bold">{memory}</span></div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* HEADER */}
+      {!isBoardCleared && (
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+            <Target className="w-7 h-7 text-indigo-400" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-1">Today's Arena</h2>
+            <p className="text-sm text-white/50">Your personalized daily quests. Extension will auto-track your time on submit.</p>
+          </div>
+        </div>
+      )}
+
+      {/* THE 3 QUEST CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {dailyChallenges.map((challenge, index) => {
           
-          // Render a skipped card placeholder
           if (challenge.status === 'skipped') {
             return (
               <div key={index} className="p-6 rounded-3xl bg-black/20 border border-white/5 flex flex-col items-center justify-center min-h-[300px]">
-                <span className="text-white/20 mb-2">Skipped</span>
-                <button onClick={() => replaceChallenge(index)} className="text-xs text-indigo-400 hover:text-indigo-300">Generate New</button>
+                <span className="text-white/20 mb-2 font-bold uppercase tracking-widest text-xs">Skipped</span>
+                {!isBoardCleared && <button onClick={() => replaceChallenge(index)} className="text-xs font-bold text-indigo-400 hover:text-indigo-300">Generate New</button>}
               </div>
             );
           }
 
-          // Render the active quest card
+          // 🔥 FIX: Check if it was solved TODAY, not just ever!
+          if (isQuestCompletedToday(challenge)) {
+            const lastAttempt = challenge.attempts?.[challenge.attempts.length - 1];
+            const { runtime, memory } = extractStats(lastAttempt?.notes);
+
+            let timeTakenDisplay = "N/A";
+            const startTime = localStorage.getItem(`quest_start_${challenge._id}`);
+            
+            if (startTime) {
+              let endTime = localStorage.getItem(`quest_end_${challenge._id}`);
+              if (!endTime) {
+                endTime = Date.now().toString();
+                localStorage.setItem(`quest_end_${challenge._id}`, endTime);
+              }
+              
+              const diffMs = parseInt(endTime) - parseInt(startTime);
+              const diffMins = Math.floor(diffMs / 60000);
+              const diffSecs = Math.floor((diffMs % 60000) / 1000);
+              timeTakenDisplay = diffMins > 0 ? `${diffMins}m ${diffSecs}s` : `${diffSecs}s`;
+            }
+
+            return (
+              <div key={index} className="p-6 rounded-3xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col relative overflow-hidden group shadow-[0_0_20px_rgba(52,211,153,0.1)]">
+                <div className="flex justify-between items-start mb-4">
+                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 flex items-center gap-1">
+                    {challenge.questIcon} {challenge.questType}
+                  </span>
+                </div>
+                
+                <h3 className="text-lg font-bold text-white mb-4 line-clamp-2 min-h-[56px]">{challenge.title}</h3>
+                
+                <div className="grid grid-cols-3 gap-2 mt-auto mb-4">
+                  <div className="p-2 rounded-xl bg-black/40 border border-emerald-500/20 flex flex-col items-center justify-center text-center">
+                    <span className="text-[9px] font-bold text-white/50 uppercase tracking-widest mb-1 flex items-center gap-1"><Clock className="w-3 h-3" /> Time</span>
+                    <span className="text-xs font-extrabold text-emerald-400">{timeTakenDisplay}</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-black/40 border border-emerald-500/20 flex flex-col items-center justify-center text-center">
+                    <span className="text-[9px] font-bold text-white/50 uppercase tracking-widest mb-1 flex items-center gap-1"><Zap className="w-3 h-3" /> Speed</span>
+                    <span className="text-xs font-extrabold text-emerald-400">{runtime}</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-black/40 border border-emerald-500/20 flex flex-col items-center justify-center text-center">
+                    <span className="text-[9px] font-bold text-white/50 uppercase tracking-widest mb-1 flex items-center gap-1"><Cpu className="w-3 h-3" /> Space</span>
+                    <span className="text-xs font-extrabold text-emerald-400">{memory}</span>
+                  </div>
+                </div>
+
+                <div className="w-full py-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-sm font-bold flex justify-center items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5" /> Quest Completed
+                </div>
+              </div>
+            );
+          }
+
+          // ACTIVE PENDING CARD
           return (
             <div key={index} className="p-6 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl flex flex-col relative overflow-hidden group hover:border-indigo-500/30 transition-all">
-              
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
               
               <div className="flex justify-between items-start mb-4">
@@ -606,25 +798,19 @@ const DailyChallengePanel = ({ dailyChallenges, replaceChallenge, skipChallenge,
                 <a 
                   href={challenge.url} 
                   target="_blank" 
-                  rel="noreferrer" 
+                  rel="noopener noreferrer"
+                  onClick={() => startQuestTimer(challenge)}
                   className="w-full py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold flex justify-center items-center gap-2 transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)]"
                 >
                   <Play className="w-4 h-4 fill-current" /> Solve Now
                 </a>
                 
                 <div className="grid grid-cols-3 gap-2 mt-1">
-                  <button onClick={() => replaceChallenge(index)} className="py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-[10px] font-bold flex justify-center items-center gap-1 transition-all">
-                    <RefreshCcw className="w-3 h-3" /> Replace
-                  </button>
-                  <button onClick={() => toggleStar(challenge)} className="py-2 rounded-xl bg-white/5 hover:bg-amber-500/10 text-white/60 hover:text-amber-400 text-[10px] font-bold flex justify-center items-center gap-1 transition-all">
-                    <Star className="w-3 h-3" /> Revision
-                  </button>
-                  <button onClick={() => skipChallenge(index)} className="py-2 rounded-xl bg-white/5 hover:bg-red-500/10 text-white/60 hover:text-red-400 text-[10px] font-bold flex justify-center items-center gap-1 transition-all">
-                    <X className="w-3 h-3" /> Skip
-                  </button>
+                  <button onClick={() => replaceChallenge(index)} className="py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-[10px] font-bold flex justify-center items-center gap-1 transition-all"><RefreshCcw className="w-3 h-3" /> Replace</button>
+                  <button onClick={() => toggleStar(challenge)} className="py-2 rounded-xl bg-white/5 hover:bg-amber-500/10 text-white/60 hover:text-amber-400 text-[10px] font-bold flex justify-center items-center gap-1 transition-all"><Star className="w-3 h-3" /> Revision</button>
+                  <button onClick={() => skipChallenge(index)} className="py-2 rounded-xl bg-white/5 hover:bg-red-500/10 text-white/60 hover:text-red-400 text-[10px] font-bold flex justify-center items-center gap-1 transition-all"><X className="w-3 h-3" /> Skip</button>
                 </div>
               </div>
-
             </div>
           );
         })}
@@ -632,8 +818,6 @@ const DailyChallengePanel = ({ dailyChallenges, replaceChallenge, skipChallenge,
     </div>
   );
 };
-
-
 // ==========================================
 // 3. MAIN PAGE COMPONENT
 // ==========================================
@@ -642,7 +826,8 @@ const DsaPage = () => {
     roadmaps, topics, problems, syncProfile, syncStats, loading, isSyncing, 
     upcomingContests, contestHistory, dailyChallenges,
     replaceChallenge, skipChallenge, toggleProblem, toggleStar, 
-    fetchTopicsForRoadmap, saveSyncProfile, triggerAutoSync, handleAddToCalendar 
+    fetchTopicsForRoadmap, saveSyncProfile, triggerAutoSync, handleAddToCalendar,
+    startQuestTimer // 🔥 ADDED THIS HERE
   } = useDSA();
   
   const [activeTab, setActiveTab] = useState('roadmaps'); 
@@ -730,7 +915,7 @@ const DsaPage = () => {
         {/* TABS RENDER */}
         {activeTab === 'analytics' && <AnalyticsPanel problems={problems} syncStats={syncStats} contestHistory={contestHistory} />}
         {activeTab === 'contests' && <ContestHubPanel upcomingContests={upcomingContests} contestHistory={contestHistory} handleAddToCalendar={handleAddToCalendar} />}
-        {activeTab === 'arena' && <DailyChallengePanel dailyChallenges={dailyChallenges} replaceChallenge={replaceChallenge} skipChallenge={skipChallenge} toggleStar={toggleStar} />}
+        {activeTab === 'arena' && <DailyChallengePanel dailyChallenges={dailyChallenges} replaceChallenge={replaceChallenge} skipChallenge={skipChallenge} toggleStar={toggleStar} startQuestTimer={startQuestTimer} />}
 
         {/* ROADMAPS TAB - LIBRARY VIEW */}
         {activeTab === 'roadmaps' && roadmapView === 'library' && (

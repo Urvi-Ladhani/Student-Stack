@@ -458,28 +458,56 @@ exports.trackLiveSubmission = async (req, res) => {
     const { problemUrl, platform, runtime, memory, isAccepted } = req.body;
     if (!isAccepted) return res.status(200).json({ message: "Ignored failed submission" });
 
-    // Clean LeetCode URL to match database format (strip trailing slashes, etc.)
-    const cleanedUrl = problemUrl.split('/description')[0].split('/submissions')[0];
+    // 🔥 THE BULLETPROOF URL MATCHER
+    // 1. Strip off query parameters (e.g., ?itm_source=...) and hash tags (#)
+    const cleanBase = problemUrl.split('?')[0].split('#')[0];
+    
+    // 2. Extract just the core path (e.g., "/problems/binary-tree-representation")
+    let urlPath = "";
+    try {
+        urlPath = new URL(cleanBase).pathname;
+    } catch(e) {
+        urlPath = cleanBase; // Fallback if URL parsing fails
+    }
+    
+    // 3. Remove LeetCode specific tabs just in case you submitted from the submissions tab
+    if (urlPath.includes('/description')) urlPath = urlPath.split('/description')[0];
+    if (urlPath.includes('/submissions')) urlPath = urlPath.split('/submissions')[0];
 
-    // Find the problem in user's database
-    const problem = await DSAProblem.findOne({ userId: req.user._id, url: { $regex: cleanedUrl, $options: 'i' } });
-    if (!problem) return res.status(404).json({ message: "Problem not found in StudentStack database" });
+    // 4. Remove trailing slashes to ensure perfect matching
+    urlPath = urlPath.replace(/\/$/, "");
 
-    // Update to solved and log the attempt details
+    // NOTE: Make sure this matches your actual Mongoose model import!
+    const ProblemModel = require('../models/DSAProblem'); 
+
+    // 5. Search the database for ANY url that contains this exact core path
+    const problem = await ProblemModel.findOne({ 
+      userId: req.user._id, 
+      url: { $regex: urlPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' } 
+    });
+    
+    if (!problem) return res.status(404).json({ message: "Problem not found in database. Make sure the URL matches!" });
+
+    // Update to solved
     problem.status = 'solved';
+    
+    // Ensure attempts array exists before pushing
+    if (!problem.attempts) problem.attempts = []; 
+    
     problem.attempts.push({
       date: new Date(),
       outcome: 'solved',
-      timeTakenMinutes: req.body.timeTakenMinutes || 15, // Optional: if you add a timer later
+      timeTakenMinutes: req.body.timeTakenMinutes || 0, 
+      confidenceRating: 5, // The fix from earlier!
       notes: `Runtime: ${runtime || 'N/A'}, Memory: ${memory || 'N/A'}`
     });
     
     await problem.save();
     console.log(`🚀 Live Tracked: Solved [${problem.title}] with ${runtime} & ${memory}`);
     
-    res.status(200).json({ message: "Problem marked solved live!", title: problem.title });
+    res.status(200).json({ message: `StudentStack Server saved [${problem.title}]!`, title: problem.title });
   } catch (error) {
-    console.error("Error in live tracking:", error);
-    res.status(500).json({ message: "Server Error Tracking Live Submission" });
+    console.error("🔥 BACKEND CRASH in trackLiveSubmission:", error);
+    res.status(500).json({ message: error.message || "Server crashed while saving" });
   }
 };

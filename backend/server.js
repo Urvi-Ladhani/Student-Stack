@@ -13,6 +13,7 @@ const connectDB = require("./config/db");
 const app = express();
 const authRoutes = require("./routes/authRoutes");
 const dsaRoutes = require('./routes/dsaRoutes');
+const notesRoutes = require('./routes/notesRoutes');
 
 
 connectDB();
@@ -23,6 +24,8 @@ app.use("/api/auth", authRoutes);
 app.use('/api/tasks', require('./routes/taskRoutes'));
 app.use('/api/dsa', dsaRoutes);
 app.use(express.json({ limit: '50mb' }));
+app.use('/api/notes', notesRoutes);
+
 
 app.get("/", (req,res) => {
    res.send("StudentStack Backend Running");

@@ -8,6 +8,7 @@ import Taskspage from './pages/Taskspage';
 import AuthPage from './components/auth/authpage'; 
 import DsaPage from './pages/DsaPage';
 import OnboardingPage from './components/OnboardingPage';
+import NotesPage from './pages/NotesPage';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || null);
@@ -81,6 +82,10 @@ function App() {
           <Route 
             path="/dsa" 
             element={token ? <DsaPage /> : <Navigate to="/login" replace />} 
+          />
+
+          <Route path="/notes"
+           element={token ? <NotesPage />: <Navigate to="/login" replace />}
           />
         </Routes>
       </div>

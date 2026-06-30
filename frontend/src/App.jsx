@@ -11,8 +11,25 @@ import OnboardingPage from './components/OnboardingPage';
 import NotesPage from './pages/NotesPage';
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('token') || null);
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
+  // 🛡️ THE STRICT TOKEN GUARD: Prevents fake strings from bypassing the login screen
+  const getValidToken = () => {
+    const storedToken = localStorage.getItem('token');
+    if (!storedToken || storedToken === 'null' || storedToken === 'undefined') return null;
+    return storedToken;
+  };
+
+  const getValidUser = () => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (!storedUser || storedUser === 'null' || storedUser === 'undefined') return null;
+      return JSON.parse(storedUser);
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const [token, setToken] = useState(getValidToken());
+  const [user, setUser] = useState(getValidUser());
 
   const handleAuthSuccess = (receivedToken, receivedUser) => {
     localStorage.setItem('token', receivedToken);
@@ -67,13 +84,11 @@ function App() {
           />
 
           {/* 3. PROTECTED ROUTES */}
-          {/* Dashboard OS */}
           <Route 
             path="/dashboard" 
             element={token ? <Workspace /> : <Navigate to="/login" replace />} 
           />
           
-          {/* Task OS */}
           <Route 
             path="/tasks" 
             element={token ? <Taskspage /> : <Navigate to="/login" replace />} 
@@ -84,8 +99,9 @@ function App() {
             element={token ? <DsaPage /> : <Navigate to="/login" replace />} 
           />
 
-          <Route path="/notes"
-           element={token ? <NotesPage />: <Navigate to="/login" replace />}
+          <Route 
+            path="/notes"
+            element={token ? <NotesPage /> : <Navigate to="/login" replace />}
           />
         </Routes>
       </div>

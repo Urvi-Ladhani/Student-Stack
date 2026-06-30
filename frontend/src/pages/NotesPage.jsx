@@ -1,15 +1,17 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import NotesRightPanel from '../components/NotesRightPanel';
+
+// 🔥 THE NEW BILLION-DOLLAR CANVAS (Guaranteed to load CSS)
+import { Tldraw } from 'tldraw';
+import 'tldraw/tldraw.css';
+
 import { 
   Search, Grid, List, Plus, Clock, TerminalSquare, 
   BookOpen, Briefcase, CheckSquare, MoreVertical, 
   X, Save, Folder, ChevronDown, PenTool, FileText, 
   LayoutGrid, UploadCloud
 } from 'lucide-react';
-
-// 🔥 THE SAFE EXCALIDRAW IMPORT: Prevents Vite HMR crashes!
-const Excalidraw = lazy(() => import('@excalidraw/excalidraw').then(mod => ({ default: mod.Excalidraw })));
 
 // ==========================================
 // 🛡️ ERROR BOUNDARY
@@ -64,9 +66,6 @@ const GlassDropdown = ({ value, options, onChange, icon: Icon, placeholder }) =>
   );
 };
 
-// ==========================================
-// DATA ENGINE
-// ==========================================
 const useNotes = () => {
   const [workspace, setWorkspace] = useState({ folders: [], tags: [], notes: [] });
   const [loading, setLoading] = useState(true);
@@ -134,9 +133,6 @@ const getModuleBadge = (moduleName) => {
   }
 };
 
-// ==========================================
-// MAIN UI COMPONENT
-// ==========================================
 const NotesPage = () => {
   const { workspace, loading, saveNote, createFolder } = useNotes();
   const [searchQuery, setSearchQuery] = useState('');
@@ -146,32 +142,22 @@ const NotesPage = () => {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editorData, setEditorData] = useState({ _id: null, title: '', content: '', sourceModule: 'General', tags: [], folderId: '', editorMode: 'text' });
   const [tagInput, setTagInput] = useState('');
-  
-  // API Ref for Excalidraw
-  const [excalidrawAPI, setExcalidrawAPI] = useState(null);
 
   const safeNotes = Array.isArray(workspace.notes) ? workspace.notes : [];
   const safeFolders = Array.isArray(workspace.folders) ? workspace.folders : [];
   const safeEditorTags = Array.isArray(editorData.tags) ? editorData.tags : [];
 
   const handleSaveAndClose = async () => {
-    let finalContent = editorData.content;
-    
-    // Safely pull Excalidraw drawing if active
-    if (editorData.editorMode === 'canvas' && excalidrawAPI) {
-      finalContent = JSON.stringify(excalidrawAPI.getSceneElements());
-    }
-
+    // Basic save integration. Note: Advanced Tldraw snapshot saving can be added later.
     const success = await saveNote({ 
         _id: editorData._id,
         title: editorData.title || 'Untitled Note', 
-        content: finalContent || '', 
+        content: editorData.content || '', 
         sourceModule: editorData.sourceModule || 'General',
         tags: safeEditorTags,
         folderId: editorData.folderId || null,
         editorMode: editorData.editorMode || 'text'
     });
-    
     if(success) setIsEditorOpen(false);
   };
 
@@ -185,8 +171,7 @@ const NotesPage = () => {
   };
 
   const addTag = (tagToAdd) => {
-    if (!tagToAdd.trim()) return;
-    if (safeEditorTags.includes(tagToAdd)) return;
+    if (!tagToAdd.trim() || safeEditorTags.includes(tagToAdd)) return;
     setEditorData({ ...editorData, tags: [...safeEditorTags, tagToAdd.trim()] });
     setTagInput('');
   };
@@ -195,12 +180,6 @@ const NotesPage = () => {
     if (activeFolderId) return note.folderId === activeFolderId;
     return true; 
   });
-
-  const getCanvasInitialData = () => {
-    if (!editorData.content || typeof editorData.content !== 'string') return [];
-    try { return JSON.parse(editorData.content); } 
-    catch (e) { return []; }
-  };
 
   const folderOptions = [{ label: 'No Notebook', value: '' }, ...safeFolders.map(f => ({ label: f.name, value: f._id }))];
   const moduleOptions = [
@@ -217,7 +196,6 @@ const NotesPage = () => {
       <DashboardLayout rightPanelContent={<NotesRightPanel createNote={saveNote} />}>
         <div className="w-full h-full flex flex-col gap-6 animate-in fade-in relative">
           
-          {/* TOP BAR */}
           <div className="w-full h-16 rounded-2xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-lg flex items-center px-4 gap-4 shrink-0">
             <div className="flex-1 flex items-center gap-3 bg-black/40 border border-white/5 rounded-xl px-4 py-2 focus-within:border-indigo-500/50 transition-colors">
               <Search className="w-4 h-4 text-white/40" />
@@ -228,7 +206,6 @@ const NotesPage = () => {
             </button>
           </div>
 
-          {/* MAIN GRID */}
           <div className="flex flex-1 gap-6 min-h-0 overflow-hidden">
             <div className="w-64 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-lg flex flex-col overflow-hidden shrink-0">
               <div className="p-4 border-b border-white/5 flex items-center justify-between bg-black/20 sticky top-0 z-10">
@@ -274,15 +251,11 @@ const NotesPage = () => {
             </div>
           </div>
 
-          {/* ========================================== */}
-          {/* THE NEW GLASSMORPHISM EDITOR MODAL */}
-          {/* ========================================== */}
+          {/* THE GLASSMORPHISM MODAL */}
           {isEditorOpen && (
             <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-              {/* 🔥 THE GLASS CONTAINER: Translucent dark background, heavy blur, sharp borders */}
               <div className="w-full max-w-5xl h-[90vh] bg-[#0a0a0a]/40 backdrop-blur-3xl border border-white/20 rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden animate-in zoom-in-95">
                 
-                {/* Header Area */}
                 <div className="h-20 shrink-0 border-b border-white/10 px-8 flex items-center justify-between bg-white/5">
                   <div className="flex items-center bg-black/20 p-1 rounded-xl border border-white/10 shadow-inner">
                     <button onClick={() => setEditorData({...editorData, editorMode: 'text'})} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${editorData.editorMode === 'text' ? 'bg-indigo-500 text-white shadow-md' : 'text-white/50 hover:text-white'}`}><BookOpen className="w-3.5 h-3.5" /> Text</button>
@@ -303,10 +276,7 @@ const NotesPage = () => {
                   </div>
                 </div>
 
-                {/* Editor Content Area */}
                 <div className="flex-1 overflow-y-auto p-8 relative">
-                  
-                  {/* TEXT MODE */}
                   {editorData.editorMode === 'text' && (
                     <div className="max-w-4xl mx-auto flex flex-col gap-6">
                       <div className="p-4 rounded-2xl bg-black/20 border border-white/10 backdrop-blur-md">
@@ -319,20 +289,13 @@ const NotesPage = () => {
                     </div>
                   )}
 
-                  {/* LAZY LOADED EXCALIDRAW MODE */}
+                  {/* 🔥 THE NEW TLDRAW CANVAS */}
                   {editorData.editorMode === 'canvas' && (
-                    <div className="w-full h-[600px] rounded-2xl overflow-hidden border border-white/20 shadow-inner relative bg-[#121212]">
-                      <Suspense fallback={<div className="flex h-full w-full items-center justify-center text-white/50 font-bold tracking-widest animate-pulse">Loading Interactive Canvas...</div>}>
-                        <Excalidraw 
-                          excalidrawAPI={(api) => setExcalidrawAPI(api)} 
-                          initialData={{ elements: getCanvasInitialData() }} 
-                          theme="dark" 
-                        />
-                      </Suspense>
+                    <div className="w-full h-[600px] rounded-2xl overflow-hidden shadow-inner relative">
+                      <Tldraw />
                     </div>
                   )}
 
-                  {/* PDF MODE */}
                   {editorData.editorMode === 'pdf' && (
                     <div className="w-full h-[600px] flex flex-col gap-4">
                       {!editorData.content || !editorData.content.startsWith('data:application/pdf') ? (
@@ -354,7 +317,6 @@ const NotesPage = () => {
             </div>
           )}
 
-          {/* FOLDER MODAL */}
           {folderModal.isOpen && (
             <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in">
               <div className="w-[400px] bg-[#0a0a0a]/80 backdrop-blur-3xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95">

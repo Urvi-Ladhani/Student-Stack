@@ -9,17 +9,20 @@ const NotesRightPanel = ({ createNote }) => {
     e.preventDefault();
     if (!quickCaptureText.trim()) return;
     
-    await createNote({ 
+    // createNote now returns true/false based on backend success!
+    const success = await createNote({ 
         title: 'Quick Draft', 
         content: quickCaptureText, 
         sourceModule: 'General',
         tags: ['#QuickCapture'],
-        folderId: null // 🔥 Explicitly null so it goes to "All Notes"
+        folderId: null
     });
     
-    setQuickCaptureText('');
-    setStatus('success');
-    setTimeout(() => setStatus('idle'), 2000);
+    if (success) {
+      setQuickCaptureText('');
+      setStatus('success');
+      setTimeout(() => setStatus('idle'), 2000);
+    }
   };
 
   return (

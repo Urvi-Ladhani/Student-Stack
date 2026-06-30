@@ -11,7 +11,9 @@ exports.getWorkspace = async (req, res) => {
       Note.find({ userId }).sort({ lastEditedAt: -1 })
     ]);
     res.status(200).json({ folders: folders || [], tags: tags || [], notes: notes || [] });
-  } catch (error) { res.status(500).json({ message: error.message }); }
+  } catch (error) { 
+    res.status(500).json({ message: error.message }); 
+  }
 };
 
 exports.createFolder = async (req, res) => {
@@ -19,39 +21,68 @@ exports.createFolder = async (req, res) => {
     const { name, parentId } = req.body;
     const folder = await Folder.create({ userId: req.user._id, name, parentId: parentId || null });
     res.status(201).json(folder);
-  } catch (error) { res.status(500).json({ message: error.message }); }
+  } catch (error) { 
+    res.status(500).json({ message: error.message }); 
+  }
 };
 
 exports.createNote = async (req, res) => {
   try {
     const { title, content, folderId, sourceModule, tags, editorMode } = req.body;
-    // Force empty folder strings to null so MongoDB doesn't throw a 500 error
-    const validFolderId = (folderId === '' || folderId === 'null' || !folderId) ? null : folderId;
+    
+    // 🛡️ THE IRONCLAD FIX: 
+    // We default to null. We ONLY use the folderId if it is exactly 24 characters long.
+    // Empty strings ("") will be ignored and remain null.
+    let validFolderId = null;
+    if (folderId && typeof folderId === 'string' && folderId.trim().length === 24) {
+        validFolderId = folderId.trim();
+    }
 
-    const note = await Note.create({ 
-      userId: req.user._id, 
-      title: title || 'Untitled Note', 
+    const note = await Note.create({
+      userId: req.user._id,
+      title: title || 'Untitled Note',
       content: content || '',
       folderId: validFolderId,
       sourceModule: sourceModule || 'General',
       tags: Array.isArray(tags) ? tags : [],
       editorMode: editorMode || 'text'
     });
+
     res.status(201).json(note);
-  } catch (error) { res.status(500).json({ message: error.message }); }
+  } catch (error) { 
+    console.error("🔥 FATAL CREATE ERROR:", error); // Will log exactly why it failed in your terminal
+    res.status(500).json({ message: "Database Error: " + error.message }); 
+  }
 };
 
 exports.updateNoteContent = async (req, res) => {
   try {
     const { title, content, folderId, sourceModule, tags, editorMode } = req.body;
-    const validFolderId = (folderId === '' || folderId === 'null' || !folderId) ? null : folderId;
+    
+    // 🛡️ SAME IRONCLAD FIX FOR UPDATES
+    let validFolderId = null;
+    if (folderId && typeof folderId === 'string' && folderId.trim().length === 24) {
+        validFolderId = folderId.trim();
+    }
 
     const note = await Note.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
-      { title, content, folderId: validFolderId, sourceModule, tags, editorMode, lastEditedAt: Date.now() },
+      {
+        title: title || 'Untitled Note',
+        content: content || '',
+        folderId: validFolderId,
+        sourceModule: sourceModule || 'General',
+        tags: Array.isArray(tags) ? tags : [],
+        editorMode: editorMode || 'text',
+        lastEditedAt: Date.now()
+      },
       { new: true }
     );
+    
     if (!note) return res.status(404).json({ message: "Note not found" });
     res.status(200).json(note);
-  } catch (error) { res.status(500).json({ message: error.message }); }
+  } catch (error) { 
+    console.error("🔥 FATAL UPDATE ERROR:", error);
+    res.status(500).json({ message: "Database Error: " + error.message }); 
+  }
 };

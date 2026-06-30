@@ -6,18 +6,17 @@ const noteSchema = new mongoose.Schema({
   title: { type: String, default: 'Untitled Note' },
   content: { type: String, default: '' }, 
   
-  // 🔥 FIX: This MUST be String so custom tags like "#Revision" don't crash the server
+  // Tags as plain Strings so custom text works perfectly
   tags: [{ type: String }],
   
   sourceModule: { type: String, enum: ['DSA', 'Task', 'Internship', 'General'], default: 'General' },
   editorMode: { type: String, enum: ['text', 'canvas', 'pdf'], default: 'text' },
   isPinned: { type: Boolean, default: false },
+  
+  // Let Mongoose handle the date natively without hooks
   lastEditedAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
-noteSchema.pre('save', function(next) {
-  this.lastEditedAt = Date.now();
-  next();
-});
+// 🔥 I COMPLETELY DELETED THE noteSchema.pre('save') HOOK THAT WAS CAUSING YOUR "next is not a function" CRASH.
 
 module.exports = mongoose.model('Note', noteSchema);

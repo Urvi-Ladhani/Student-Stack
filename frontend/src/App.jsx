@@ -9,6 +9,7 @@ import AuthPage from './components/auth/authpage';
 import DsaPage from './pages/DsaPage';
 import OnboardingPage from './components/OnboardingPage';
 import NotesPage from './pages/NotesPage';
+import PdfAnnotatorPage from './pages/PdfAnnotatorPage';
 
 function App() {
   // 🛡️ THE STRICT TOKEN GUARD: Prevents fake strings from bypassing the login screen
@@ -103,6 +104,11 @@ function App() {
             path="/notes"
             element={token ? <NotesPage /> : <Navigate to="/login" replace />}
           />
+
+          <Route 
+  path="/notes/pdf"
+  element={token ? <PdfAnnotatorPage /> : <Navigate to="/login" replace />}
+/>
         </Routes>
       </div>
     </BrowserRouter>

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Edit3, Send, CheckCircle2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Edit3, Send, CheckCircle2, FileText } from 'lucide-react';
 
 const NotesRightPanel = ({ createNote }) => {
+  const navigate = useNavigate();
   const [quickCaptureText, setQuickCaptureText] = useState('');
   const [status, setStatus] = useState('idle');
 
@@ -27,6 +29,19 @@ const NotesRightPanel = ({ createNote }) => {
 
   return (
     <div className="w-full flex flex-col gap-6">
+      
+      {/* 🔥 NEW: GLASSMORPHISM PDF ANNOTATOR LAUNCHER */}
+      <button 
+        onClick={() => navigate('/notes/pdf')}
+        className="w-full p-6 rounded-3xl bg-gradient-to-br from-indigo-500/10 to-blue-500/5 border border-indigo-500/20 hover:border-indigo-500/50 hover:bg-indigo-500/10 backdrop-blur-xl shadow-lg flex flex-col items-center justify-center gap-3 transition-all group"
+      >
+        <div className="p-3 bg-indigo-500/20 rounded-full group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(99,102,241,0.2)] group-hover:shadow-[0_0_25px_rgba(99,102,241,0.5)]">
+          <FileText className="w-6 h-6 text-indigo-400" />
+        </div>
+        <span className="font-bold text-sm text-indigo-100 tracking-wider">PDF Annotator OS</span>
+      </button>
+
+      {/* EXISTING: QUICK CAPTURE */}
       <div className="p-5 rounded-3xl bg-gradient-to-br from-indigo-500/10 to-purple-500/5 border border-indigo-500/20 backdrop-blur-xl shadow-lg relative overflow-hidden">
         
         <div className={`absolute inset-0 bg-emerald-500/20 backdrop-blur-md transition-opacity duration-300 flex items-center justify-center ${status === 'success' ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none'}`}>
@@ -52,6 +67,7 @@ const NotesRightPanel = ({ createNote }) => {
           </button>
         </form>
       </div>
+
     </div>
   );
 };

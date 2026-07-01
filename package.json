@@ -10,6 +10,8 @@
     "concurrently": "^9.0.0"
   },
   "dependencies": {
+    "multer": "^2.2.0",
+    "react-pdf-highlighter-plus": "^1.2.0",
     "tldraw": "^5.1.1"
   }
 }

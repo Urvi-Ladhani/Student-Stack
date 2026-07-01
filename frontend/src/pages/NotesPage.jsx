@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import NotesRightPanel from '../components/NotesRightPanel';
 import { Tldraw } from 'tldraw';
@@ -6,7 +6,7 @@ import 'tldraw/tldraw.css';
 import { 
   Search, Plus, Clock, TerminalSquare, BookOpen, Briefcase, 
   CheckSquare, X, Save, Folder, ChevronDown, PenTool, FileText, 
-  LayoutGrid, UploadCloud, PlaySquare, Code, BookMarked, Link as LinkIcon, Tag
+  LayoutGrid, UploadCloud, PlaySquare, Code, BookMarked, Link as LinkIcon, Tag, Trash2, ExternalLink
 } from 'lucide-react';
 
 const SMART_TAGS = ['Revision', 'Important', 'Interview', 'Exam', 'Assignment'];
@@ -78,6 +78,24 @@ const useNotes = () => {
     } catch (err) { alert("❌ Network Error"); return false;}
   };
 
+  const deleteNote = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:5000/api/notes/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        fetchWorkspace(); 
+      } else {
+        alert("❌ Failed to delete note from database.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("❌ Network Error");
+    }
+  };
+
   const createFolder = async (name) => {
     try {
       const token = localStorage.getItem('token');
@@ -87,16 +105,23 @@ const useNotes = () => {
   };
 
   useEffect(() => { fetchWorkspace(); }, []);
-  return { workspace, loading, saveNote, createFolder };
+  return { workspace, loading, saveNote, deleteNote, createFolder }; 
 };
 
 const NotesPage = () => {
-  const { workspace, loading, saveNote, createFolder } = useNotes();
+  const { workspace, loading, saveNote, deleteNote, createFolder } = useNotes();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFolderId, setActiveFolderId] = useState(null);
   const [folderModal, setFolderModal] = useState({ isOpen: false, name: '' });
+  
+  const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, noteId: null });
+  
+  // 🔥 UPDATE 1: Switched to useRef so the canvas engine doesn't get lost on save
+  const canvasEditorRef = useRef(null);
+
   const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [editorData, setEditorData] = useState({ _id: null, title: '', content: '', sourceModule: 'General', tags: [], attachments: [], folderId: '', editorMode: 'text' });
+  const [editorData, setEditorData] = useState({ _id: null, title: '', content: '', sourceModule: 'General', tags: [], attachments: [], folderId: '', editorMode: 'text', fileUrl: '' });
+  
   const [tagInput, setTagInput] = useState('');
   const [attachmentInput, setAttachmentInput] = useState('');
 
@@ -115,11 +140,33 @@ const NotesPage = () => {
   });
 
   const handleSaveAndClose = async () => {
+    let finalContent = editorData.content;
+    
+    // 🔥 UPDATE 2: Crash-proof wrapper to extract Tldraw data safely
+    if (editorData.editorMode === 'canvas' && canvasEditorRef.current) {
+       try {
+          let snapshot = null;
+          // Handles different minor versions of Tldraw just in case
+          if (typeof canvasEditorRef.current.getSnapshot === 'function') {
+              snapshot = canvasEditorRef.current.getSnapshot();
+          } else if (canvasEditorRef.current.store && typeof canvasEditorRef.current.store.getSnapshot === 'function') {
+              snapshot = canvasEditorRef.current.store.getSnapshot();
+          }
+          
+          if (snapshot) {
+              finalContent = JSON.stringify(snapshot);
+          }
+       } catch (err) {
+          console.error("Canvas saving error:", err);
+       }
+    }
+
     const success = await saveNote({ 
-        _id: editorData._id, title: editorData.title || 'Untitled Note', content: editorData.content || '', 
+        _id: editorData._id, title: editorData.title || 'Untitled Note', content: finalContent || '', 
         sourceModule: editorData.sourceModule || 'General', tags: safeEditorTags, attachments: safeAttachments,
         folderId: editorData.folderId || null, editorMode: editorData.editorMode || 'text'
     });
+    
     if(success) setIsEditorOpen(false);
   };
 
@@ -164,7 +211,6 @@ const NotesPage = () => {
 
   return (
     <ErrorBoundary>
-      {/* 🚀 Wrapper Fragment to allow modals to sit outside the layout */}
       <>
         <DashboardLayout rightPanelContent={<NotesRightPanel createNote={saveNote} />}>
           <div className="w-full h-full flex flex-col gap-6 animate-in fade-in relative">
@@ -174,7 +220,7 @@ const NotesPage = () => {
                 <Search className="w-4 h-4 text-white/40" />
                 <input type="text" placeholder="Search notes or tags..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-transparent border-none outline-none text-sm text-white placeholder-white/30" />
               </div>
-              <button onClick={() => { setEditorData({ _id: null, title: '', content: '', sourceModule: 'General', tags: [], attachments: [], folderId: activeFolderId || '', editorMode: 'text' }); setIsEditorOpen(true); }} className="px-5 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-bold transition-all flex items-center gap-2"><Plus className="w-4 h-4" /> New Note</button>
+              <button onClick={() => { setEditorData({ _id: null, title: '', content: '', sourceModule: 'General', tags: [], attachments: [], folderId: activeFolderId || '', editorMode: 'text', fileUrl: '' }); canvasEditorRef.current = null; setIsEditorOpen(true); }} className="px-5 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-bold transition-all flex items-center gap-2"><Plus className="w-4 h-4" /> New Note</button>
             </div>
 
             <div className="flex flex-1 gap-6 min-h-0 overflow-hidden">
@@ -192,13 +238,39 @@ const NotesPage = () => {
 
               <div className="flex-1 overflow-y-auto scrollbar-hide grid grid-cols-1 xl:grid-cols-2 gap-6 pb-24 content-start">
                 {displayedNotes.map(note => (
-                  <div key={note._id} onClick={() => { setEditorData({ _id: note._id, title: note.title, content: note.content, sourceModule: note.sourceModule, tags: Array.isArray(note.tags) ? note.tags : [], attachments: Array.isArray(note.attachments) ? note.attachments : [], folderId: note.folderId || '', editorMode: note.editorMode || 'text' }); setIsEditorOpen(true); }} className="h-64 p-5 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl hover:border-indigo-500/30 cursor-pointer flex flex-col shadow-lg overflow-hidden group">
-                    <div className="flex justify-between items-start mb-2"><span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">{note.editorMode}</span></div>
-                    <h3 className="text-lg font-bold text-white mb-2 line-clamp-2">{note.title}</h3>
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {Array.isArray(note.tags) && note.tags.slice(0,3).map(t => <span key={t} className="text-[9px] px-2 py-0.5 rounded-full bg-white/10 text-white/70">{t}</span>)}
+                  <div key={note._id} className="h-64 p-5 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl hover:border-indigo-500/30 flex flex-col shadow-lg overflow-hidden group relative">
+                    
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ isOpen: true, noteId: note._id }); }} 
+                      className="absolute top-4 right-4 p-2 bg-red-500/20 text-red-400 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 hover:text-white z-10"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+
+                    <div 
+                      className="flex-1 cursor-pointer flex flex-col"
+                      onClick={() => { setEditorData({ _id: note._id, title: note.title, content: note.content, sourceModule: note.sourceModule, tags: Array.isArray(note.tags) ? note.tags : [], attachments: Array.isArray(note.attachments) ? note.attachments : [], folderId: note.folderId || '', editorMode: note.editorMode || 'text', fileUrl: note.fileUrl || '' }); canvasEditorRef.current = null; setIsEditorOpen(true); }}
+                    >
+                      <div className="flex justify-between items-start mb-2"><span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">{note.editorMode}</span></div>
+                      <h3 className="text-lg font-bold text-white mb-2 line-clamp-2">{note.title}</h3>
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {Array.isArray(note.tags) && note.tags.slice(0,3).map(t => <span key={t} className="text-[9px] px-2 py-0.5 rounded-full bg-white/10 text-white/70">{t}</span>)}
+                      </div>
+                      
+                      {note.editorMode === 'pdf' ? (
+                        <div className="flex items-center gap-2 mt-2 text-indigo-300 bg-indigo-500/10 p-3 rounded-xl border border-indigo-500/20">
+                          <FileText className="w-5 h-5" /> 
+                          <span className="text-xs font-bold">PDF Document Uploaded</span>
+                        </div>
+                      ) : note.editorMode === 'text' ? (
+                        <p className="text-sm text-white/40 line-clamp-3 mb-4">{note.content}</p>
+                      ) : (
+                        <div className="flex items-center gap-2 mt-2 text-emerald-300 bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20">
+                          <PenTool className="w-5 h-5" /> 
+                          <span className="text-xs font-bold">Canvas Whiteboard</span>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm text-white/40 line-clamp-3 mb-4">{note.editorMode === 'text' ? note.content : '[CANVAS DATA]'}</p>
                   </div>
                 ))}
               </div>
@@ -207,9 +279,6 @@ const NotesPage = () => {
           </div>
         </DashboardLayout>
 
-        {/* ========================================== */}
-        {/* 🔥 MODALS ARE NOW OUTSIDE THE LAYOUT SO THEY FLOAT ON TOP */}
-        {/* ========================================== */}
         {isEditorOpen && (
           <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 backdrop-blur-md p-4 animate-in fade-in">
             <div className="w-full max-w-6xl h-[85vh] bg-white/10 backdrop-blur-3xl border border-white/20 rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden">
@@ -255,11 +324,49 @@ const NotesPage = () => {
 
               <div className="flex-1 flex overflow-hidden">
                 <div className="flex-1 p-8 overflow-y-auto">
-                  {editorData.editorMode === 'text' && (
+                  {editorData.editorMode === 'pdf' ? (
+                     <div className="w-full h-full flex flex-col items-center justify-center text-white/50">
+                        <FileText className="w-16 h-16 text-indigo-500/50 mb-4" />
+                        <p>This is a PDF Document.</p>
+                        
+                        {editorData.fileUrl && (
+                          <a 
+                            href={`http://localhost:5000${editorData.fileUrl}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="mt-6 px-6 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold rounded-xl shadow-[0_0_15px_rgba(99,102,241,0.4)] transition-all flex items-center gap-2"
+                          >
+                            <ExternalLink className="w-4 h-4" /> Open Full PDF
+                          </a>
+                        )}
+
+                        <p className="text-sm mt-8 text-white/30">Your typed notes alongside this PDF are saved below:</p>
+                        <div className="mt-2 p-4 bg-black/30 rounded-xl border border-white/10 w-3/4 text-white/80 whitespace-pre-wrap">
+                          {editorData.content || 'No notes typed for this PDF.'}
+                        </div>
+                     </div>
+                  ) : editorData.editorMode === 'text' ? (
                     <textarea value={editorData.content} onChange={(e) => setEditorData({...editorData, content: e.target.value})} placeholder="Start typing your notes here..." className="w-full min-h-[500px] bg-transparent text-lg text-white font-medium placeholder-white/30 border-none outline-none resize-none leading-relaxed drop-shadow-sm" />
-                  )}
-                  {editorData.editorMode === 'canvas' && (
-                     <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl relative border border-white/10"><Tldraw /></div>
+                  ) : (
+                     <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl relative border border-white/10 bg-white">
+                        <Tldraw 
+                          onMount={(editor) => {
+                             canvasEditorRef.current = editor; // Connects the ref directly to the Tldraw engine
+                             if (editorData.content && editorData.content.trim() !== '') {
+                                try {
+                                   const parsed = JSON.parse(editorData.content);
+                                   if (typeof editor.loadSnapshot === 'function') {
+                                       editor.loadSnapshot(parsed);
+                                   } else if (editor.store && typeof editor.store.loadSnapshot === 'function') {
+                                       editor.store.loadSnapshot(parsed);
+                                   }
+                                } catch(e) {
+                                   console.log("Could not parse old canvas data, starting fresh.");
+                                }
+                             }
+                          }}
+                        />
+                     </div>
                   )}
                 </div>
 
@@ -287,6 +394,34 @@ const NotesPage = () => {
                     <input type="text" value={attachmentInput} onChange={(e)=>setAttachmentInput(e.target.value)} onKeyDown={handleAddAttachment} placeholder="Paste link and press Enter..." className="w-full bg-black/20 border border-white/20 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-indigo-400 placeholder-white/40 shadow-inner" />
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 🔥 UPDATE 3: Fully Theme-Matched Indigo Delete Modal */}
+        {deleteConfirm.isOpen && (
+          <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 backdrop-blur-md animate-in fade-in">
+            <div className="w-[400px] bg-[#121212] backdrop-blur-3xl border border-white/20 rounded-3xl shadow-2xl p-6 flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-indigo-500/20 border border-indigo-500/30 rounded-full flex items-center justify-center mb-4">
+                <Trash2 className="w-8 h-8 text-indigo-400" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Delete Note?</h3>
+              <p className="text-sm text-white/50 mb-6">This action cannot be undone. This note will be permanently removed from your database.</p>
+              
+              <div className="flex gap-4 w-full">
+                <button 
+                  onClick={() => setDeleteConfirm({isOpen: false, noteId: null})} 
+                  className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={() => { deleteNote(deleteConfirm.noteId); setDeleteConfirm({isOpen: false, noteId: null}); }} 
+                  className="flex-1 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-bold shadow-[0_0_15px_rgba(99,102,241,0.4)] transition-all"
+                >
+                  Confirm Delete
+                </button>
               </div>
             </div>
           </div>

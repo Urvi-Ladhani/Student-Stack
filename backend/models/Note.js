@@ -16,6 +16,10 @@ const noteSchema = new mongoose.Schema({
   
   sourceModule: { type: String, enum: ['DSA', 'Task', 'Internship', 'General'], default: 'General' },
   editorMode: { type: String, enum: ['text', 'canvas', 'pdf'], default: 'text' },
+  fileUrl: {
+    type: String,
+    default: ''
+  },
   isPinned: { type: Boolean, default: false },
   lastEditedAt: { type: Date, default: Date.now }
 }, { timestamps: true });

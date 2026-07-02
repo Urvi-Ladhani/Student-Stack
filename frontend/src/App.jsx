@@ -10,9 +10,9 @@ import DsaPage from './pages/DsaPage';
 import OnboardingPage from './components/OnboardingPage';
 import NotesPage from './pages/NotesPage';
 import PdfAnnotatorPage from './pages/PdfAnnotatorPage';
+import InternshipPage from './pages/InternshipPage';
 
 function App() {
-  // 🛡️ THE STRICT TOKEN GUARD: Prevents fake strings from bypassing the login screen
   const getValidToken = () => {
     const storedToken = localStorage.getItem('token');
     if (!storedToken || storedToken === 'null' || storedToken === 'undefined') return null;
@@ -55,7 +55,6 @@ function App() {
       <DashboardMain userName={user?.name || 'Student'} />
     </DashboardLayout>
   );
-
   return (
     <BrowserRouter>
       <div 
@@ -63,7 +62,6 @@ function App() {
         style={{ backgroundImage: "url('/mountain-bg.jpg')" }}
       >
         <Routes>
-          {/* 1. ONBOARDING PAGE (Landing Page) */}
           <Route 
             path="/onboarding" 
             element={token ? <Navigate to="/dashboard" replace /> : <OnboardingPage />} 
@@ -106,9 +104,13 @@ function App() {
           />
 
           <Route 
-  path="/notes/pdf"
-  element={token ? <PdfAnnotatorPage /> : <Navigate to="/login" replace />}
-/>
+            path="/notes/pdf"
+            element={token ? <PdfAnnotatorPage /> : <Navigate to="/login" replace />}
+          />
+          <Route 
+            path="/internships"
+            element={token ? <InternshipPage /> : <Navigate to="/login" replace />}
+          />
         </Routes>
       </div>
     </BrowserRouter>

@@ -29,6 +29,7 @@ app.use("/api/auth", authRoutes);
 app.use('/api/tasks', require('./routes/taskRoutes'));
 app.use('/api/dsa', dsaRoutes);
 app.use('/api/notes', notesRoutes);
+app.use('/api/internships', require('./routes/internshipRoutes'));
 
 app.get("/", (req,res) => {
    res.send("StudentStack Backend Running");

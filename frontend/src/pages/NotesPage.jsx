@@ -6,8 +6,13 @@ import 'tldraw/tldraw.css';
 import { 
   Search, Plus, Clock, TerminalSquare, BookOpen, Briefcase, 
   CheckSquare, X, Save, Folder, ChevronDown, PenTool, FileText, 
-  LayoutGrid, UploadCloud, PlaySquare, Code, BookMarked, Link as LinkIcon, Tag
+  LayoutGrid, UploadCloud, PlaySquare, Code, BookMarked, Link as LinkIcon, Tag, Trash2, AlertCircle
 } from 'lucide-react';
+
+const API_BASE = 'http://localhost:5002';
+
+// Resolves backend-relative URLs (e.g. /uploads/...) to full URLs
+const resolveUrl = (url) => url && url.startsWith('/') ? `${API_BASE}${url}` : url;
 
 const SMART_TAGS = ['Revision', 'Important', 'Interview', 'Exam', 'Assignment'];
 
@@ -49,23 +54,27 @@ const GlassDropdown = ({ value, options, onChange, icon: Icon, placeholder }) =>
 const useNotes = () => {
   const [workspace, setWorkspace] = useState({ folders: [], tags: [], notes: [] });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchWorkspace = async () => {
     try {
+      setError(null);
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/notes/workspace', { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(`${API_BASE}/api/notes/workspace`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (res.ok) {
         const data = await res.json();
         setWorkspace({ folders: data.folders || [], tags: data.tags || [], notes: data.notes || [] });
+      } else {
+        setError('Failed to load workspace. Server returned an error.');
       }
-    } catch (error) { console.error("Error:", error); } 
+    } catch (err) { console.error("Error:", err); setError('Network error. Is the backend running?'); } 
     finally { setLoading(false); }
   };
 
   const saveNote = async (data) => {
     try {
       const token = localStorage.getItem('token');
-      const url = data._id ? `http://localhost:5000/api/notes/${data._id}` : 'http://localhost:5000/api/notes';
+      const url = data._id ? `${API_BASE}/api/notes/${data._id}` : `${API_BASE}/api/notes`;
       const method = data._id ? 'PUT' : 'POST';
       const payload = { ...data };
       if (!payload._id) delete payload._id;
@@ -78,20 +87,30 @@ const useNotes = () => {
     } catch (err) { alert("❌ Network Error"); return false;}
   };
 
+  const deleteNote = async (noteId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/notes/${noteId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      if (!res.ok) return alert('❌ Failed to delete note');
+      await fetchWorkspace();
+      return true;
+    } catch (err) { alert('❌ Network Error'); return false; }
+  };
+
   const createFolder = async (name) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch('http://localhost:5000/api/notes/folders', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ name, parentId: null }) });
+      await fetch(`${API_BASE}/api/notes/folders`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ name, parentId: null }) });
       fetchWorkspace();
     } catch (err) { alert("❌ Network Error"); }
   };
 
   useEffect(() => { fetchWorkspace(); }, []);
-  return { workspace, loading, saveNote, createFolder };
+  return { workspace, loading, error, saveNote, deleteNote, createFolder };
 };
 
 const NotesPage = () => {
-  const { workspace, loading, saveNote, createFolder } = useNotes();
+  const { workspace, loading, error, saveNote, deleteNote, createFolder } = useNotes();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFolderId, setActiveFolderId] = useState(null);
   const [folderModal, setFolderModal] = useState({ isOpen: false, name: '' });
@@ -106,7 +125,8 @@ const NotesPage = () => {
   const safeAttachments = Array.isArray(editorData.attachments) ? editorData.attachments : [];
 
   const displayedNotes = safeNotes.filter(note => {
-    const matchesFolder = activeFolderId ? note.folderId === activeFolderId : true;
+    const noteFolderId = note.folderId ? String(note.folderId) : null;
+    const matchesFolder = activeFolderId ? noteFolderId === String(activeFolderId) : true;
     const matchesSearch = searchQuery 
       ? (note.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
         (note.tags || []).some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))) 
@@ -162,6 +182,16 @@ const NotesPage = () => {
 
   if (loading) return <DashboardLayout><div className="w-full h-full flex items-center justify-center text-white/50 animate-pulse">Booting Knowledge Base...</div></DashboardLayout>;
 
+  if (error) return (
+    <DashboardLayout>
+      <div className="w-full h-full flex flex-col items-center justify-center gap-4">
+        <AlertCircle className="w-12 h-12 text-red-400" />
+        <p className="text-red-400 text-sm font-bold">{error}</p>
+        <button onClick={() => window.location.reload()} className="px-5 py-2 rounded-xl bg-white/10 text-white text-xs font-bold hover:bg-white/20 transition-all">Retry</button>
+      </div>
+    </DashboardLayout>
+  );
+
   return (
     <ErrorBoundary>
       {/* 🚀 Wrapper Fragment to allow modals to sit outside the layout */}
@@ -191,9 +221,22 @@ const NotesPage = () => {
               </div>
 
               <div className="flex-1 overflow-y-auto scrollbar-hide grid grid-cols-1 xl:grid-cols-2 gap-6 pb-24 content-start">
+                {displayedNotes.length === 0 && (
+                  <div className="col-span-full flex flex-col items-center justify-center py-24 gap-4">
+                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                      <FileText className="w-8 h-8 text-white/20" />
+                    </div>
+                    <p className="text-sm text-white/40 font-medium">{searchQuery ? 'No notes match your search.' : 'No notes yet. Create your first note!'}</p>
+                  </div>
+                )}
                 {displayedNotes.map(note => (
                   <div key={note._id} onClick={() => { setEditorData({ _id: note._id, title: note.title, content: note.content, sourceModule: note.sourceModule, tags: Array.isArray(note.tags) ? note.tags : [], attachments: Array.isArray(note.attachments) ? note.attachments : [], folderId: note.folderId || '', editorMode: note.editorMode || 'text' }); setIsEditorOpen(true); }} className="h-64 p-5 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl hover:border-indigo-500/30 cursor-pointer flex flex-col shadow-lg overflow-hidden group">
-                    <div className="flex justify-between items-start mb-2"><span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">{note.editorMode}</span></div>
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">{note.editorMode}</span>
+                      <button onClick={(e) => { e.stopPropagation(); if(window.confirm(`Delete "${note.title}"?`)) deleteNote(note._id); }} className="w-7 h-7 rounded-lg flex items-center justify-center text-white/30 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all" title="Delete note">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                     <h3 className="text-lg font-bold text-white mb-2 line-clamp-2">{note.title}</h3>
                     <div className="flex flex-wrap gap-1 mb-2">
                       {Array.isArray(note.tags) && note.tags.slice(0,3).map(t => <span key={t} className="text-[9px] px-2 py-0.5 rounded-full bg-white/10 text-white/70">{t}</span>)}
@@ -218,6 +261,7 @@ const NotesPage = () => {
                 <div className="flex items-center bg-black/20 p-1 rounded-xl border border-white/10">
                   <button onClick={() => setEditorData({...editorData, editorMode: 'text'})} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${editorData.editorMode === 'text' ? 'bg-indigo-500 text-white shadow-md' : 'text-white/50 hover:text-white'}`}><BookOpen className="w-3.5 h-3.5" /> Text</button>
                   <button onClick={() => setEditorData({...editorData, editorMode: 'canvas'})} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${editorData.editorMode === 'canvas' ? 'bg-emerald-500 text-white shadow-md' : 'text-white/50 hover:text-white'}`}><PenTool className="w-3.5 h-3.5" /> Flowchart</button>
+                  {safeAttachments.some(a => a.attachmentType === 'pdf') && <button onClick={() => setEditorData({...editorData, editorMode: 'pdf'})} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${editorData.editorMode === 'pdf' ? 'bg-red-500 text-white shadow-md' : 'text-white/50 hover:text-white'}`}><FileText className="w-3.5 h-3.5" /> PDF</button>}
                 </div>
                 <div className="flex items-center gap-4">
                   <button onClick={handleSaveAndClose} className="px-6 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold shadow-lg flex items-center gap-2"><Save className="w-4 h-4" /> Save</button>
@@ -261,6 +305,40 @@ const NotesPage = () => {
                   {editorData.editorMode === 'canvas' && (
                      <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl relative border border-white/10"><Tldraw /></div>
                   )}
+                  {editorData.editorMode === 'pdf' && (
+                    <div className="w-full h-full flex gap-4 overflow-hidden">
+                      {/* PDF Viewer Left Pane */}
+                      <div className="flex-1 flex flex-col gap-2">
+                        <div className="flex-1 bg-white rounded-2xl overflow-hidden shadow-2xl border border-white/10 relative group">
+                          {safeAttachments.length > 0 && safeAttachments[0]?.attachmentType === 'pdf' ? (
+                            <>
+                              <iframe
+                                src={`${API_BASE}${safeAttachments[0].url}#toolbar=0`}
+                                type="application/pdf"
+                                className="w-full h-full border-none"
+                                title="PDF Viewer"
+                              />
+                              {/* Open in New Tab Button */}
+                              <a href={`${API_BASE}${safeAttachments[0].url}`} target="_blank" rel="noreferrer" className="absolute top-3 right-3 px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">Open in New Tab</a>
+                            </>
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                              <p>No PDF attached to this note</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right Pane: Annotations */}
+                      <div className="w-96 flex flex-col gap-4 overflow-y-auto pr-2">
+                        {/* Annotations Section */}
+                        <div className="bg-black/20 p-4 rounded-xl border border-white/10 flex-1">
+                          <p className="text-xs font-bold text-white/70 mb-2">Annotations:</p>
+                          <textarea value={editorData.content} onChange={(e) => setEditorData({...editorData, content: e.target.value})} placeholder="Add your notes and annotations here..." className="w-full h-full min-h-[300px] bg-black/30 border border-white/20 rounded-lg p-3 text-sm text-white font-medium placeholder-white/30 outline-none focus:border-indigo-400 resize-none" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="w-80 border-l border-white/10 bg-white/5 p-6 flex flex-col shrink-0">
@@ -275,7 +353,7 @@ const NotesPage = () => {
                          <FileText className="w-5 h-5 text-indigo-300 shrink-0" />}
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold text-white truncate drop-shadow-sm">{att.title}</p>
-                          <a href={att.url} target="_blank" rel="noreferrer" className="text-[10px] text-indigo-200 hover:text-white hover:underline truncate block transition-colors">{att.url}</a>
+                          <a href={resolveUrl(att.url)} target="_blank" rel="noreferrer" className="text-[10px] text-indigo-200 hover:text-white hover:underline truncate block transition-colors">{att.url}</a>
                         </div>
                         <button onClick={() => removeAttachment(idx)} className="text-white/50 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3"/></button>
                       </div>
@@ -293,10 +371,15 @@ const NotesPage = () => {
         )}
 
         {folderModal.isOpen && (
-          <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 backdrop-blur-md animate-in fade-in">
-            <div className="w-[400px] bg-white/10 backdrop-blur-3xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden p-6">
-              <form onSubmit={(e) => { e.preventDefault(); createFolder(folderModal.name); setFolderModal({isOpen: false, name: ''}); }} className="flex flex-col gap-4">
-                <h3 className="text-sm font-bold text-white mb-2 drop-shadow-sm">Create Notebook</h3>
+          <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 backdrop-blur-md animate-in fade-in" onClick={() => setFolderModal({ isOpen: false, name: '' })}>
+            <div className="w-[400px] bg-white/10 backdrop-blur-3xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden p-6" onClick={(e) => e.stopPropagation()}>
+              <form onSubmit={(e) => { e.preventDefault(); if(folderModal.name.trim()) { createFolder(folderModal.name); setFolderModal({isOpen: false, name: ''}); } }} className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-white drop-shadow-sm">Create Notebook</h3>
+                  <button type="button" onClick={() => setFolderModal({ isOpen: false, name: '' })} className="w-8 h-8 flex items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
                 <input autoFocus type="text" value={folderModal.name} onChange={(e) => setFolderModal({...folderModal, name: e.target.value})} placeholder="Notebook Name..." className="w-full bg-black/20 border border-white/20 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-400 placeholder-white/40 shadow-inner" />
                 <button type="submit" disabled={!folderModal.name.trim()} className="w-full py-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold shadow-lg transition-colors">Create</button>
               </form>

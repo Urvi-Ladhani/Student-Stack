@@ -146,21 +146,21 @@ const useDSA = () => {
       const token = localStorage.getItem('token');
       const headers = { 'Authorization': `Bearer ${token}` };
 
-      let rmRes = await fetch('http://localhost:5000/api/dsa/roadmaps', { headers });
+      let rmRes = await fetch('http://localhost:5002/api/dsa/roadmaps', { headers });
       let dbRoadmaps = await rmRes.json();
       if (dbRoadmaps.length === 0) {
-        await fetch('http://localhost:5000/api/dsa/seed-defaults', { method: 'POST', headers });
-        rmRes = await fetch('http://localhost:5000/api/dsa/roadmaps', { headers });
+        await fetch('http://localhost:5002/api/dsa/seed-defaults', { method: 'POST', headers });
+        rmRes = await fetch('http://localhost:5002/api/dsa/roadmaps', { headers });
         dbRoadmaps = await rmRes.json();
       }
       setRoadmaps(dbRoadmaps);
 
       if (dbRoadmaps.length > 0) {
-        const topRes = await fetch(`http://localhost:5000/api/dsa/topics/${dbRoadmaps[0]._id}`, { headers });
+        const topRes = await fetch(`http://localhost:5002/api/dsa/topics/${dbRoadmaps[0]._id}`, { headers });
         if (topRes.ok) setTopics(await topRes.json());
       }
 
-      const probRes = await fetch('http://localhost:5000/api/dsa/problems', { headers });
+      const probRes = await fetch('http://localhost:5002/api/dsa/problems', { headers });
       if (probRes.ok) {
         const pData = await probRes.json();
         setProblems(pData); 
@@ -168,10 +168,10 @@ const useDSA = () => {
         // We will let a dedicated useEffect handle it below!
       }
 
-      const histRes = await fetch('http://localhost:5000/api/dsa/contests', { headers });
+      const histRes = await fetch('http://localhost:5002/api/dsa/contests', { headers });
       if (histRes.ok) setContestHistory(await histRes.json());
 
-      const syncRes = await fetch('http://localhost:5000/api/dsa/sync-profile', { headers });
+      const syncRes = await fetch('http://localhost:5002/api/dsa/sync-profile', { headers });
       if (syncRes.ok) {
         const profile = await syncRes.json();
         setSyncProfile({ 
@@ -192,7 +192,7 @@ const useDSA = () => {
       const token = localStorage.getItem('token');
       const options = { method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } };
       if (body) options.body = JSON.stringify(body);
-      const res = await fetch(`http://localhost:5000/api/dsa${url}`, options);
+      const res = await fetch(`http://localhost:5002/api/dsa${url}`, options);
       if (res.ok) { fetchData(); return true; }
       return false;
     } catch (err) { return false; }
@@ -215,7 +215,7 @@ const useDSA = () => {
   const handleAddToCalendar = async (contest) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/tasks', {
+      const res = await fetch('http://localhost:5002/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
@@ -254,7 +254,7 @@ const useDSA = () => {
         window.removeEventListener("message", listener);
         
         try {
-          await fetch('http://localhost:5000/api/dsa/contests/sync', {
+          await fetch('http://localhost:5002/api/dsa/contests/sync', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
           });
@@ -279,7 +279,7 @@ const useDSA = () => {
 
   const fetchTopicsForRoadmap = async (roadmapId) => {
     const token = localStorage.getItem('token');
-    const res = await fetch(`http://localhost:5000/api/dsa/topics/${roadmapId}`, { headers: { 'Authorization': `Bearer ${token}` }});
+    const res = await fetch(`http://localhost:5002/api/dsa/topics/${roadmapId}`, { headers: { 'Authorization': `Bearer ${token}` }});
     if (res.ok) setTopics(await res.json());
   };
 

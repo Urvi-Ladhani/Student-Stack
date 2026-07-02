@@ -18,7 +18,7 @@ const useTasks = () => {
   const fetchTasks = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/tasks', {
+      const response = await fetch('http://localhost:5002/api/tasks', {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to fetch tasks');
@@ -38,7 +38,7 @@ const useTasks = () => {
       const options = { method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } };
       if (body) options.body = JSON.stringify(body);
       
-      const res = await fetch(`http://localhost:5000/api/tasks${url}`, options);
+      const res = await fetch(`http://localhost:5002/api/tasks${url}`, options);
       if (res.ok) { 
         fetchTasks(); 
         return true; 
@@ -80,7 +80,7 @@ const useTasks = () => {
     setTasks(prevTasks => prevTasks.map(t => t._id === taskId ? { ...t, status: newStatus } : t));
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+      const response = await fetch(`http://localhost:5002/api/tasks/${taskId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ status: newStatus })

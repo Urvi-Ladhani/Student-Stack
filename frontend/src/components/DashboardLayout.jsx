@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Command, LayoutDashboard, CheckSquare, Code2, 
-  BookOpen, Briefcase, Timer, Plus, LogOut 
+  BookOpen, Briefcase, Timer, Plus, LogOut, FileText 
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -41,6 +41,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
               { label: 'Task OS', icon: CheckSquare, path: '/tasks' }, 
               { label: 'DSA OS', icon: Code2, path: '/dsa' },
               { label: 'Notes OS', icon: BookOpen, path: '/notes' },
+              { label: 'PDF OS', icon: FileText, path: '/notes/pdf' },
               { label: 'Internship OS', icon: Briefcase, path: '/internships' },
             ].map((item) => (
               <button 

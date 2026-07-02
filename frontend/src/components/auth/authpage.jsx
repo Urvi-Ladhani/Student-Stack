@@ -28,7 +28,7 @@ const AuthPage = ({ onAuthSuccess }) => {
     setLoading(true);
 
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
-    const url = `http://localhost:5000${endpoint}`;
+    const url = `http://localhost:5002${endpoint}`;
 
     try {
       const response = await fetch(url, {

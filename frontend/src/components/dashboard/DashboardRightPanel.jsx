@@ -9,7 +9,7 @@ const DashboardRightPanel = () => {
     const fetchTasks = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/tasks', {
+        const response = await fetch('http://localhost:5002/api/tasks', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) setTasks(await response.json());

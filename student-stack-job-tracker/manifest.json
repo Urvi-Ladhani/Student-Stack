@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "StudentStack Job Tracker",
+  "version": "1.0",
+  "description": "Automatically logs LinkedIn applications to your Internship OS.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "http://localhost:5000/*",
+    "https://www.linkedin.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://www.linkedin.com/*"], 
+      "js": ["content.js"]
+    },
+    {
+      "matches": ["http://localhost:5173/*", "http://localhost:3000/*"],
+      "js": ["autosync.js"]
+    }
+  ]
+}

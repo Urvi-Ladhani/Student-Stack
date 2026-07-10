@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import InternshipRightPanel from '../components/InternshipRightPanel';
 import { 
-  Briefcase, Plus, Activity, Clock, FileText, Code, X 
+  Briefcase, Plus, Activity, Clock, FileText, Code, X, 
+  MapPin, DollarSign, ExternalLink // 🟢 Added new icons for the details modal
 } from 'lucide-react';
 
 const KANBAN_STAGES = [
@@ -19,6 +20,9 @@ const InternshipPage = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ company: '', role: '', status: 'wishlist' });
+  
+  // 🟢 NEW STATE: Tracks which job card was double-clicked
+  const [selectedJob, setSelectedJob] = useState(null);
 
   // 1. FETCH DATA FROM MONGODB
   const fetchInternships = async () => {
@@ -189,14 +193,17 @@ const InternshipPage = () => {
                           key={app._id}
                           draggable
                           onDragStart={(e) => handleDragStart(e, app._id)}
-                          className="bg-black/60 border border-white/10 rounded-xl p-3 shadow-lg cursor-grab active:cursor-grabbing hover:border-indigo-500/50 transition-colors"
+                          // 🟢 THE DOUBLE CLICK TRIGGER
+                          onDoubleClick={() => setSelectedJob(app)}
+                          // Added select-none so double clicking doesn't highlight the text
+                          className="bg-black/60 border border-white/10 rounded-xl p-3 shadow-lg cursor-grab active:cursor-grabbing hover:border-indigo-500/50 transition-colors select-none"
                         >
                           <div className="flex justify-between items-start mb-2">
                             <span className="text-[10px] font-bold text-white/40 uppercase">{app.company}</span>
                           </div>
-                          <h4 className="text-sm font-bold text-white mb-2">{app.role}</h4>
+                          <h4 className="text-sm font-bold text-white mb-2 leading-tight">{app.role}</h4>
                           <p className="text-[10px] text-white/50 flex items-center gap-1">
-                            <Clock className="w-3 h-3" /> Tracked recently
+                            <Clock className="w-3 h-3" /> Double-click for details
                           </p>
                         </div>
                       ))}
@@ -229,7 +236,7 @@ const InternshipPage = () => {
         </div>
       </div>
 
-      {/* ADD APPLICATION MODAL */}
+      {/* ADD APPLICATION MODAL (Existing) */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 backdrop-blur-md animate-in fade-in">
           <div className="w-[400px] bg-[#121212] backdrop-blur-3xl border border-white/20 rounded-3xl shadow-2xl p-6">
@@ -268,6 +275,74 @@ const InternshipPage = () => {
           </div>
         </div>
       )}
+
+      {/* 🟢 NEW: JOB DETAILS FULL MODAL */}
+      {selectedJob && (
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in p-4">
+          <div className="w-full max-w-[700px] max-h-[85vh] bg-[#121212] backdrop-blur-3xl border border-white/20 rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+            
+            {/* Header */}
+            <div className="p-6 border-b border-white/10 flex justify-between items-start bg-white/5">
+              <div>
+                <h2 className="text-2xl font-extrabold text-white leading-tight mb-1">{selectedJob.role}</h2>
+                <h3 className="text-lg font-medium text-indigo-400">{selectedJob.company}</h3>
+              </div>
+              <button 
+                onClick={() => setSelectedJob(null)} 
+                className="text-white/40 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-2 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Badges Grid */}
+            <div className="px-6 pt-5 flex flex-wrap gap-3">
+              <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 px-3 py-1.5 rounded-full text-sm font-semibold">
+                <Briefcase className="w-4 h-4" /> {selectedJob.workType || 'Not specified'}
+              </div>
+              <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-full text-sm font-semibold">
+                <MapPin className="w-4 h-4" /> {selectedJob.location || 'Not specified'}
+              </div>
+              <div className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 text-orange-400 px-3 py-1.5 rounded-full text-sm font-semibold">
+                <DollarSign className="w-4 h-4" /> {selectedJob.stipend || 'Not specified'}
+              </div>
+            </div>
+
+            {/* Scrollable Description */}
+            <div className="p-6 flex-1 overflow-y-auto scrollbar-hide">
+              <h4 className="text-sm font-bold text-white/50 uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Job Description</h4>
+              <p className="text-white/80 text-sm leading-relaxed whitespace-pre-line font-medium">
+                {selectedJob.jobDescription || "No description captured for this listing. Apply directly via the link below."}
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="p-5 border-t border-white/10 bg-black/40 flex justify-between items-center">
+              {selectedJob.jobLink ? (
+                <a 
+                  href={selectedJob.jobLink} 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-sm font-bold transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" /> View Original Posting
+                </a>
+              ) : (
+                <span className="text-sm text-white/30 italic">Manually added (No URL)</span>
+              )}
+              
+              <button 
+                onClick={() => setSelectedJob(null)} 
+                className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-bold rounded-xl transition-colors"
+              >
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </DashboardLayout>
   );
 };

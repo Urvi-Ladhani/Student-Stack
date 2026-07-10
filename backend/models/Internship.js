@@ -24,6 +24,11 @@ const internshipSchema = new mongoose.Schema({
   // 🔌 CHROME EXTENSION DATA
   jobLink: { type: String, default: '' },
   
+  // 🟢 NEW FIELDS FOR THE SCRAPER
+  location: { type: String, default: 'Not specified' },
+  workType: { type: String, default: 'Not specified' },
+  stipend: { type: String, default: 'Not specified' },
+  
   // 🤖 AI ATS MATCHER DATA
   jobDescription: { type: String, default: '' }, 
   atsScore: { type: Number, default: null }, 

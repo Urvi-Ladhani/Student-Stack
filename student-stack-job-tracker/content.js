@@ -20,53 +20,89 @@ function showToast(message, type = "success") {
   setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 300); }, 3500);
 }
 
-// 2. The Pinpoint Scraper
-// 2. The Hyperlink Scraper
+// 2. The Smart Scraper (Fixes Link, Description, and Address)
 function extractJobDetails() {
-  let role = 'Unknown Role';
-  let company = 'Unknown Company';
+  let result = { 
+    role: 'Unknown Role', company: 'Unknown Company', location: 'Not specified', 
+    workType: 'Not specified', stipend: 'Not specified', jobDescription: '', jobLink: '' 
+  };
 
   try {
-    const jobPanel = document.querySelector('.jobs-search__right-rail') || 
-                     document.querySelector('.job-view-layout-jobs-details') || 
-                     document.body;
+    const panel = document.querySelector('.jobs-search__right-rail') || 
+                  document.querySelector('.job-view-layout-jobs-details') || 
+                  document.body;
 
-    // 1. Get the Company (This is working perfectly!)
-    const companyEl = jobPanel.querySelector('a[href*="/company/"]');
-    if (companyEl) {
-      company = companyEl.textContent.trim();
+    // A. Role, Company, and EXACT LINK
+    const companyEl = panel.querySelector('a[href*="/company/"]');
+    if (companyEl) result.company = companyEl.textContent.trim();
+    
+    const titleLink = panel.querySelector('a[href*="/jobs/view/"]');
+    if (titleLink) {
+        result.role = titleLink.textContent.trim();
+        // 🟢 FIX: Grabs the exact job link from the title, not the browser bar!
+        result.jobLink = titleLink.href.split('?')[0]; 
     }
+    
+    // Fallback if link is still empty
+    if (!result.jobLink) result.jobLink = window.location.href.split('?')[0];
 
-    // 2. Get the Role (The Hyperlink Strategy)
-    // Find the main job link at the top of the panel
-    const titleLink = jobPanel.querySelector('a[href*="/jobs/view/"]');
-    
-    if (titleLink && titleLink.textContent.trim().length > 2) {
-      // Grab the raw text and clean it up
-      role = titleLink.textContent.trim().split('\n')[0].trim();
-    } 
-    
-    // Fallback just in case: brute force grab the first real heading using textContent
-    if (role === 'Unknown Role') {
-      const headings = jobPanel.querySelectorAll('h1, h2');
-      for (let i = 0; i < headings.length; i++) {
-        let text = headings[i].textContent.trim();
-        if (text.length > 3 && !text.includes('Similar') && !text.includes('About')) {
-          role = text.split('\n')[0].trim();
-          break;
+    // B. Address (Location) and Stipend Hunter
+    const allSpans = panel.querySelectorAll('span, div');
+    let maxTextLength = 0;
+    let fallbackDescription = "";
+
+    for (let el of allSpans) {
+        let text = el.textContent.trim();
+
+        // Check small text blocks for Location and Money
+        if (text.length > 2 && text.length < 100) {
+            // Address: Looks for commas (e.g., "Ahmedabad, Gujarat, India")
+            if (result.location === 'Not specified' && text.includes(',')) {
+                if (!/\d/.test(text) && !text.toLowerCase().includes('save') && !text.toLowerCase().includes('apply')) {
+                    result.location = text;
+                }
+            }
+            // Stipend
+            if (result.stipend === 'Not specified' && (text.includes('₹') || text.includes('$') || text.toLowerCase().includes('lpa'))) {
+                result.stipend = text;
+            }
         }
-      }
+
+        // 🟢 FIX: Description Hunter (Finds the largest paragraph on the screen)
+        if (text.length > 400 && text.length > maxTextLength) {
+            // Prevent it from accidentally grabbing the whole webpage
+            if (!text.includes(panel.textContent.trim().substring(0, 100))) {
+                maxTextLength = text.length;
+                fallbackDescription = text;
+            }
+        }
     }
-  } catch (err) {
-    console.log("Scraping error:", err);
+
+    // C. Work Type
+    const lowerText = panel.innerText.toLowerCase();
+    if (lowerText.includes('remote')) result.workType = 'Remote';
+    else if (lowerText.includes('hybrid')) result.workType = 'Hybrid';
+    else if (lowerText.includes('on-site') || lowerText.includes('onsite')) result.workType = 'On-site';
+
+    // D. Final Description Lock-in
+    const descEl = panel.querySelector('article') || panel.querySelector('#job-details') || panel.querySelector('.jobs-description__content');
+    if (descEl) {
+        result.jobDescription = descEl.innerText.trim();
+    } else if (fallbackDescription.length > 0) {
+        result.jobDescription = fallbackDescription;
+    } else {
+        result.jobDescription = "Could not extract description automatically. Please view original link.";
+    }
+
+  } catch(e) {
+    console.log("Scraping error:", e);
   }
 
-  // Final safety check
-  if (!role || role === 'undefined') role = 'Unknown Role';
-
-  return { role, company };
+  console.log("🕵️‍♂️ DATA EXTRACTED:", result);
+  return result;
 }
-// 3. The SPAN-Proof Interceptor
+
+// 3. The Interceptor
 document.addEventListener('click', async (e) => {
   const clickedTarget = e.target.closest('button') || e.target;
   const buttonText = (clickedTarget.innerText || clickedTarget.textContent || "").toLowerCase();
@@ -74,8 +110,8 @@ document.addEventListener('click', async (e) => {
   if (buttonText.includes('apply')) {
     showToast("Intercepting apply click...", "success");
 
-    const { role, company } = extractJobDetails();
-    const jobUrl = window.location.href.split('?')[0]; 
+    // 🟢 WE GRAB EVERYTHING DIRECTLY FROM THE SCRAPER NOW
+    const { role, company, location, workType, stipend, jobDescription, jobLink } = extractJobDetails();
 
     chrome.storage.local.get(['jobTrackerToken'], async (result) => {
       const token = result.jobTrackerToken;
@@ -88,7 +124,16 @@ document.addEventListener('click', async (e) => {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ company, role, status: 'applied', jobLink: jobUrl })
+          body: JSON.stringify({ 
+            company, 
+            role, 
+            location, // The address!
+            workType, 
+            stipend, 
+            jobDescription, // The massive text block!
+            status: 'applied', 
+            jobLink // The exact URL!
+          })
         });
 
         if (response.ok) {

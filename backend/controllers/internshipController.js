@@ -16,7 +16,17 @@ exports.getInternships = async (req, res) => {
 // @route   POST /api/internships
 exports.createInternship = async (req, res) => {
   try {
-    const { company, role, status, jobLink, jobDescription } = req.body;
+    // 🟢 FIXED: Catching ALL the fields sent by the Chrome Extension
+    const { 
+      company, 
+      role, 
+      status, 
+      jobLink, 
+      jobDescription, 
+      location, 
+      workType, 
+      stipend 
+    } = req.body;
 
     const internship = await Internship.create({
       userId: req.user._id,
@@ -24,7 +34,10 @@ exports.createInternship = async (req, res) => {
       role,
       status: status || 'wishlist', // Defaults to wishlist if not provided
       jobLink,
-      jobDescription
+      jobDescription,
+      location,      // 🟢 ADDED
+      workType,      // 🟢 ADDED
+      stipend        // 🟢 ADDED
     });
 
     res.status(201).json(internship);

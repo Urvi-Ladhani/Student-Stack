@@ -4,19 +4,33 @@ import { Calendar, CheckCircle } from 'lucide-react';
 const InternshipRightPanel = ({ internships = [] }) => {
   // Extract all upcoming events from the internships array
   const upcomingEvents = [];
+  let pendingOAsCount = 0;
+  let scheduledInterviewsCount = 0;
   
   internships.forEach(app => {
     if (app.onlineAssessments) {
       app.onlineAssessments.forEach(oa => {
         if (oa.status === 'Pending') {
-          upcomingEvents.push({ company: app.company, title: `${oa.platform} OA`, date: new Date(oa.date), type: 'OA' });
+          pendingOAsCount++;
+          upcomingEvents.push({ 
+            company: app.company, 
+            title: `${oa.platform} OA`, 
+            date: new Date(oa.date), 
+            type: 'OA' 
+          });
         }
       });
     }
     if (app.interviews) {
       app.interviews.forEach(interview => {
         if (interview.outcome === 'Scheduled') {
-          upcomingEvents.push({ company: app.company, title: interview.round, date: new Date(interview.date), type: 'Interview' });
+          scheduledInterviewsCount++;
+          upcomingEvents.push({ 
+            company: app.company, 
+            title: interview.round, 
+            date: new Date(interview.date), 
+            type: 'Interview' 
+          });
         }
       });
     }
@@ -26,31 +40,44 @@ const InternshipRightPanel = ({ internships = [] }) => {
   upcomingEvents.sort((a, b) => a.date - b.date);
 
   return (
-    <div className="w-full h-full p-6 flex flex-col gap-6 overflow-y-auto scrollbar-hide text-white">
+    <div className="w-full h-full p-4 flex flex-col gap-4 overflow-hidden text-white">
       
-      <div className="bg-black/20 border border-white/5 rounded-2xl p-5 shadow-lg">
-        <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest mb-4 flex items-center gap-2">
+      {/* Active OAs - Stacked, formatted with clean centered earlier layout */}
+      <div className="bg-white/5 border border-white/5 rounded-2xl p-5 flex flex-col items-center justify-center text-center shrink-0">
+        <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Active OAs</span>
+        <span className="text-3xl font-extrabold text-blue-400 mt-1 drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]">{pendingOAsCount}</span>
+      </div>
+
+      {/* Interviews - Stacked, formatted with clean centered earlier layout */}
+      <div className="bg-white/5 border border-white/5 rounded-2xl p-5 flex flex-col items-center justify-center text-center shrink-0">
+        <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Interviews</span>
+        <span className="text-3xl font-extrabold text-blue-400 mt-1 drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]">{scheduledInterviewsCount}</span>
+      </div>
+
+      {/* Upcoming Deadlines Widget (Fills remaining height) */}
+      <div className="bg-white/5 border border-white/5 rounded-2xl p-5 shadow-lg flex-1 flex flex-col min-h-0">
+        <h3 className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-4 flex items-center gap-2 shrink-0">
           <Calendar className="w-4 h-4 text-indigo-400" /> Upcoming Deadlines
         </h3>
         
-        <div className="flex flex-col gap-3">
+        <div className="flex-1 overflow-y-auto scrollbar-thin pr-1 flex flex-col gap-3">
           {upcomingEvents.length > 0 ? (
             upcomingEvents.map((event, idx) => (
-              <div key={idx} className="flex items-start justify-between bg-white/5 p-3 rounded-xl border border-white/10">
-                <div>
-                  <p className="text-sm font-bold text-white">{event.company}</p>
-                  <p className="text-[10px] text-white/50">{event.title}</p>
+              <div key={idx} className="flex items-center justify-between bg-black/20 p-3.5 rounded-xl border border-white/5 hover:border-white/10 transition-all shrink-0">
+                <div className="min-w-0 flex-1 pr-3">
+                  <p className="text-xs font-bold text-white truncate">{event.company}</p>
+                  <p className="text-[9px] text-white/40 truncate mt-0.5">{event.title}</p>
                 </div>
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${event.type === 'OA' ? 'text-orange-400 bg-orange-400/10' : 'text-purple-400 bg-purple-400/10'}`}>
+                <span className="text-[9px] font-bold px-2 py-1 rounded-md shrink-0 text-blue-400 bg-blue-500/10 border border-blue-500/20 font-mono">
                   {event.date.toLocaleDateString()}
                 </span>
               </div>
             ))
           ) : (
-            <div className="text-center py-6 text-white/30 flex flex-col items-center gap-2">
-              <CheckCircle className="w-8 h-8 text-white/10" />
-              <p className="text-xs">No upcoming deadlines.</p>
-              <p className="text-[10px]">Time to apply to more jobs!</p>
+            <div className="text-center py-20 text-white/20 flex flex-col items-center justify-center gap-2 flex-1">
+              <CheckCircle className="w-8 h-8 text-white/5" />
+              <p className="text-xs">No upcoming tasks.</p>
+              <p className="text-[9px] text-white/30">Select or drop a card to wishlist/applied to begin!</p>
             </div>
           )}
         </div>

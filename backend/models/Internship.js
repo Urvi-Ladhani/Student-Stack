@@ -52,6 +52,12 @@ const internshipSchema = new mongoose.Schema({
     date: Date,
     notes: String,
     outcome: { type: String, enum: ['Scheduled', 'Passed', 'Failed'], default: 'Scheduled' }
+  }],
+
+  // 📝 PREPARATION CHECKLIST
+  prepChecklist: [{
+    text: { type: String, required: true },
+    checked: { type: Boolean, default: false }
   }]
 
 }, { timestamps: true });

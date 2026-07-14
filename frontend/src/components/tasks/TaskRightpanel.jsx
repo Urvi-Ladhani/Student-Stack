@@ -42,24 +42,24 @@ const TaskRightPanel = ({ tasks = [] }) => {
       {/* Priority Summary */}
       <div className="p-5 rounded-2xl bg-black/20 border border-white/10 backdrop-blur-xl shadow-xl shadow-black/20">
         <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-4 flex items-center gap-2">
-          <AlertCircle className="w-3 h-3 text-amber-400" /> Priority Breakdown
+          <AlertCircle className="w-3 h-3 text-blue-400" /> Priority Breakdown
         </h3>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex flex-col items-center justify-center">
-            <span className="text-xl font-bold text-red-400 drop-shadow-sm">{criticalCount}</span>
-            <span className="text-[10px] text-white/50 uppercase">Critical</span>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 hover:bg-white/10 transition-all flex flex-col items-center justify-center">
+            <span className="text-2xl font-extrabold text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]">{criticalCount}</span>
+            <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mt-1">Critical</span>
           </div>
-          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col items-center justify-center">
-            <span className="text-xl font-bold text-amber-400 drop-shadow-sm">{highCount}</span>
-            <span className="text-[10px] text-white/50 uppercase">High</span>
+          <div className="p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 hover:bg-white/10 transition-all flex flex-col items-center justify-center">
+            <span className="text-2xl font-extrabold text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]">{highCount}</span>
+            <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mt-1">High</span>
           </div>
-          <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 flex flex-col items-center justify-center">
-            <span className="text-xl font-bold text-blue-400 drop-shadow-sm">{medCount}</span>
-            <span className="text-[10px] text-white/50 uppercase">Medium</span>
+          <div className="p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 hover:bg-white/10 transition-all flex flex-col items-center justify-center">
+            <span className="text-2xl font-extrabold text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]">{medCount}</span>
+            <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mt-1">Medium</span>
           </div>
-          <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex flex-col items-center justify-center">
-            <span className="text-xl font-bold text-white/60 drop-shadow-sm">{lowCount}</span>
-            <span className="text-[10px] text-white/50 uppercase">Low</span>
+          <div className="p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 hover:bg-white/10 transition-all flex flex-col items-center justify-center">
+            <span className="text-2xl font-extrabold text-white/60 drop-shadow-[0_0_8px_rgba(255,255,255,0.05)]">{lowCount}</span>
+            <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mt-1">Low</span>
           </div>
         </div>
       </div>

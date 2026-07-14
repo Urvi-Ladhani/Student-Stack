@@ -8,7 +8,7 @@ const resumeSchema = new mongoose.Schema({
   },
   versionName: { 
     type: String, 
-    required: true // e.g., "SDE Backend Focus"
+    required: true 
   },
   fileUrl: { 
     type: String, 

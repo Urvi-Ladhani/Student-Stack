@@ -63,14 +63,21 @@ const InternshipRightPanel = ({ internships = [] }) => {
         <div className="flex-1 overflow-y-auto scrollbar-thin pr-1 flex flex-col gap-3">
           {upcomingEvents.length > 0 ? (
             upcomingEvents.map((event, idx) => (
-              <div key={idx} className="flex items-center justify-between bg-black/20 p-3.5 rounded-xl border border-white/5 hover:border-white/10 transition-all shrink-0">
-                <div className="min-w-0 flex-1 pr-3">
-                  <p className="text-xs font-bold text-white truncate">{event.company}</p>
-                  <p className="text-[9px] text-white/40 truncate mt-0.5">{event.title}</p>
+              <div key={idx} className="flex flex-col gap-1.5 bg-black/20 p-3.5 rounded-xl border border-white/5 hover:border-white/10 transition-all shrink-0">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-xs font-bold text-white break-words flex-1">{event.company}</p>
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-md shrink-0 text-blue-400 bg-blue-500/10 border border-blue-500/20 font-mono">
+                    {event.date.toLocaleDateString()}
+                  </span>
                 </div>
-                <span className="text-[9px] font-bold px-2 py-1 rounded-md shrink-0 text-blue-400 bg-blue-500/10 border border-blue-500/20 font-mono">
-                  {event.date.toLocaleDateString()}
-                </span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className={`text-[8px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded ${
+                    event.type === 'OA' ? 'text-purple-400 bg-purple-500/10 border border-purple-500/20' : 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20'
+                  }`}>
+                    {event.type}
+                  </span>
+                  <p className="text-[10px] text-white/50 break-words flex-1">{event.title}</p>
+                </div>
               </div>
             ))
           ) : (

@@ -5,8 +5,7 @@ exports.getTasks = async (req, res) => {
   try {
     const tasks = await Task.find({ 
       userId: req.user._id, 
-      isDeleted: false,
-      isArchived: false 
+      isDeleted: false
     }).sort({ deadline: 1 });
     res.json(tasks);
   } catch (error) {

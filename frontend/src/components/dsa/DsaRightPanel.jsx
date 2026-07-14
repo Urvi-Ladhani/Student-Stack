@@ -40,14 +40,14 @@ const DsaRightPanel = ({ problems }) => {
         <div className="flex flex-col gap-4 w-full">
           
           {/* LeetCode */}
-          <div className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5 hover:border-amber-500/30 transition-all w-full group">
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5 hover:border-blue-500/30 transition-all w-full group">
             {/* min-w-0 forces flexbox to respect truncation, stopping the overflow! */}
             <div className="flex flex-col gap-1 min-w-0 pr-2">
-              <span className="text-xs font-extrabold text-white/70 uppercase tracking-wide truncate group-hover:text-amber-400 transition-colors">LeetCode</span>
+              <span className="text-xs font-extrabold text-white/70 uppercase tracking-wide truncate group-hover:text-blue-400 transition-colors">LeetCode</span>
               <span className="text-[10px] font-bold text-white/40 whitespace-nowrap">{lc.solved} / {lc.total} Solved</span>
             </div>
             {/* Scaled down to w-13 h-13 so it fits perfectly in the sidebar */}
-            <div className="w-12 h-12 shrink-0 rounded-full border-[3px] border-amber-500/20 flex items-center justify-center font-bold text-lg text-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.1)]">
+            <div className="w-12 h-12 shrink-0 rounded-full border-[3px] border-blue-500/20 flex items-center justify-center font-bold text-lg text-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.1)]">
               {lc.solved}
             </div>
           </div>
@@ -64,12 +64,12 @@ const DsaRightPanel = ({ problems }) => {
           </div>
 
           {/* GeeksForGeeks */}
-          <div className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5 hover:border-emerald-500/30 transition-all w-full group">
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5 hover:border-blue-500/30 transition-all w-full group">
             <div className="flex flex-col gap-1 min-w-0 pr-2">
-              <span className="text-xs font-extrabold text-white/70 uppercase tracking-normal truncate group-hover:text-emerald-400 transition-colors">GeeksForGeeks</span>
+              <span className="text-xs font-extrabold text-white/70 uppercase tracking-normal truncate group-hover:text-blue-400 transition-colors">GeeksForGeeks</span>
               <span className="text-[10px] font-bold text-white/40 whitespace-nowrap">{gfg.solved} / {gfg.total} Solved</span>
             </div>
-            <div className="w-12 h-12 shrink-0 rounded-full border-[3px] border-emerald-500/20 flex items-center justify-center font-bold text-lg text-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.1)]">
+            <div className="w-12 h-12 shrink-0 rounded-full border-[3px] border-blue-500/20 flex items-center justify-center font-bold text-lg text-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.1)]">
               {gfg.solved}
             </div>
           </div>

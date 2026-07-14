@@ -337,19 +337,22 @@ const Taskspage = () => {
     return (
       <div 
         draggable onDragStart={(e) => handleDragStart(e, task._id)} onDragEnd={handleDragEnd}
-        className={`relative p-4 rounded-xl backdrop-blur-xl shadow-xl transition-all cursor-grab active:cursor-grabbing group ${isSelected ? 'bg-blue-500/20 border border-blue-500/40' : 'bg-black/30 border border-white/10 hover:border-white/30'} ${activeDropdown === task._id ? 'z-50' : 'z-10'}`}
+        className={`relative p-4 rounded-xl backdrop-blur-xl shadow-xl transition-all cursor-grab active:cursor-grabbing group w-full h-full flex flex-col justify-between ${isSelected ? 'bg-blue-500/20 border border-blue-500/40' : 'bg-black/30 border border-white/10 hover:border-white/30'} ${activeDropdown === task._id ? 'z-50' : 'z-10'}`}
       >
-        <div className="flex justify-between items-start mb-3">
-          <div className="flex items-center gap-2">
-            <button onClick={(e) => { e.stopPropagation(); toggleSelect(task._id); }} className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${isSelected ? 'bg-blue-500 border-blue-500 text-white' : 'border-white/30 opacity-0 group-hover:opacity-100'}`}>
-              {isSelected && <CheckSquare className="w-3 h-3" />}
-            </button>
-            <PriorityBadge priority={task.priority} />
+        <div>
+          <div className="flex justify-between items-start mb-3">
+            <div className="flex items-center gap-2">
+              <button onClick={(e) => { e.stopPropagation(); toggleSelect(task._id); }} className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${isSelected ? 'bg-blue-500 border-blue-500 text-white' : 'border-white/30 opacity-0 group-hover:opacity-100'}`}>
+                {isSelected && <CheckSquare className="w-3 h-3" />}
+              </button>
+              <PriorityBadge priority={task.priority} />
+            </div>
+            {renderContextMenu(task)}
           </div>
-          {renderContextMenu(task)}
+          <h4 className={`font-medium text-sm mb-2 ${task.status === 'done' ? 'text-white/50 line-through' : 'text-white'}`}>{task.title}</h4>
+          <div className="flex items-center gap-3 text-xs text-white/40 mb-4"><span className="flex items-center gap-1"><Tag className="w-3 h-3" /> {task.category}</span></div>
         </div>
-        <h4 className={`font-medium text-sm mb-2 ${task.status === 'done' ? 'text-white/50 line-through' : 'text-white'}`}>{task.title}</h4>
-        <div className="flex items-center gap-3 text-xs text-white/40 mb-4"><span className="flex items-center gap-1"><Tag className="w-3 h-3" /> {task.category}</span></div>
+        
         <div className="pt-3 border-t border-white/10 flex justify-between items-center">
           <GlassDropdown variant="status" value={task.status} options={[{value: 'todo', label: 'To Do'}, {value: 'in_progress', label: 'In Progress'}, {value: 'done', label: 'Done'}]} onChange={(v) => updateTaskStatus(task._id, v)} />
           {task.status !== 'done' && (
@@ -446,8 +449,8 @@ const Taskspage = () => {
               {activeTasks.map(task => <TaskListItem key={task._id} task={task} />)}
             </div>
             {overdueTasks.length > 0 && (
-              <div className="mt-8 pt-6 border-t border-red-500/20">
-                <div className="flex items-center gap-2 text-red-400 mb-4 font-semibold text-sm tracking-wide"><AlertTriangle className="w-4 h-4" /> Overdue Tasks</div>
+              <div className="mt-8 pt-6 border-t border-white/10">
+                <div className="flex items-center gap-2 text-white/60 mb-4 font-semibold text-sm tracking-wide"><AlertTriangle className="w-4 h-4 text-blue-400" /> Overdue Tasks</div>
                 <div className="flex flex-col gap-3">{overdueTasks.map(task => <TaskListItem key={task._id} task={task} />)}</div>
               </div>
             )}
@@ -471,9 +474,9 @@ const Taskspage = () => {
               ))}
             </div>
             {overdueTasks.length > 0 && (
-              <div className="mt-8 pt-6 border-t border-red-500/20">
-                <div className="flex items-center gap-2 text-red-400 mb-4 font-semibold text-sm tracking-wide"><AlertTriangle className="w-4 h-4" /> Overdue Tasks</div>
-                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">{overdueTasks.map(task => <div key={task._id} className="min-w-[300px] max-w-[300px]"><TaskCard task={task} /></div>)}</div>
+              <div className="mt-8 pt-6 border-t border-white/10">
+                <div className="flex items-center gap-2 text-white/60 mb-4 font-semibold text-sm tracking-wide"><AlertTriangle className="w-4 h-4 text-blue-400" /> Overdue Tasks</div>
+                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">{overdueTasks.map(task => <div key={task._id} className="min-w-[300px] max-w-[300px] flex"><TaskCard task={task} /></div>)}</div>
               </div>
             )}
           </div>

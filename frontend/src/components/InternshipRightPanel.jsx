@@ -40,30 +40,30 @@ const InternshipRightPanel = ({ internships = [] }) => {
   upcomingEvents.sort((a, b) => a.date - b.date);
 
   return (
-    <div className="w-full h-full p-4 flex flex-col gap-4 overflow-hidden text-white">
+    <div className="flex flex-col gap-6 h-full text-white">
       
       {/* Active OAs - Stacked, formatted with clean centered earlier layout */}
-      <div className="bg-white/5 border border-white/5 rounded-2xl p-5 flex flex-col items-center justify-center text-center shrink-0">
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col items-center justify-center text-center shrink-0">
         <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Active OAs</span>
         <span className="text-3xl font-extrabold text-blue-400 mt-1 drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]">{pendingOAsCount}</span>
       </div>
 
       {/* Interviews - Stacked, formatted with clean centered earlier layout */}
-      <div className="bg-white/5 border border-white/5 rounded-2xl p-5 flex flex-col items-center justify-center text-center shrink-0">
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col items-center justify-center text-center shrink-0">
         <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Interviews</span>
         <span className="text-3xl font-extrabold text-blue-400 mt-1 drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]">{scheduledInterviewsCount}</span>
       </div>
 
       {/* Upcoming Deadlines Widget (Fills remaining height) */}
-      <div className="bg-white/5 border border-white/5 rounded-2xl p-5 shadow-lg flex-1 flex flex-col min-h-0">
-        <h3 className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-4 flex items-center gap-2 shrink-0">
-          <Calendar className="w-4 h-4 text-indigo-400" /> Upcoming Deadlines
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg flex-1 flex flex-col min-h-0">
+        <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-4 flex items-center gap-2 shrink-0">
+          <Calendar className="w-3.5 h-3.5 text-blue-400" /> Upcoming Deadlines
         </h3>
         
         <div className="flex-1 overflow-y-auto scrollbar-thin pr-1 flex flex-col gap-3">
           {upcomingEvents.length > 0 ? (
             upcomingEvents.map((event, idx) => (
-              <div key={idx} className="flex flex-col gap-1.5 bg-black/20 p-3.5 rounded-xl border border-white/5 hover:border-white/10 transition-all shrink-0">
+              <div key={idx} className="flex flex-col gap-1.5 bg-black/20 p-3.5 rounded-xl border border-white/10 hover:border-white/20 transition-all shrink-0">
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-xs font-bold text-white break-words flex-1">{event.company}</p>
                   <span className="text-[9px] font-bold px-2 py-0.5 rounded-md shrink-0 text-blue-400 bg-blue-500/10 border border-blue-500/20 font-mono">

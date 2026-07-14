@@ -461,20 +461,20 @@ const AnalyticsPanel = ({ problems, syncStats, contestHistory }) => {
       <div className="flex flex-col gap-4 mt-2">
         <h3 className="text-[11px] font-bold text-white/50 uppercase tracking-widest pl-2">Global Lifetime Sync</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl bg-black/20 border border-amber-500/10 flex flex-col items-center justify-center gap-2 hover:border-amber-500/30 transition-all">
-            <span className="text-3xl font-extrabold text-amber-400">{syncStats.leetcode}</span>
+          <div className="p-5 rounded-2xl bg-black/20 border border-white/5 hover:border-blue-500/20 transition-all flex flex-col items-center justify-center gap-2">
+            <span className="text-3xl font-extrabold text-blue-400">{syncStats.leetcode}</span>
             <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">LeetCode</span>
           </div>
-          <div className="p-5 rounded-2xl bg-black/20 border border-blue-500/10 flex flex-col items-center justify-center gap-2 hover:border-blue-500/30 transition-all">
+          <div className="p-5 rounded-2xl bg-black/20 border border-white/5 hover:border-blue-500/20 transition-all flex flex-col items-center justify-center gap-2">
             <span className="text-3xl font-extrabold text-blue-400">{syncStats.codeforces}</span>
             <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Codeforces</span>
           </div>
-          <div className="p-5 rounded-2xl bg-black/20 border border-emerald-500/10 flex flex-col items-center justify-center gap-2 hover:border-emerald-500/30 transition-all">
-            <span className="text-3xl font-extrabold text-emerald-400">{syncStats.gfg}</span>
+          <div className="p-5 rounded-2xl bg-black/20 border border-white/5 hover:border-blue-500/20 transition-all flex flex-col items-center justify-center gap-2">
+            <span className="text-3xl font-extrabold text-blue-400">{syncStats.gfg}</span>
             <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">GeeksForGeeks</span>
           </div>
-          <div className="p-5 rounded-2xl bg-black/20 border border-purple-500/10 flex flex-col items-center justify-center gap-2 hover:border-purple-500/30 transition-all">
-            <span className="text-3xl font-extrabold text-purple-400">{contestHistory?.length || 0}</span>
+          <div className="p-5 rounded-2xl bg-black/20 border border-white/5 hover:border-blue-500/20 transition-all flex flex-col items-center justify-center gap-2">
+            <span className="text-3xl font-extrabold text-blue-400">{contestHistory?.length || 0}</span>
             <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Contests</span>
           </div>
         </div>
@@ -529,7 +529,7 @@ const ContestHubPanel = ({ upcomingContests, contestHistory, handleAddToCalendar
                 <div key={contest.id} className="p-4 rounded-2xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-lg hover:border-white/20 transition-all group">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex flex-col">
-                      <span className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${contest.color === 'amber' ? 'text-amber-400' : contest.color === 'blue' ? 'text-blue-400' : 'text-emerald-400'}`}>
+                      <span className="text-[10px] font-bold uppercase tracking-wider mb-1 text-blue-400">
                         {contest.platform}
                       </span>
                       <h4 className="text-sm font-bold text-white group-hover:text-blue-300 transition-colors">{contest.name}</h4>
@@ -865,9 +865,9 @@ const DsaPage = () => {
 
   const getPlatformStyle = (platform) => {
     switch(platform) {
-      case 'LeetCode': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+      case 'LeetCode': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
       case 'Codeforces': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
-      case 'GeeksForGeeks': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+      case 'GeeksForGeeks': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
       default: return 'text-white/60 bg-white/5 border-white/10';
     }
   };

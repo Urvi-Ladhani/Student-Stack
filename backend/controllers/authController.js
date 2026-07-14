@@ -107,8 +107,73 @@ const getProfile = async (req, res) => {
     res.status(200).json(req.user);
 };
 
+const googleAuth = async (req, res) => {
+    try {
+        const { idToken, name: directName, email: directEmail } = req.body;
+        let name = directName;
+        let email = directEmail;
+
+        if (idToken) {
+            // Verify the Google ID token securely with Google's API
+            const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+            if (!googleRes.ok) {
+                return res.status(400).json({ message: "Invalid Google OAuth token" });
+            }
+            const payload = await googleRes.json();
+            name = payload.name;
+            email = payload.email;
+        }
+
+        if (!email) {
+            return res.status(400).json({ message: "Email is required for authentication" });
+        }
+
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // Create user in the database
+            const placeholderPassword = Math.random().toString(36).slice(-8);
+            const hashedPassword = await bcrypt.hash(placeholderPassword, 10);
+            user = await User.create({
+                name: name || "Google User",
+                email,
+                password: hashedPassword,
+                university: "Tech University",
+                branch: "Computer Science",
+                semester: "6th",
+                targetRole: "Software Engineer"
+            });
+        }
+
+        const token = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        res.status(200).json({
+            message: "Google Auth successful",
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                fullName: user.name,
+                email: user.email,
+                university: user.university,
+                branch: user.branch,
+                semester: user.semester,
+                targetRole: user.targetRole
+            }
+        });
+    } catch (error) {
+        console.error("Google Auth controller error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     signupUser,
     loginUser,
-    getProfile
+    getProfile,
+    googleAuth
 };

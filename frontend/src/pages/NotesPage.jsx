@@ -242,7 +242,7 @@ const NotesPage = () => {
                     
                     <button 
                       onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ isOpen: true, noteId: note._id }); }} 
-                      className="absolute top-4 right-4 p-2 bg-red-500/20 text-red-400 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 hover:text-white z-10"
+                      className="absolute top-4 right-4 p-2 bg-white/5 text-white/40 rounded-lg opacity-0 group-hover:opacity-100 border border-white/10 transition-all hover:bg-red-500/20 hover:text-red-400 z-10"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -258,17 +258,11 @@ const NotesPage = () => {
                       </div>
                       
                       {note.editorMode === 'pdf' ? (
-                        <div className="flex items-center gap-2 mt-2 text-indigo-300 bg-indigo-500/10 p-3 rounded-xl border border-indigo-500/20">
-                          <FileText className="w-5 h-5" /> 
-                          <span className="text-xs font-bold">PDF Document Uploaded</span>
-                        </div>
+                        <p className="text-xs text-white/40 italic flex items-center gap-2 mt-4"><FileText className="w-4 h-4 text-indigo-400/50" /> PDF Document Uploaded</p>
                       ) : note.editorMode === 'text' ? (
                         <p className="text-sm text-white/40 line-clamp-3 mb-4">{note.content}</p>
                       ) : (
-                        <div className="flex items-center gap-2 mt-2 text-emerald-300 bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20">
-                          <PenTool className="w-5 h-5" /> 
-                          <span className="text-xs font-bold">Canvas Whiteboard</span>
-                        </div>
+                        <p className="text-xs text-white/40 italic flex items-center gap-2 mt-4"><PenTool className="w-4 h-4 text-blue-400/50" /> Canvas Whiteboard Drawing</p>
                       )}
                     </div>
                   </div>
@@ -286,7 +280,7 @@ const NotesPage = () => {
               <div className="h-20 shrink-0 border-b border-white/10 px-8 flex items-center justify-between bg-transparent">
                 <div className="flex items-center bg-black/20 p-1 rounded-xl border border-white/10">
                   <button onClick={() => setEditorData({...editorData, editorMode: 'text'})} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${editorData.editorMode === 'text' ? 'bg-indigo-500 text-white shadow-md' : 'text-white/50 hover:text-white'}`}><BookOpen className="w-3.5 h-3.5" /> Text</button>
-                  <button onClick={() => setEditorData({...editorData, editorMode: 'canvas'})} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${editorData.editorMode === 'canvas' ? 'bg-emerald-500 text-white shadow-md' : 'text-white/50 hover:text-white'}`}><PenTool className="w-3.5 h-3.5" /> Flowchart</button>
+                  <button onClick={() => setEditorData({...editorData, editorMode: 'canvas'})} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${editorData.editorMode === 'canvas' ? 'bg-indigo-500 text-white shadow-md' : 'text-white/50 hover:text-white'}`}><PenTool className="w-3.5 h-3.5" /> Flowchart</button>
                 </div>
                 <div className="flex items-center gap-4">
                   <button onClick={handleSaveAndClose} className="px-6 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold shadow-lg flex items-center gap-2"><Save className="w-4 h-4" /> Save</button>

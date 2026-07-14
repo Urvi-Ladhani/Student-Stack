@@ -136,9 +136,9 @@ const InternshipPage = () => {
     company: '', 
     role: '', 
     status: 'wishlist',
-    location: 'Not specified',
+    location: '',
     workType: 'Remote',
-    stipend: 'Not specified',
+    stipend: '',
     jobLink: '',
     jobDescription: ''
   });
@@ -617,8 +617,8 @@ const InternshipPage = () => {
                                 role: app.role || '',
                                 company: app.company || '',
                                 workType: app.workType || 'Remote',
-                                location: app.location || 'Not specified',
-                                stipend: app.stipend || 'Not specified',
+                                location: app.location === 'Not specified' ? '' : (app.location || ''),
+                                stipend: app.stipend === 'Not specified' ? '' : (app.stipend || ''),
                                 jobLink: app.jobLink || '',
                                 jobDescription: app.jobDescription || ''
                               });
@@ -934,8 +934,8 @@ const InternshipPage = () => {
                           role: selectedJob.role || '',
                           company: selectedJob.company || '',
                           workType: selectedJob.workType || 'Remote',
-                          location: selectedJob.location || 'Not specified',
-                          stipend: selectedJob.stipend || 'Not specified',
+                          location: selectedJob.location === 'Not specified' ? '' : (selectedJob.location || ''),
+                          stipend: selectedJob.stipend === 'Not specified' ? '' : (selectedJob.stipend || ''),
                           jobLink: selectedJob.jobLink || '',
                           jobDescription: selectedJob.jobDescription || ''
                         });
@@ -952,8 +952,8 @@ const InternshipPage = () => {
                         role: selectedJob.role || '',
                         company: selectedJob.company || '',
                         workType: selectedJob.workType || 'Remote',
-                        location: selectedJob.location || 'Not specified',
-                        stipend: selectedJob.stipend || 'Not specified',
+                        location: selectedJob.location === 'Not specified' ? '' : (selectedJob.location || ''),
+                        stipend: selectedJob.stipend === 'Not specified' ? '' : (selectedJob.stipend || ''),
                         jobLink: selectedJob.jobLink || '',
                         jobDescription: selectedJob.jobDescription || ''
                       });
@@ -1074,6 +1074,7 @@ const InternshipPage = () => {
                           type="text" 
                           value={editForm.location} 
                           onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} 
+                          placeholder="e.g. San Francisco, CA"
                           className="bg-black/40 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-indigo-500 w-full mt-1"
                         />
                       ) : (
@@ -1091,6 +1092,7 @@ const InternshipPage = () => {
                           type="text" 
                           value={editForm.stipend} 
                           onChange={(e) => setEditForm({ ...editForm, stipend: e.target.value })} 
+                          placeholder="e.g. $50/hr or Unpaid"
                           className="bg-black/40 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-indigo-500 w-full font-mono mt-1"
                         />
                       ) : (

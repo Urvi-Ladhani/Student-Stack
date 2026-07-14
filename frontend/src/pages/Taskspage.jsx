@@ -149,7 +149,7 @@ const TaskModal = ({ isOpen, onClose, onSave, initialData }) => {
     if (initialData) {
       setFormData({ ...initialData, deadline: initialData.deadline ? new Date(initialData.deadline).toISOString().split('T')[0] : '' });
     } else {
-      setFormData({ title: '', category: 'Academic', priority: 'medium', deadline: '', estimatedMinutes: 30 });
+      setFormData({ title: '', category: 'Academic', priority: 'medium', deadline: '', estimatedMinutes: '' });
     }
   }, [initialData, isOpen]);
 
@@ -198,7 +198,7 @@ const TaskModal = ({ isOpen, onClose, onSave, initialData }) => {
             </div>
             <div>
               <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Est. Minutes</label>
-              <input type="number" min="5" value={formData.estimatedMinutes} onChange={(e) => setFormData({...formData, estimatedMinutes: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500/50 outline-none transition-all" />
+              <input type="number" min="5" value={formData.estimatedMinutes} onChange={(e) => setFormData({...formData, estimatedMinutes: e.target.value})} placeholder="30" className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500/50 outline-none transition-all" />
             </div>
           </div>
           <div className="pt-4 mt-2 border-t border-white/10 flex gap-3">
@@ -332,12 +332,12 @@ const Taskspage = () => {
     </div>
   );
 
-  const TaskCard = ({ task }) => {
+  const TaskCard = ({ task, hFull = false }) => {
     const isSelected = selectedTasks.includes(task._id);
     return (
       <div 
         draggable onDragStart={(e) => handleDragStart(e, task._id)} onDragEnd={handleDragEnd}
-        className={`relative p-4 rounded-xl backdrop-blur-xl shadow-xl transition-all cursor-grab active:cursor-grabbing group w-full h-full flex flex-col justify-between ${isSelected ? 'bg-blue-500/20 border border-blue-500/40' : 'bg-black/30 border border-white/10 hover:border-white/30'} ${activeDropdown === task._id ? 'z-50' : 'z-10'}`}
+        className={`relative p-4 rounded-xl backdrop-blur-xl shadow-xl transition-all cursor-grab active:cursor-grabbing group w-full ${hFull ? 'h-full flex flex-col justify-between' : ''} ${isSelected ? 'bg-blue-500/20 border border-blue-500/40' : 'bg-black/30 border border-white/10 hover:border-white/30'} ${activeDropdown === task._id ? 'z-50' : 'z-10'}`}
       >
         <div>
           <div className="flex justify-between items-start mb-3">
@@ -476,7 +476,7 @@ const Taskspage = () => {
             {overdueTasks.length > 0 && (
               <div className="mt-8 pt-6 border-t border-white/10">
                 <div className="flex items-center gap-2 text-white/60 mb-4 font-semibold text-sm tracking-wide"><AlertTriangle className="w-4 h-4 text-blue-400" /> Overdue Tasks</div>
-                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">{overdueTasks.map(task => <div key={task._id} className="min-w-[300px] max-w-[300px] flex"><TaskCard task={task} /></div>)}</div>
+                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">{overdueTasks.map(task => <div key={task._id} className="min-w-[300px] max-w-[300px] flex"><TaskCard task={task} hFull={true} /></div>)}</div>
               </div>
             )}
           </div>

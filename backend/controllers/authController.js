@@ -180,9 +180,54 @@ const googleAuth = async (req, res) => {
     }
 };
 
+const logStudySession = async (req, res) => {
+    try {
+        const { minutes } = req.body;
+        if (!minutes || isNaN(minutes)) {
+            return res.status(400).json({ message: "Invalid minutes value" });
+        }
+
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Log session
+        user.studySessions.push({ date: new Date(), minutes: Number(minutes) });
+
+        // Streak calculations
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        const lastDate = user.stats.lastStudyDate ? new Date(user.stats.lastStudyDate) : null;
+        if (lastDate) {
+            lastDate.setHours(0,0,0,0);
+            const diffTime = today - lastDate;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 1) {
+                user.stats.studyStreak += 1;
+            } else if (diffDays > 1) {
+                user.stats.studyStreak = 1;
+            }
+        } else {
+            user.stats.studyStreak = 1;
+        }
+
+        user.stats.lastStudyDate = new Date();
+        user.stats.longestStreak = Math.max(user.stats.longestStreak, user.stats.studyStreak);
+        user.stats.totalStudyMinutes = (user.stats.totalStudyMinutes || 0) + Number(minutes);
+
+        await user.save();
+        res.status(200).json({ message: "Study session logged successfully", stats: user.stats });
+    } catch (error) {
+        console.error("Log study session error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     signupUser,
     loginUser,
     getProfile,
-    googleAuth
+    googleAuth,
+    logStudySession
 };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Command, LayoutDashboard, CheckSquare, Code2, 
-  BookOpen, Briefcase, Timer, Plus, LogOut, X, Sparkles, Clock, Play, CheckCircle2, Menu
+  BookOpen, Briefcase, Timer, Plus, LogOut, X, Sparkles, Clock, Play, CheckCircle2, Menu, ChevronLeft
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -15,6 +15,14 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('focus'); // 'focus' | 'jot'
+  const [commandAction, setCommandAction] = useState(null); // null | 'task' | 'focus' | 'note' | 'dsa' | 'internship'
+  const [dsaTopics, setDsaTopics] = useState([]);
+
+  // Quick Action form states
+  const [quickTask, setQuickTask] = useState({ title: '', priority: 'medium', category: 'Academic', estimatedMinutes: 30 });
+  const [quickNote, setQuickNote] = useState({ title: '', content: '' });
+  const [quickDsa, setQuickDsa] = useState({ title: '', url: '', difficulty: 'medium', platform: 'LeetCode', topicId: '' });
+  const [quickInternship, setQuickInternship] = useState({ company: '', role: '', status: 'wishlist' });
   const [sessionActive, setSessionActive] = useState(false);
   const [sessionName, setSessionName] = useState('');
   const [timeLeft, setTimeLeft] = useState(0);
@@ -38,18 +46,64 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
 
   // Sync Focus Session with localStorage to persist across route navigation
   useEffect(() => {
-    const checkFocusSession = () => {
-      const endTime = localStorage.getItem('focus_session_end');
+    const checkFocusSession = async () => {
+      const status = localStorage.getItem('focus_session_status');
       const name = localStorage.getItem('focus_session_name') || 'Deep Work';
+      const duration = parseInt(localStorage.getItem('focus_session_duration')) || 1500;
       
-      if (endTime) {
-        const remaining = Math.max(0, Math.floor((parseInt(endTime) - Date.now()) / 1000));
-        if (remaining > 0) {
-          setTimeLeft(remaining);
-          setSessionName(name);
-          setSessionActive(true);
-          return;
+      if (status === 'running') {
+        const endTime = localStorage.getItem('focus_session_end');
+        if (endTime) {
+          const remaining = Math.max(0, Math.floor((parseInt(endTime) - Date.now()) / 1000));
+          if (remaining > 0) {
+            setTimeLeft(remaining);
+            setSessionName(name);
+            setSessionActive(true);
+            return;
+          } else {
+            // Auto complete!
+            localStorage.setItem('focus_session_status', 'completed');
+            const elapsedMinutes = Math.round(duration / 60);
+            if (elapsedMinutes > 0) {
+              try {
+                const token = localStorage.getItem('token');
+                await fetch('http://localhost:5000/api/auth/study-session', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                  },
+                  body: JSON.stringify({ minutes: elapsedMinutes })
+                });
+                window.dispatchEvent(new Event('study-session-logged'));
+              } catch (err) {
+                console.error("Error logging auto-completed focus session:", err);
+              }
+            }
+
+            localStorage.removeItem('focus_session_status');
+            localStorage.removeItem('focus_session_name');
+            localStorage.removeItem('focus_session_end');
+            localStorage.removeItem('focus_session_duration');
+            localStorage.removeItem('focus_session_time_left');
+            setSessionActive(false);
+            setTimeLeft(0);
+
+            setDialogState({
+              isOpen: true,
+              title: 'Session Complete!',
+              message: `Congratulations! You completed the study session: "${name}". Your hours and streak are updated.`,
+              type: 'success'
+            });
+            return;
+          }
         }
+      } else if (status === 'paused') {
+        const remaining = parseInt(localStorage.getItem('focus_session_time_left')) || 0;
+        setTimeLeft(remaining);
+        setSessionName(name);
+        setSessionActive(true);
+        return;
       }
       setSessionActive(false);
       setTimeLeft(0);
@@ -61,27 +115,92 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
   }, []);
 
   const startFocusSession = (durationMinutes, name) => {
-    const durationMs = durationMinutes * 60 * 1000;
-    const endTimestamp = Date.now() + durationMs;
+    const durationSeconds = durationMinutes * 60;
+    const endTimestamp = Date.now() + durationSeconds * 1000;
+    
+    localStorage.setItem('focus_session_status', 'running');
+    localStorage.setItem('focus_session_duration', durationSeconds.toString());
     localStorage.setItem('focus_session_end', endTimestamp.toString());
     localStorage.setItem('focus_session_name', name || 'Deep Work');
+    
     setSessionName(name || 'Deep Work');
-    setTimeLeft(durationMinutes * 60);
+    setTimeLeft(durationSeconds);
     setSessionActive(true);
     setIsModalOpen(false);
   };
 
-  const stopFocusSession = () => {
-    localStorage.removeItem('focus_session_end');
+  const stopFocusSession = async () => {
+    const status = localStorage.getItem('focus_session_status');
+    const duration = parseInt(localStorage.getItem('focus_session_duration')) || 1500;
+    
+    let elapsedSeconds = 0;
+    if (status === 'running') {
+      const endTime = parseInt(localStorage.getItem('focus_session_end')) || 0;
+      const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+      elapsedSeconds = duration - remaining;
+    } else if (status === 'paused') {
+      const remaining = parseInt(localStorage.getItem('focus_session_time_left')) || 0;
+      elapsedSeconds = duration - remaining;
+    }
+
+    const elapsedMinutes = Math.round(elapsedSeconds / 60);
+    if (elapsedMinutes > 0) {
+      try {
+        const token = localStorage.getItem('token');
+        await fetch('http://localhost:5000/api/auth/study-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ minutes: elapsedMinutes })
+        });
+        window.dispatchEvent(new Event('study-session-logged'));
+      } catch (err) {
+        console.error("Error logging stopped focus session:", err);
+      }
+    }
+
+    localStorage.removeItem('focus_session_status');
     localStorage.removeItem('focus_session_name');
+    localStorage.removeItem('focus_session_end');
+    localStorage.removeItem('focus_session_duration');
+    localStorage.removeItem('focus_session_time_left');
     setSessionActive(false);
     setTimeLeft(0);
   };
 
-  const handleQuickJotSubmit = async (e) => {
-    e.preventDefault();
-    if (!jotTitle.trim()) return;
+  // Fetch topics for DSA Quick Action selection list
+  useEffect(() => {
+    if (isModalOpen && commandAction === 'dsa') {
+      const fetchTopics = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const headers = { 'Authorization': `Bearer ${token}` };
+          const rmRes = await fetch('http://localhost:5000/api/dsa/roadmaps', { headers });
+          if (rmRes.ok) {
+            const rms = await rmRes.json();
+            if (rms.length > 0) {
+              const topRes = await fetch(`http://localhost:5000/api/dsa/topics/${rms[0]._id}`, { headers });
+              if (topRes.ok) {
+                const tops = await topRes.json();
+                setDsaTopics(tops);
+                if (tops.length > 0) {
+                  setQuickDsa(prev => ({ ...prev, topicId: tops[0]._id }));
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Failed to load DSA topics for quick action", err);
+        }
+      };
+      fetchTopics();
+    }
+  }, [isModalOpen, commandAction]);
 
+  const handleQuickActionSubmit = async (e, type) => {
+    e.preventDefault();
     try {
       const token = localStorage.getItem('token');
       const headers = { 
@@ -89,48 +208,69 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
         'Authorization': `Bearer ${token}` 
       };
 
-      if (jotType === 'task') {
-        const res = await fetch('http://localhost:5000/api/tasks', {
+      let res;
+      if (type === 'task') {
+        res = await fetch('http://localhost:5000/api/tasks', {
           method: 'POST',
           headers,
-          body: JSON.stringify({
-            title: jotTitle,
-            category: 'Academic',
-            priority: 'medium',
-            deadline: new Date(Date.now() + 86400000).toISOString().split('T')[0], // Tomorrow
-            estimatedMinutes: 30
-          })
+          body: JSON.stringify(quickTask)
         });
-        if (res.ok) {
-          setDialogState({
-            isOpen: true,
-            title: 'Task Created',
-            message: 'Your task has been added successfully to your roadmap.',
-            type: 'task'
-          });
-        }
-      } else {
-        const res = await fetch('http://localhost:5000/api/notes', {
+      } else if (type === 'note') {
+        res = await fetch('http://localhost:5000/api/notes', {
           method: 'POST',
           headers,
           body: JSON.stringify({
-            title: jotTitle,
-            content: 'Instant note recorded from Quick Action.',
-            sourceModule: 'General',
+            title: quickNote.title,
+            content: quickNote.content || 'Quick Note recorded.',
             editorMode: 'text'
           })
         });
-        if (res.ok) {
-          setDialogState({
-            isOpen: true,
-            title: 'Note Recorded',
-            message: 'Your instant note has been added successfully to your library.',
-            type: 'note'
-          });
+      } else if (type === 'dsa') {
+        if (!quickDsa.topicId) {
+          alert("Please select a DSA topic.");
+          return;
         }
+        res = await fetch('http://localhost:5000/api/dsa/problems', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(quickDsa)
+        });
+      } else if (type === 'internship') {
+        res = await fetch('http://localhost:5000/api/internships', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(quickInternship)
+        });
       }
-      setJotTitle('');
-      setIsModalOpen(false);
+
+      if (res && res.ok) {
+        setDialogState({
+          isOpen: true,
+          title: 'Success!',
+          message: `Your ${type} has been added successfully.`,
+          type: 'success'
+        });
+        
+        // Reset states
+        setQuickTask({ title: '', priority: 'medium', category: 'Academic', estimatedMinutes: 30 });
+        setQuickNote({ title: '', content: '' });
+        setQuickDsa({ title: '', url: '', difficulty: 'medium', platform: 'LeetCode', topicId: '' });
+        setQuickInternship({ company: '', role: '', status: 'wishlist' });
+        setCommandAction(null);
+        setIsModalOpen(false);
+
+        // Notify other widgets to refresh
+        window.dispatchEvent(new Event('dashboard-data-updated'));
+        
+        // Force refresh for lists if we are on their respective page
+        if (window.location.pathname === '/tasks') window.location.reload();
+        if (window.location.pathname === '/notes') window.location.reload();
+        if (window.location.pathname === '/dsa') window.location.reload();
+        if (window.location.pathname === '/internships') window.location.reload();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(`Error: ${err.message || 'Operation failed'}`);
+      }
     } catch (err) {
       console.error("Quick action save error:", err);
       setDialogState({
@@ -393,50 +533,175 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
       {/* COMMAND CENTER QUICK ACTION MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-md strong-glass p-7 shadow-2xl text-white">
+          <div className="w-full max-w-lg strong-glass p-7 shadow-2xl text-white">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-blue-400" /> Command Center
-              </h3>
+              <div className="flex items-center gap-2">
+                {commandAction && (
+                  <button 
+                    onClick={() => setCommandAction(null)}
+                    className="p-1.5 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors mr-1"
+                    title="Back to shortcuts"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                )}
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-blue-400" /> 
+                  {commandAction ? `Quick ${commandAction.charAt(0).toUpperCase() + commandAction.slice(1)}` : 'Command Center'}
+                </h3>
+              </div>
               <button 
-                onClick={() => setIsModalOpen(false)} 
+                onClick={() => { setIsModalOpen(false); setCommandAction(null); }} 
                 className="p-1.5 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Tab Switched */}
-            <div className="flex border-b border-white/10 mb-6">
-              <button 
-                onClick={() => setActiveTab('focus')}
-                className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-all ${activeTab === 'focus' ? 'border-blue-400 text-blue-300' : 'border-transparent text-white/40 hover:text-white/80'}`}
-              >
-                Focus Timer
-              </button>
-              <button 
-                onClick={() => setActiveTab('jot')}
-                className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-all ${activeTab === 'jot' ? 'border-blue-400 text-blue-300' : 'border-transparent text-white/40 hover:text-white/80'}`}
-              >
-                Quick Jot
-              </button>
-            </div>
+            {/* Shortcut Grid Screen */}
+            {commandAction === null && (
+              <div className="space-y-4">
+                <p className="text-xs text-white/45 uppercase tracking-widest font-semibold mb-3">Shortcuts & Direct Actions</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <button 
+                    onClick={() => setCommandAction('task')}
+                    className="p-4 rounded-xl light-glass text-left hover-lift-scale flex flex-col gap-3 group border border-white/5 hover:border-blue-500/20"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500/20 transition-colors">
+                      <CheckSquare className="w-4.5 h-4.5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">Create Task</p>
+                      <p className="text-[10px] text-white/40">Add a task to Task OS</p>
+                    </div>
+                  </button>
 
-            {activeTab === 'focus' ? (
+                  <button 
+                    onClick={() => setCommandAction('focus')}
+                    className="p-4 rounded-xl light-glass text-left hover-lift-scale flex flex-col gap-3 group border border-white/5 hover:border-emerald-500/20"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500/20 transition-colors">
+                      <Timer className="w-4.5 h-4.5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">Start Study Session</p>
+                      <p className="text-[10px] text-white/40">Launch focus arena timer</p>
+                    </div>
+                  </button>
+
+                  <button 
+                    onClick={() => setCommandAction('note')}
+                    className="p-4 rounded-xl light-glass text-left hover-lift-scale flex flex-col gap-3 group border border-white/5 hover:border-purple-500/20"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:bg-purple-500/20 transition-colors">
+                      <BookOpen className="w-4.5 h-4.5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">Add Note</p>
+                      <p className="text-[10px] text-white/40">Jot a quick note instantly</p>
+                    </div>
+                  </button>
+
+                  <button 
+                    onClick={() => setCommandAction('dsa')}
+                    className="p-4 rounded-xl light-glass text-left hover-lift-scale flex flex-col gap-3 group border border-white/5 hover:border-orange-500/20"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-400 group-hover:bg-orange-500/20 transition-colors">
+                      <Code2 className="w-4.5 h-4.5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">Add DSA Problem</p>
+                      <p className="text-[10px] text-white/40">Log a problem attempt</p>
+                    </div>
+                  </button>
+                </div>
+
+                <button 
+                  onClick={() => setCommandAction('internship')}
+                  className="w-full p-4 rounded-xl light-glass text-left hover-lift-scale flex items-center gap-4 group border border-white/5 hover:border-pink-500/20 mt-4"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-pink-500/10 flex items-center justify-center text-pink-400 group-hover:bg-pink-500/20 transition-colors shrink-0">
+                    <Briefcase className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white">Add Internship Application</p>
+                    <p className="text-[10px] text-white/40">Log a job, ATS details, or wishlist application</p>
+                  </div>
+                </button>
+              </div>
+            )}
+
+            {/* CREATE TASK FORM */}
+            {commandAction === 'task' && (
+              <form onSubmit={(e) => handleQuickActionSubmit(e, 'task')} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Task Title</label>
+                  <input 
+                    type="text" 
+                    required 
+                    value={quickTask.title} 
+                    onChange={e => setQuickTask({ ...quickTask, title: e.target.value })}
+                    placeholder="Enter task title..." 
+                    className="w-full glass-input px-4 py-3 text-sm text-white" 
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Category</label>
+                    <select 
+                      value={quickTask.category} 
+                      onChange={e => setQuickTask({ ...quickTask, category: e.target.value })}
+                      className="w-full glass-input px-4 py-3 text-sm text-white bg-black/60 outline-none"
+                    >
+                      {['Academic', 'DSA', 'Internship', 'Personal', 'Project'].map(cat => (
+                        <option key={cat} value={cat} className="bg-slate-900">{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Priority</label>
+                    <select 
+                      value={quickTask.priority} 
+                      onChange={e => setQuickTask({ ...quickTask, priority: e.target.value })}
+                      className="w-full glass-input px-4 py-3 text-sm text-white bg-black/60 outline-none"
+                    >
+                      {['critical', 'high', 'medium', 'low'].map(prio => (
+                        <option key={prio} value={prio} className="bg-slate-900 uppercase text-[10px]">{prio}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Est. Time (Minutes)</label>
+                  <input 
+                    type="number" 
+                    required 
+                    value={quickTask.estimatedMinutes} 
+                    onChange={e => setQuickTask({ ...quickTask, estimatedMinutes: Number(e.target.value) })}
+                    className="w-full glass-input px-4 py-3 text-sm text-white" 
+                  />
+                </div>
+                <button type="submit" className="w-full py-3 glass-btn-primary mt-2">
+                  <Plus className="w-4 h-4" /> Save Task
+                </button>
+              </form>
+            )}
+
+            {/* FOCUS TIMER FORM */}
+            {commandAction === 'focus' && (
               <div className="space-y-6">
                 <div>
-                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Session Name</label>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Session Topic / Name</label>
                   <input 
                     type="text" 
                     value={sessionName} 
                     onChange={(e) => setSessionName(e.target.value)} 
-                    placeholder="e.g. DSA Practice, Math Revision..." 
-                    className="w-full glass-input px-4 py-3"
+                    placeholder="e.g. DSA Revision, Deep Work..." 
+                    className="w-full glass-input px-4 py-3 text-sm text-white"
                   />
                 </div>
-                
                 <div>
-                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-3">Duration</label>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-3">Duration</label>
                   <div className="grid grid-cols-3 gap-3">
                     {[
                       { label: '25 Min', val: 25 },
@@ -446,7 +711,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
                       <button 
                         key={btn.val}
                         onClick={() => startFocusSession(btn.val, sessionName || 'Deep Work')}
-                        className="py-3 rounded-xl glass-btn-secondary text-xs flex flex-col items-center justify-center gap-1.5"
+                        className="py-3.5 rounded-xl glass-btn-secondary text-xs flex flex-col items-center justify-center gap-1.5"
                       >
                         <Clock className="w-4 h-4 text-blue-400" />
                         {btn.label}
@@ -455,42 +720,155 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
                   </div>
                 </div>
               </div>
-            ) : (
-              <form onSubmit={handleQuickJotSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Jot Down an Idea / Task</label>
-                  <div className="flex bg-white/5 border border-white/10 rounded-xl p-1 mb-4">
-                    <button 
-                      type="button"
-                      onClick={() => setJotType('task')}
-                      className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${jotType === 'task' ? 'bg-white/10 text-white shadow' : 'text-white/40'}`}
-                    >
-                      Quick Task
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => setJotType('note')}
-                      className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${jotType === 'note' ? 'bg-white/10 text-white shadow' : 'text-white/40'}`}
-                    >
-                      Quick Note
-                    </button>
-                  </div>
+            )}
 
+            {/* ADD NOTE FORM */}
+            {commandAction === 'note' && (
+              <form onSubmit={(e) => handleQuickActionSubmit(e, 'note')} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Note Title</label>
                   <input 
                     type="text" 
-                    required
-                    value={jotTitle} 
-                    onChange={(e) => setJotTitle(e.target.value)} 
-                    placeholder={jotType === 'task' ? "I need to complete..." : "Write quick note title..."} 
-                    className="w-full glass-input px-4 py-3"
+                    required 
+                    value={quickNote.title} 
+                    onChange={e => setQuickNote({ ...quickNote, title: e.target.value })}
+                    placeholder="Enter note title..." 
+                    className="w-full glass-input px-4 py-3 text-sm text-white" 
                   />
                 </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Quick Jot / Content</label>
+                  <textarea 
+                    value={quickNote.content} 
+                    onChange={e => setQuickNote({ ...quickNote, content: e.target.value })}
+                    placeholder="Type notes detail..." 
+                    rows="3"
+                    className="w-full glass-input px-4 py-3 text-sm text-white resize-none"
+                  ></textarea>
+                </div>
+                <button type="submit" className="w-full py-3 glass-btn-primary mt-2">
+                  <Plus className="w-4 h-4" /> Save Note
+                </button>
+              </form>
+            )}
 
-                <button 
-                  type="submit" 
-                  className="w-full py-3 mt-2 glass-btn-primary"
-                >
-                  <Plus className="w-4 h-4" /> Save Instance
+            {/* ADD DSA PROBLEM FORM */}
+            {commandAction === 'dsa' && (
+              <form onSubmit={(e) => handleQuickActionSubmit(e, 'dsa')} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Problem Title</label>
+                  <input 
+                    type="text" 
+                    required 
+                    value={quickDsa.title} 
+                    onChange={e => setQuickDsa({ ...quickDsa, title: e.target.value })}
+                    placeholder="e.g. Two Sum" 
+                    className="w-full glass-input px-4 py-3 text-sm text-white" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Problem Link / URL</label>
+                  <input 
+                    type="url" 
+                    value={quickDsa.url} 
+                    onChange={e => setQuickDsa({ ...quickDsa, url: e.target.value })}
+                    placeholder="e.g. https://leetcode.com/problems/..." 
+                    className="w-full glass-input px-4 py-3 text-sm text-white" 
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Difficulty</label>
+                    <select 
+                      value={quickDsa.difficulty} 
+                      onChange={e => setQuickDsa({ ...quickDsa, difficulty: e.target.value })}
+                      className="w-full glass-input px-4 py-3 text-sm text-white bg-slate-950 outline-none"
+                    >
+                      {['easy', 'medium', 'hard'].map(d => (
+                        <option key={d} value={d} className="bg-slate-900">{d.toUpperCase()}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Platform</label>
+                    <select 
+                      value={quickDsa.platform} 
+                      onChange={e => setQuickDsa({ ...quickDsa, platform: e.target.value })}
+                      className="w-full glass-input px-4 py-3 text-sm text-white bg-slate-950 outline-none"
+                    >
+                      {['LeetCode', 'Codeforces', 'HackerRank', 'GeeksForGeeks', 'Other'].map(p => (
+                        <option key={p} value={p} className="bg-slate-900">{p}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Target Topic</label>
+                  <select 
+                    value={quickDsa.topicId} 
+                    onChange={e => setQuickDsa({ ...quickDsa, topicId: e.target.value })}
+                    className="w-full glass-input px-4 py-3 text-sm text-white bg-slate-950 outline-none"
+                  >
+                    {dsaTopics.length === 0 ? (
+                      <option value="" className="bg-slate-900">Loading topics...</option>
+                    ) : (
+                      dsaTopics.map(t => (
+                        <option key={t._id} value={t._id} className="bg-slate-900">{t.name}</option>
+                      ))
+                    )}
+                  </select>
+                </div>
+                <button type="submit" className="w-full py-3 glass-btn-primary mt-2">
+                  <Plus className="w-4 h-4" /> Save Problem
+                </button>
+              </form>
+            )}
+
+            {/* ADD INTERNSHIP APPLICATION FORM */}
+            {commandAction === 'internship' && (
+              <form onSubmit={(e) => handleQuickActionSubmit(e, 'internship')} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Company Name</label>
+                  <input 
+                    type="text" 
+                    required 
+                    value={quickInternship.company} 
+                    onChange={e => setQuickInternship({ ...quickInternship, company: e.target.value })}
+                    placeholder="e.g. Google" 
+                    className="w-full glass-input px-4 py-3 text-sm text-white" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Role Name</label>
+                  <input 
+                    type="text" 
+                    required 
+                    value={quickInternship.role} 
+                    onChange={e => setQuickInternship({ ...quickInternship, role: e.target.value })}
+                    placeholder="e.g. Software Engineering Intern" 
+                    className="w-full glass-input px-4 py-3 text-sm text-white" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Kanban Stage</label>
+                  <select 
+                    value={quickInternship.status} 
+                    onChange={e => setQuickInternship({ ...quickInternship, status: e.target.value })}
+                    className="w-full glass-input px-4 py-3 text-sm text-white bg-slate-950 outline-none"
+                  >
+                    {[
+                      { value: 'wishlist', label: 'Wishlist' },
+                      { value: 'applied', label: 'Applied' },
+                      { value: 'oa', label: 'Online Assessment' },
+                      { value: 'interview', label: 'Interview' },
+                      { value: 'offer', label: 'Offer' }
+                    ].map(st => (
+                      <option key={st.value} value={st.value} className="bg-slate-900">{st.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <button type="submit" className="w-full py-3 glass-btn-primary mt-2">
+                  <Plus className="w-4 h-4" /> Save Application
                 </button>
               </form>
             )}

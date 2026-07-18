@@ -38,6 +38,11 @@ const userSchema = new mongoose.Schema({
     lastStudyDate: { type: Date }
   },
 
+  studySessions: [{
+    date: { type: Date, default: Date.now },
+    minutes: { type: Number, required: true }
+  }],
+
   // 5. OS Goals (From Architecture PDF)
   goals: [{
     type: { 

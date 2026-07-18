@@ -566,7 +566,7 @@ const InternshipPage = () => {
         <div className="w-full flex justify-end shrink-0 z-20">
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="px-5 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-bold transition-all shadow-[0_0_15px_rgba(99,102,241,0.4)] flex items-center gap-2"
+            className="px-5 py-2.5 rounded-xl text-xs font-bold glass-btn-primary shadow-lg"
           >
             <Plus className="w-4 h-4" /> Add Application
           </button>
@@ -590,15 +590,15 @@ const InternshipPage = () => {
                     key={column.id} 
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDropColumn(e, column.id)}
-                    className="w-full h-[550px] bg-black/20 backdrop-blur-2xl border border-white/10 rounded-2xl flex flex-col overflow-hidden transition-all hover:bg-black/30"
+                    className="w-full h-[550px] flex flex-col overflow-hidden transition-all light-glass shadow"
                   >
                     {/* Header with stage color underline */}
-                    <div className="p-4 border-b border-white/10 bg-white/5 flex items-center justify-between sticky top-0 z-10">
+                    <div className="p-4 border-b border-white/5 bg-white/[0.02] flex items-center justify-between sticky top-0 z-10">
                       <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full border ${column.color}`}></div>
                         <span className="text-sm font-bold text-white/90">{column.title}</span>
                       </div>
-                      <span className="text-xs font-bold text-white/40 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">{columnApps.length}</span>
+                      <span className="text-xs font-bold text-white/40 bg-white/5 px-2 py-0.5 rounded-md">{columnApps.length}</span>
                     </div>
                     
                     {/* Cards Container */}
@@ -623,7 +623,7 @@ const InternshipPage = () => {
                                 jobDescription: app.jobDescription || ''
                               });
                             }}
-                            className="bg-black/50 hover:bg-black/70 border border-white/10 hover:border-indigo-500/50 rounded-xl p-3.5 shadow-lg cursor-grab active:cursor-grabbing transition-all hover:-translate-y-0.5 relative group"
+                            className="p-3.5 hover:bg-white/[0.04] transition-all hover:-translate-y-0.5 relative group light-glass shadow-lg cursor-grab active:cursor-grabbing"
                           >
                             {/* Card header */}
                             <div className="flex justify-between items-start mb-1.5">
@@ -714,7 +714,7 @@ const InternshipPage = () => {
                 <FileText className="w-5 h-5 text-purple-400" /> Resume Versions
               </h2>
               
-              <div className="bg-black/30 border border-white/10 rounded-2xl p-5 shadow-lg backdrop-blur-xl flex flex-col justify-between h-[320px]">
+              <div className="p-5 shadow-lg flex flex-col justify-between h-[320px] light-glass">
                 
                 {/* Upload Form */}
                 <form onSubmit={handleUploadResume} className="flex gap-2 items-end shrink-0 mb-4">
@@ -725,7 +725,7 @@ const InternshipPage = () => {
                       value={resumeVersionName} 
                       onChange={(e) => setResumeVersionName(e.target.value)} 
                       placeholder="e.g. Backend Dev Resume" 
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-indigo-500 placeholder-white/20" 
+                      className="w-full glass-input px-3 py-2 text-xs" 
                     />
                   </div>
                   <div>
@@ -744,7 +744,7 @@ const InternshipPage = () => {
                     <button 
                       type="button" 
                       onClick={() => document.getElementById('resume-file-input').click()}
-                      className="bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all h-[34px] flex items-center gap-1.5"
+                      className="glass-btn-secondary text-xs px-4 py-2 flex items-center gap-1.5"
                     >
                       <UploadCloud className="w-3.5 h-3.5" /> PDF
                     </button>
@@ -752,7 +752,7 @@ const InternshipPage = () => {
                   <button 
                     type="submit" 
                     disabled={uploadingResume}
-                    className="bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-500/50 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-[0_0_10px_rgba(99,102,241,0.3)] h-[34px]"
+                    className="glass-btn-primary text-xs px-4 py-2"
                   >
                     {uploadingResume ? '...' : 'Upload'}
                   </button>
@@ -809,7 +809,7 @@ const InternshipPage = () => {
       {/* ADD APPLICATION MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in">
-          <div className="w-[500px] bg-[#121212] backdrop-blur-3xl border border-white/20 rounded-3xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto scrollbar-hide">
+          <div className="w-[500px] strong-glass p-7 shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-white">Track Application Manual Entry</h3>
               <button onClick={() => setIsModalOpen(false)} className="text-white/50 hover:text-white"><X className="w-5 h-5" /></button>
@@ -819,24 +819,24 @@ const InternshipPage = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-white/50 font-bold mb-1 block">Company Name</label>
-                  <input required type="text" value={formData.company} onChange={(e) => setFormData({...formData, company: e.target.value})} placeholder="Google, Stripe" className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-indigo-400 placeholder-white/20" />
+                  <input required type="text" value={formData.company} onChange={(e) => setFormData({...formData, company: e.target.value})} placeholder="Google, Stripe" className="w-full glass-input px-4 py-2.5 text-xs" />
                 </div>
                 
                 <div>
                   <label className="text-xs text-white/50 font-bold mb-1 block">Role</label>
-                  <input required type="text" value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})} placeholder="Software Engineer Intern" className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-indigo-400 placeholder-white/20" />
+                  <input required type="text" value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})} placeholder="Software Engineer Intern" className="w-full glass-input px-4 py-2.5 text-xs" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-white/50 font-bold mb-1 block">Location</label>
-                  <input type="text" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} placeholder="San Francisco, CA" className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-indigo-400 placeholder-white/20" />
+                  <input type="text" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} placeholder="San Francisco, CA" className="w-full glass-input px-4 py-2.5 text-xs" />
                 </div>
                 
                 <div>
                   <label className="text-xs text-white/50 font-bold mb-1 block">Stipend</label>
-                  <input type="text" value={formData.stipend} onChange={(e) => setFormData({...formData, stipend: e.target.value})} placeholder="$50/hr or Unpaid" className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-indigo-400 placeholder-white/20" />
+                  <input type="text" value={formData.stipend} onChange={(e) => setFormData({...formData, stipend: e.target.value})} placeholder="$50/hr or Unpaid" className="w-full glass-input px-4 py-2.5 text-xs" />
                 </div>
               </div>
 
@@ -864,12 +864,10 @@ const InternshipPage = () => {
 
               <div>
                 <label className="text-xs text-white/50 font-bold mb-1 block">Job Posting URL (Optional)</label>
-                <input type="url" value={formData.jobLink} onChange={(e) => setFormData({...formData, jobLink: e.target.value})} placeholder="https://linkedin.com/..." className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-indigo-400 placeholder-white/20" />
+                <input type="url" value={formData.jobLink} onChange={(e) => setFormData({...formData, jobLink: e.target.value})} placeholder="https://linkedin.com/..." className="w-full glass-input px-4 py-2.5 text-xs" />
               </div>
 
-
-
-              <button type="submit" className="w-full mt-2 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-bold text-xs shadow-lg transition-colors">
+              <button type="submit" className="w-full mt-2 py-3 glass-btn-primary text-xs font-bold">
                 Save Application
               </button>
             </form>
@@ -880,10 +878,10 @@ const InternshipPage = () => {
       {/* DETAILED JOB WORKSPACE MODAL (Tabbed Interface) */}
       {selectedJob && (
         <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/75 backdrop-blur-md animate-in fade-in p-4">
-          <div className="w-full max-w-[850px] h-[85vh] bg-[#121212] backdrop-blur-3xl border border-white/20 rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+          <div className="w-full max-w-[850px] h-[85vh] strong-glass shadow-2xl flex flex-col overflow-hidden">
             
             {/* Header section with Glass details (editable) */}
-            <div className="p-6 border-b border-white/10 flex justify-between items-start bg-white/5">
+            <div className="p-6 border-b border-white/5 flex justify-between items-start bg-white/[0.02]">
               {isEditing ? (
                 <div className="flex flex-col gap-2 w-full max-w-[500px]">
                   <div>
@@ -892,7 +890,7 @@ const InternshipPage = () => {
                       type="text" 
                       value={editForm.company} 
                       onChange={(e) => setEditForm({ ...editForm, company: e.target.value })} 
-                      className="bg-black/40 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-indigo-500 w-full"
+                      className="w-full glass-input px-3 py-1.5 text-xs"
                     />
                   </div>
                   <div>
@@ -901,7 +899,7 @@ const InternshipPage = () => {
                       type="text" 
                       value={editForm.role} 
                       onChange={(e) => setEditForm({ ...editForm, role: e.target.value })} 
-                      className="bg-black/40 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-indigo-500 w-full font-bold"
+                      className="w-full glass-input px-3 py-1.5 text-xs font-bold"
                     />
                   </div>
                 </div>
@@ -923,7 +921,7 @@ const InternshipPage = () => {
                         await updateJobDetails(selectedJob._id, editForm);
                         setIsEditing(false);
                       }}
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                      className="glass-btn-primary text-xs px-4 py-2 font-bold"
                     >
                       Save
                     </button>
@@ -940,7 +938,7 @@ const InternshipPage = () => {
                           jobDescription: selectedJob.jobDescription || ''
                         });
                       }}
-                      className="bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 text-xs font-semibold px-4 py-2 rounded-xl transition-all"
+                      className="glass-btn-secondary text-xs px-4 py-2"
                     >
                       Cancel
                     </button>
@@ -959,21 +957,21 @@ const InternshipPage = () => {
                       });
                       setIsEditing(true);
                     }}
-                    className="bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 text-xs font-semibold px-4 py-2 rounded-xl transition-all"
+                    className="glass-btn-secondary text-xs px-4 py-2"
                   >
                     Edit Details
                   </button>
                 )}
                 <button 
                   onClick={() => handleDeleteApplication(selectedJob._id)}
-                  className="text-rose-400/70 hover:text-rose-400 transition-colors bg-white/5 hover:bg-rose-500/10 p-2 rounded-full border border-white/10 hover:border-rose-500/20"
+                  className="text-rose-400/80 glass-btn-danger p-2"
                   title="Delete Application"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
                 <button 
                   onClick={() => setSelectedJob(null)} 
-                  className="text-white/40 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-2 rounded-full border border-white/10"
+                  className="text-white/50 glass-btn-secondary p-2"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1019,7 +1017,7 @@ const InternshipPage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
                     
                     {/* Status selection widget */}
-                    <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col justify-between min-h-[84px]">
+                    <div className="p-4 flex flex-col justify-between min-h-[84px] light-glass shadow-sm">
                       <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Status Stage</span>
                       <div className="mt-1">
                         <GlassDropdown 
@@ -1038,7 +1036,7 @@ const InternshipPage = () => {
                     </div>
 
                     {/* Work type display widget */}
-                    <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col justify-between min-h-[84px]">
+                    <div className="p-4 flex flex-col justify-between min-h-[84px] light-glass shadow-sm">
                       <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Work Type</span>
                       {isEditing ? (
                         <div className="mt-1">
@@ -1055,7 +1053,7 @@ const InternshipPage = () => {
                     </div>
 
                     {/* ATS match score display widget */}
-                    <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col justify-between min-h-[84px] overflow-hidden">
+                    <div className="p-4 flex flex-col justify-between min-h-[84px] overflow-hidden light-glass shadow-sm">
                       <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">ATS Score</span>
                       <span className={`text-xs font-extrabold w-fit px-3 py-1 mt-1 rounded-full ${
                         selectedJob.atsScore >= 80 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
@@ -1067,7 +1065,7 @@ const InternshipPage = () => {
                     </div>
 
                     {/* Location display widget */}
-                    <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col justify-between min-h-[84px] md:col-span-2 overflow-hidden">
+                    <div className="p-4 flex flex-col justify-between min-h-[84px] md:col-span-2 overflow-hidden light-glass shadow-sm">
                       <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Location</span>
                       {isEditing ? (
                         <input 
@@ -1075,7 +1073,7 @@ const InternshipPage = () => {
                           value={editForm.location} 
                           onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} 
                           placeholder="e.g. San Francisco, CA"
-                          className="bg-black/40 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-indigo-500 w-full mt-1"
+                          className="w-full glass-input px-3 py-1.5 text-xs mt-1"
                         />
                       ) : (
                         <span className="text-sm text-white font-bold flex items-center gap-2 mt-1.5 truncate" title={selectedJob.location}>
@@ -1085,7 +1083,7 @@ const InternshipPage = () => {
                     </div>
 
                     {/* Stipend display widget */}
-                    <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col justify-between min-h-[84px] overflow-hidden">
+                    <div className="p-4 flex flex-col justify-between min-h-[84px] overflow-hidden light-glass shadow-sm">
                       <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Stipend</span>
                       {isEditing ? (
                         <input 
@@ -1093,7 +1091,7 @@ const InternshipPage = () => {
                           value={editForm.stipend} 
                           onChange={(e) => setEditForm({ ...editForm, stipend: e.target.value })} 
                           placeholder="e.g. $50/hr or Unpaid"
-                          className="bg-black/40 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-indigo-500 w-full font-mono mt-1"
+                          className="w-full glass-input px-3 py-1.5 text-xs mt-1 font-mono"
                         />
                       ) : (
                         <span className="text-sm text-emerald-400 font-bold font-mono truncate mt-1.5" title={selectedJob.stipend}>
@@ -1106,25 +1104,25 @@ const InternshipPage = () => {
 
                   {/* Job Posting actions Row (If link exists or editing) */}
                   {isEditing ? (
-                    <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col gap-1 w-full shrink-0">
+                    <div className="p-4 flex flex-col gap-1 w-full shrink-0 light-glass shadow-sm">
                       <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Job Posting URL</span>
                       <input 
                         type="url" 
                         value={editForm.jobLink} 
                         onChange={(e) => setEditForm({ ...editForm, jobLink: e.target.value })} 
                         placeholder="https://linkedin.com/jobs/view/..." 
-                        className="bg-black/40 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-indigo-500 w-full"
+                        className="w-full glass-input px-3 py-1.5 text-xs"
                       />
                     </div>
                   ) : (
                     selectedJob.jobLink && (
-                      <div className="bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 flex items-center justify-between shrink-0">
+                      <div className="px-4 py-2.5 flex items-center justify-between shrink-0 light-glass shadow-sm">
                         <span className="text-[10px] text-white/50 font-bold uppercase tracking-wider">Source posting URL:</span>
                         <a 
                           href={selectedJob.jobLink} 
                           target="_blank" 
                           rel="noreferrer" 
-                          className="text-xs bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all animate-pulse"
+                          className="text-xs glass-btn-primary px-3 py-1.5 flex items-center gap-1.5"
                         >
                           <ExternalLink className="w-3.5 h-3.5" /> View Original Listing
                         </a>
@@ -1140,7 +1138,7 @@ const InternshipPage = () => {
                 <div className="flex flex-col gap-6">
                   
                   {/* Skill profile editor and resume selectors */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/5 border border-white/5 p-5 rounded-2xl">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 light-glass shadow-sm">
                     <div className="flex flex-col gap-2">
                       <label className="text-[10px] text-white/50 font-bold uppercase tracking-widest">1. Select Resume Version</label>
                       <GlassDropdown 
@@ -1159,7 +1157,7 @@ const InternshipPage = () => {
                         value={skillsProfile}
                         onChange={(e) => saveSkillsProfile(e.target.value)}
                         placeholder="React, Node.js, Express, MongoDB, JavaScript, Python"
-                        className="bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-indigo-500 placeholder-white/20 h-[38px]"
+                        className="glass-input px-4 py-2.5 text-xs h-[38px]"
                       />
                       <p className="text-[9px] text-white/30 italic">List your skills (comma separated) to check matching keywords in job description.</p>
                     </div>
@@ -1167,7 +1165,7 @@ const InternshipPage = () => {
                     <button 
                       onClick={handleATSScan}
                       disabled={scanning || !selectedResumeId}
-                      className="md:col-span-2 mt-2 w-full flex items-center justify-center gap-2 bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-500/50 text-white text-xs font-bold py-3 rounded-xl transition-all shadow-[0_0_10px_rgba(99,102,241,0.2)]"
+                      className="md:col-span-2 mt-2 w-full flex items-center justify-center gap-2 glass-btn-primary py-3"
                     >
                       {scanning ? (
                         <>
@@ -1184,7 +1182,7 @@ const InternshipPage = () => {
 
                   {/* SCAN RESULT AREA - VISUALLY ENHANCED */}
                   {selectedJob.atsScore !== null && selectedJob.atsScore !== undefined && (
-                    <div className="flex flex-col md:flex-row gap-6 bg-white/5 border border-white/5 p-6 rounded-2xl animate-in fade-in relative overflow-hidden">
+                    <div className="flex flex-col md:flex-row gap-6 p-6 rounded-2xl animate-in fade-in relative overflow-hidden light-glass shadow">
                       <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-indigo-500/5 blur-[80px] rounded-full pointer-events-none"></div>
 
                       {/* Circular Gauge & Quality Level */}
@@ -1223,7 +1221,7 @@ const InternshipPage = () => {
                       <div className="w-full md:w-2/3 flex flex-col gap-5 justify-between">
                         
                         {/* Selected Resume profile summary card */}
-                        <div className="bg-white/[0.03] border border-white/5 rounded-xl p-3.5 flex items-center justify-between shrink-0">
+                        <div className="p-3.5 flex items-center justify-between shrink-0 light-glass shadow-sm">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-lg bg-indigo-500/15 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
                               <FileText className="w-4 h-4" />
@@ -1291,9 +1289,8 @@ const InternshipPage = () => {
                   
                   {/* Online Assessments & Interviews Section - Fitted beautifully with full vertical height */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
-                    
-                    {/* OA LOGGER */}
-                    <div className="bg-white/5 border border-white/5 p-6 rounded-2xl flex flex-col gap-4 min-h-[420px] h-[420px]">
+                                       {/* OA LOGGER */}
+                    <div className="p-6 flex flex-col gap-4 min-h-[420px] h-[420px] light-glass shadow-sm">
                       <div>
                         <h3 className="text-sm font-bold text-blue-400">
                           Online Assessments (OA)
@@ -1302,7 +1299,7 @@ const InternshipPage = () => {
                       </div>
                       
                       {/* Log form */}
-                      <div className="flex flex-col gap-2.5 bg-black/20 border border-white/5 p-4 rounded-xl shrink-0">
+                      <div className="flex flex-col gap-2.5 bg-white/5 border border-white/5 p-4 rounded-xl shrink-0">
                         <div className="grid grid-cols-2 gap-2.5 items-center">
                           <GlassDropdown 
                             value={newOAPlatform} 
@@ -1315,7 +1312,7 @@ const InternshipPage = () => {
                             value={newOATimeLimit}
                             onChange={(e) => setNewOATimeLimit(e.target.value)}
                             placeholder="Limit (e.g. 90m)" 
-                            className="w-full min-w-0 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-indigo-500 placeholder-white/20 h-[38px]" 
+                            className="w-full glass-input px-3 py-2 text-xs h-[38px]" 
                           />
                         </div>
                         <div className="flex gap-2">
@@ -1323,12 +1320,12 @@ const InternshipPage = () => {
                             type="date" 
                             value={newOADate}
                             onChange={(e) => setNewOADate(e.target.value)}
-                            className="flex-1 min-w-0 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-indigo-500 cursor-pointer [color-scheme:dark] h-[34px]" 
+                            className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-indigo-500 cursor-pointer [color-scheme:dark] h-[34px]" 
                           />
                           <button 
                             type="button"
                             onClick={handleAddOA}
-                            className="bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-bold px-4 py-1.5 rounded-lg transition-colors h-[34px] shrink-0 whitespace-nowrap min-w-[90px]"
+                            className="glass-btn-primary h-[34px] shrink-0 text-xs font-bold px-4 py-1.5 whitespace-nowrap min-w-[90px]"
                           >
                             Add OA
                           </button>
@@ -1339,7 +1336,7 @@ const InternshipPage = () => {
                       <div className="flex-1 overflow-y-auto scrollbar-thin flex flex-col gap-2.5 pr-1">
                         {selectedJob.onlineAssessments && selectedJob.onlineAssessments.length > 0 ? (
                           selectedJob.onlineAssessments.map((oa, index) => (
-                            <div key={index} className="bg-black/30 border border-white/5 rounded-xl p-3.5 flex items-center justify-between text-xs hover:border-white/10 transition-all shrink-0">
+                            <div key={index} className="p-3.5 flex items-center justify-between text-xs hover-lift-scale shrink-0 light-glass shadow-sm">
                               <div className="min-w-0 flex-1 pr-2">
                                 <span className="font-bold text-white block truncate">{oa.platform}</span>
                                 <span className="text-[10px] text-white/40 block mt-0.5">Date: {new Date(oa.date).toLocaleDateString()} | Limit: {oa.timeLimit}</span>
@@ -1352,7 +1349,7 @@ const InternshipPage = () => {
                                 />
                                 <button 
                                   onClick={() => handleRemoveOA(index)}
-                                  className="p-1.5 bg-white/5 hover:bg-rose-500/20 text-white/30 hover:text-rose-400 rounded transition-colors border border-white/5"
+                                  className="p-1.5 rounded transition-colors glass-btn-danger"
                                 >
                                   <X className="w-3.5 h-3.5" />
                                 </button>
@@ -1368,7 +1365,7 @@ const InternshipPage = () => {
                     </div>
 
                     {/* INTERVIEW ROUND LOGGER */}
-                    <div className="bg-white/5 border border-white/5 p-6 rounded-2xl flex flex-col gap-4 min-h-[420px] h-[420px]">
+                    <div className="p-6 flex flex-col gap-4 min-h-[420px] h-[420px] light-glass shadow-sm">
                       <div>
                         <h3 className="text-sm font-bold text-blue-400">
                           Interview Rounds
@@ -1377,20 +1374,20 @@ const InternshipPage = () => {
                       </div>
                       
                       {/* Log form */}
-                      <div className="flex flex-col gap-2.5 bg-black/20 border border-white/5 p-4 rounded-xl shrink-0">
+                      <div className="flex flex-col gap-2.5 bg-white/5 border border-white/5 p-4 rounded-xl shrink-0">
                         <div className="grid grid-cols-2 gap-2.5">
                           <input 
                             type="text" 
                             value={newRoundName}
                             onChange={(e) => setNewRoundName(e.target.value)}
                             placeholder="Round (e.g. System Design)" 
-                            className="w-full min-w-0 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-indigo-500 placeholder-white/20 h-[34px]" 
+                            className="w-full glass-input px-3 py-2 text-xs h-[34px]" 
                           />
                           <input 
                             type="date" 
                             value={newRoundDate}
                             onChange={(e) => setNewRoundDate(e.target.value)}
-                            className="w-full min-w-0 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-indigo-500 cursor-pointer [color-scheme:dark] h-[34px]" 
+                            className="w-full min-w-0 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-indigo-500 cursor-pointer [color-scheme:dark] h-[34px]" 
                           />
                         </div>
                         <div className="flex gap-2">
@@ -1399,12 +1396,12 @@ const InternshipPage = () => {
                             value={newRoundNotes}
                             onChange={(e) => setNewRoundNotes(e.target.value)}
                             placeholder="Round questions or notes..." 
-                            className="flex-1 min-w-0 bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-indigo-500 placeholder-white/20 h-[34px]" 
+                            className="flex-1 glass-input px-3 py-1.5 text-xs h-[34px]" 
                           />
                           <button 
                             type="button"
                             onClick={handleAddInterviewRound}
-                            className="bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-bold px-4 py-1.5 rounded-lg transition-colors h-[34px] shrink-0 whitespace-nowrap min-w-[90px]"
+                            className="glass-btn-primary h-[34px] shrink-0 text-xs font-bold px-4 py-1.5 whitespace-nowrap min-w-[90px]"
                           >
                             Add Round
                           </button>
@@ -1415,7 +1412,7 @@ const InternshipPage = () => {
                       <div className="flex-1 overflow-y-auto scrollbar-thin flex flex-col gap-2.5 pr-1">
                         {selectedJob.interviews && selectedJob.interviews.length > 0 ? (
                           selectedJob.interviews.map((round, index) => (
-                            <div key={index} className="bg-black/30 border border-white/5 rounded-xl p-3 flex items-start justify-between text-xs hover:border-white/10 transition-all shrink-0">
+                            <div key={index} className="p-3 flex items-start justify-between text-xs hover-lift-scale shrink-0 light-glass shadow-sm">
                               <div className="flex-1 min-w-0 pr-2">
                                 <span className="font-bold text-white block truncate">{round.round}</span>
                                 <span className="text-[9px] text-white/40 block mt-0.5">Date: {new Date(round.date).toLocaleDateString()}</span>
@@ -1429,7 +1426,7 @@ const InternshipPage = () => {
                                 />
                                 <button 
                                   onClick={() => handleRemoveInterview(index)}
-                                  className="p-1.5 bg-white/5 hover:bg-rose-500/20 text-white/30 hover:text-rose-400 rounded transition-colors border border-white/5"
+                                  className="p-1.5 rounded transition-colors glass-btn-danger"
                                 >
                                   <X className="w-3.5 h-3.5" />
                                 </button>
@@ -1452,10 +1449,10 @@ const InternshipPage = () => {
             </div>
 
             {/* Footer with basic buttons */}
-            <div className="p-4 border-t border-white/10 bg-black/40 flex justify-end">
+            <div className="p-4 border-t border-white/5 bg-white/[0.02] flex justify-end">
               <button 
                 onClick={() => setSelectedJob(null)} 
-                className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-colors border border-white/10"
+                className="px-6 py-2 glass-btn-secondary text-xs font-bold"
               >
                 Done
               </button>

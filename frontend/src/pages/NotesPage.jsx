@@ -215,21 +215,21 @@ const NotesPage = () => {
         <DashboardLayout rightPanelContent={<NotesRightPanel createNote={saveNote} />}>
           <div className="w-full h-full flex flex-col gap-6 animate-in fade-in relative">
             
-            <div className="w-full h-16 rounded-2xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-lg flex items-center px-4 gap-4 shrink-0">
-              <div className="flex-1 flex items-center gap-3 bg-black/40 border border-white/5 rounded-xl px-4 py-2 focus-within:border-indigo-500/50">
+            <div className="w-full h-16 flex items-center px-4 gap-4 shrink-0 light-glass shadow">
+              <div className="flex-1 flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-2">
                 <Search className="w-4 h-4 text-white/40" />
                 <input type="text" placeholder="Search notes or tags..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-transparent border-none outline-none text-sm text-white placeholder-white/30" />
               </div>
-              <button onClick={() => { setEditorData({ _id: null, title: '', content: '', sourceModule: 'General', tags: [], attachments: [], folderId: activeFolderId || '', editorMode: 'text', fileUrl: '' }); canvasEditorRef.current = null; setIsEditorOpen(true); }} className="px-5 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-bold transition-all flex items-center gap-2"><Plus className="w-4 h-4" /> New Note</button>
+              <button onClick={() => { setEditorData({ _id: null, title: '', content: '', sourceModule: 'General', tags: [], attachments: [], folderId: activeFolderId || '', editorMode: 'text', fileUrl: '' }); canvasEditorRef.current = null; setIsEditorOpen(true); }} className="px-5 py-2.5 rounded-xl text-xs font-bold glass-btn-primary"><Plus className="w-4 h-4" /> New Note</button>
             </div>
 
             <div className="flex flex-1 gap-6 min-h-0 overflow-hidden">
-              <div className="w-64 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-lg flex flex-col overflow-hidden shrink-0">
-                <div className="p-4 border-b border-white/5 flex items-center justify-between bg-black/20"><h2 className="text-xs font-bold text-white/50 uppercase flex items-center gap-2"><BookOpen className="w-4 h-4" /> Notebooks</h2><button onClick={() => setFolderModal({ isOpen: true, name: '' })} className="hover:text-white text-white/50"><Plus className="w-4 h-4" /></button></div>
+              <div className="w-64 flex flex-col overflow-hidden shrink-0 light-glass shadow">
+                <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]"><h2 className="text-xs font-bold text-white/50 uppercase flex items-center gap-2"><BookOpen className="w-4 h-4" /> Notebooks</h2><button onClick={() => setFolderModal({ isOpen: true, name: '' })} className="hover:text-white text-white/50"><Plus className="w-4 h-4" /></button></div>
                 <div className="flex-1 overflow-y-auto p-3 scrollbar-hide space-y-1">
-                  <button onClick={() => setActiveFolderId(null)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all mb-2 ${activeFolderId === null ? 'bg-white/10 text-white font-bold' : 'text-white/50 hover:bg-white/5'}`}><LayoutGrid className="w-4 h-4" /> All Notes</button>
+                  <button onClick={() => setActiveFolderId(null)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all mb-2 hover-lift-scale ${activeFolderId === null ? 'bg-white/10 text-white font-bold shadow' : 'text-white/50 hover:bg-white/5'}`}><LayoutGrid className="w-4 h-4" /> All Notes</button>
                   {safeFolders.map(folder => (
-                    <div key={folder._id} onClick={() => setActiveFolderId(folder._id)} className={`flex items-center justify-between py-2 px-3 rounded-xl cursor-pointer text-sm transition-all ${activeFolderId === folder._id ? 'bg-indigo-500/20 text-indigo-400' : 'hover:bg-white/5 text-white/70'}`}>
+                    <div key={folder._id} onClick={() => setActiveFolderId(folder._id)} className={`flex items-center justify-between py-2 px-3 rounded-xl cursor-pointer text-sm transition-all hover-lift-scale ${activeFolderId === folder._id ? 'bg-white/10 text-white font-bold shadow' : 'hover:bg-white/5 text-white/70'}`}>
                       <div className="flex items-center gap-2"><Folder className="w-4 h-4" /> <span>{folder.name}</span></div>
                     </div>
                   ))}
@@ -238,11 +238,11 @@ const NotesPage = () => {
 
               <div className="flex-1 overflow-y-auto scrollbar-hide grid grid-cols-1 xl:grid-cols-2 gap-6 pb-24 content-start">
                 {displayedNotes.map(note => (
-                  <div key={note._id} className="h-64 p-5 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl hover:border-indigo-500/30 flex flex-col shadow-lg overflow-hidden group relative">
+                  <div key={note._id} className="h-64 p-5 flex flex-col shadow hover-lift-scale overflow-hidden group relative light-glass">
                     
                     <button 
                       onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ isOpen: true, noteId: note._id }); }} 
-                      className="absolute top-4 right-4 p-2 bg-white/5 text-white/40 rounded-lg opacity-0 group-hover:opacity-100 border border-white/10 transition-all hover:bg-red-500/20 hover:text-red-400 z-10"
+                      className="absolute top-4 right-4 p-2 bg-white/5 text-white/40 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/20 hover:text-red-400 z-10"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -275,20 +275,20 @@ const NotesPage = () => {
 
         {isEditorOpen && (
           <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 backdrop-blur-md p-4 animate-in fade-in">
-            <div className="w-full max-w-6xl h-[85vh] bg-white/10 backdrop-blur-3xl border border-white/20 rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden">
+            <div className="w-full max-w-6xl h-[85vh] strong-glass shadow-2xl flex flex-col overflow-hidden">
               
-              <div className="h-20 shrink-0 border-b border-white/10 px-8 flex items-center justify-between bg-transparent">
-                <div className="flex items-center bg-black/20 p-1 rounded-xl border border-white/10">
-                  <button onClick={() => setEditorData({...editorData, editorMode: 'text'})} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${editorData.editorMode === 'text' ? 'bg-indigo-500 text-white shadow-md' : 'text-white/50 hover:text-white'}`}><BookOpen className="w-3.5 h-3.5" /> Text</button>
-                  <button onClick={() => setEditorData({...editorData, editorMode: 'canvas'})} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${editorData.editorMode === 'canvas' ? 'bg-indigo-500 text-white shadow-md' : 'text-white/50 hover:text-white'}`}><PenTool className="w-3.5 h-3.5" /> Flowchart</button>
+              <div className="h-20 shrink-0 border-b border-white/5 px-8 flex items-center justify-between bg-transparent">
+                <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
+                  <button onClick={() => setEditorData({...editorData, editorMode: 'text'})} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${editorData.editorMode === 'text' ? 'bg-white/15 text-white shadow' : 'text-white/50 hover:text-white'}`}><BookOpen className="w-3.5 h-3.5" /> Text</button>
+                  <button onClick={() => setEditorData({...editorData, editorMode: 'canvas'})} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${editorData.editorMode === 'canvas' ? 'bg-white/15 text-white shadow' : 'text-white/50 hover:text-white'}`}><PenTool className="w-3.5 h-3.5" /> Flowchart</button>
                 </div>
                 <div className="flex items-center gap-4">
-                  <button onClick={handleSaveAndClose} className="px-6 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold shadow-lg flex items-center gap-2"><Save className="w-4 h-4" /> Save</button>
-                  <button onClick={() => setIsEditorOpen(false)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 text-white border border-white/10 hover:bg-red-500/20"><X className="w-5 h-5" /></button>
+                  <button onClick={handleSaveAndClose} className="px-6 py-2.5 rounded-xl text-sm font-bold glass-btn-primary"><Save className="w-4 h-4" /> Save</button>
+                  <button onClick={() => setIsEditorOpen(false)} className="w-10 h-10 flex items-center justify-center rounded-xl glass-btn-danger"><X className="w-5 h-5" /></button>
                 </div>
               </div>
 
-              <div className="px-8 py-5 border-b border-white/10 bg-transparent shrink-0 flex flex-col gap-4">
+              <div className="px-8 py-5 border-b border-white/5 bg-transparent shrink-0 flex flex-col gap-4">
                 <div className="flex items-center gap-6">
                   <input type="text" value={editorData.title} onChange={(e) => setEditorData({...editorData, title: e.target.value})} placeholder="Note Title..." className="flex-1 bg-transparent text-4xl font-extrabold text-white placeholder-white/40 border-none outline-none drop-shadow-md" />
                   <div className="flex gap-3">
@@ -383,9 +383,9 @@ const NotesPage = () => {
                     ))}
                   </div>
 
-                  <div className="mt-auto pt-4 border-t border-white/10">
+                  <div className="mt-auto pt-4 border-t border-white/5">
                     <p className="text-[10px] text-white/60 mb-2 drop-shadow-sm">Paste a YouTube, LeetCode, or PDF link</p>
-                    <input type="text" value={attachmentInput} onChange={(e)=>setAttachmentInput(e.target.value)} onKeyDown={handleAddAttachment} placeholder="Paste link and press Enter..." className="w-full bg-black/20 border border-white/20 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-indigo-400 placeholder-white/40 shadow-inner" />
+                    <input type="text" value={attachmentInput} onChange={(e)=>setAttachmentInput(e.target.value)} onKeyDown={handleAddAttachment} placeholder="Paste link and press Enter..." className="w-full glass-input px-3 py-2 text-xs placeholder-white/40" />
                   </div>
                 </div>
               </div>
@@ -396,8 +396,8 @@ const NotesPage = () => {
         {/* 🔥 UPDATE 3: Fully Theme-Matched Indigo Delete Modal */}
         {deleteConfirm.isOpen && (
           <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 backdrop-blur-md animate-in fade-in">
-            <div className="w-[400px] bg-[#121212] backdrop-blur-3xl border border-white/20 rounded-3xl shadow-2xl p-6 flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-indigo-500/20 border border-indigo-500/30 rounded-full flex items-center justify-center mb-4">
+            <div className="w-[400px] strong-glass shadow-2xl p-6 flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-indigo-500/10 border border-indigo-500/20 rounded-full flex items-center justify-center mb-4">
                 <Trash2 className="w-8 h-8 text-indigo-400" />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Delete Note?</h3>
@@ -406,13 +406,13 @@ const NotesPage = () => {
               <div className="flex gap-4 w-full">
                 <button 
                   onClick={() => setDeleteConfirm({isOpen: false, noteId: null})} 
-                  className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold transition-colors"
+                  className="flex-1 py-3 glass-btn-secondary text-sm font-bold"
                 >
                   Cancel
                 </button>
                 <button 
                   onClick={() => { deleteNote(deleteConfirm.noteId); setDeleteConfirm({isOpen: false, noteId: null}); }} 
-                  className="flex-1 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-bold shadow-[0_0_15px_rgba(99,102,241,0.4)] transition-all"
+                  className="flex-1 py-3 glass-btn-primary text-sm font-bold"
                 >
                   Confirm Delete
                 </button>
@@ -423,11 +423,11 @@ const NotesPage = () => {
 
         {folderModal.isOpen && (
           <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 backdrop-blur-md animate-in fade-in">
-            <div className="w-[400px] bg-white/10 backdrop-blur-3xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden p-6">
+            <div className="w-[400px] strong-glass shadow-2xl p-6">
               <form onSubmit={(e) => { e.preventDefault(); createFolder(folderModal.name); setFolderModal({isOpen: false, name: ''}); }} className="flex flex-col gap-4">
                 <h3 className="text-sm font-bold text-white mb-2 drop-shadow-sm">Create Notebook</h3>
-                <input autoFocus type="text" value={folderModal.name} onChange={(e) => setFolderModal({...folderModal, name: e.target.value})} placeholder="Notebook Name..." className="w-full bg-black/20 border border-white/20 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-400 placeholder-white/40 shadow-inner" />
-                <button type="submit" disabled={!folderModal.name.trim()} className="w-full py-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold shadow-lg transition-colors">Create</button>
+                <input autoFocus type="text" value={folderModal.name} onChange={(e) => setFolderModal({...folderModal, name: e.target.value})} placeholder="Notebook Name..." className="w-full glass-input px-4 py-3 text-white" />
+                <button type="submit" disabled={!folderModal.name.trim()} className="w-full py-3 glass-btn-primary font-bold">Create</button>
               </form>
             </div>
           </div>

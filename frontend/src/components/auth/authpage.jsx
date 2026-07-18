@@ -132,10 +132,10 @@ const AuthPage = ({ onAuthSuccess }) => {
       className="min-h-screen w-full flex items-center justify-center p-6 bg-cover bg-center font-sans"
       style={{ backgroundImage: "url('/mountain-bg.jpg')" }} 
     >
-      <div className="w-full max-w-[480px] backdrop-blur-[48px] backdrop-saturate-[150%] bg-white/[0.04] border border-white/[0.15] rounded-[36px] p-10 shadow-[0_24px_64px_rgba(0,0,0,0.5)] relative z-10">
+      <div className="w-full max-w-[480px] strong-glass p-10 shadow-[0_24px_64px_rgba(0,0,0,0.5)] z-10 animate-in zoom-in-95 duration-500">
         
         <div className="mb-10 text-center flex flex-col items-center">
-          <div className="mb-6 flex justify-center p-4 rounded-3xl bg-white/[0.06] border border-white/10 shadow-inner">
+          <div className="mb-6 flex justify-center p-4 rounded-3xl light-glass shadow-inner">
             <Command className="w-8 h-8 text-white stroke-[1.5]" />
           </div>
           
@@ -151,22 +151,22 @@ const AuthPage = ({ onAuthSuccess }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLoginPath && (
             <div className="space-y-4">
-              <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Full Name" required={!isLoginPath} className="w-full bg-black/[0.15] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white font-medium placeholder-white/40 focus:ring-1 focus:ring-white/30 focus:border-white/20 outline-none transition-all" />
+              <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Full Name" required={!isLoginPath} className="w-full glass-input px-5 py-4" />
               <div className="grid grid-cols-2 gap-4">
-                <input type="text" name="university" value={formData.university} onChange={handleChange} placeholder="University" className="w-full bg-black/[0.15] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white font-medium placeholder-white/40 focus:ring-1 focus:ring-white/30 focus:border-white/20 outline-none transition-all" />
-                <input type="text" name="branch" value={formData.branch} onChange={handleChange} placeholder="Branch" className="w-full bg-black/[0.15] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white font-medium placeholder-white/40 focus:ring-1 focus:ring-white/30 focus:border-white/20 outline-none transition-all" />
+                <input type="text" name="university" value={formData.university} onChange={handleChange} placeholder="University" className="w-full glass-input px-5 py-4" />
+                <input type="text" name="branch" value={formData.branch} onChange={handleChange} placeholder="Branch" className="w-full glass-input px-5 py-4" />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <input type="text" name="semester" value={formData.semester} onChange={handleChange} placeholder="Semester" className="w-full bg-black/[0.15] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white font-medium placeholder-white/40 focus:ring-1 focus:ring-white/30 focus:border-white/20 outline-none transition-all" />
-                <input type="text" name="targetRole" value={formData.targetRole} onChange={handleChange} placeholder="Target Role" className="w-full bg-black/[0.15] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white font-medium placeholder-white/40 focus:ring-1 focus:ring-white/30 focus:border-white/20 outline-none transition-all" />
+                <input type="text" name="semester" value={formData.semester} onChange={handleChange} placeholder="Semester" className="w-full glass-input px-5 py-4" />
+                <input type="text" name="targetRole" value={formData.targetRole} onChange={handleChange} placeholder="Target Role" className="w-full glass-input px-5 py-4" />
               </div>
             </div>
           )}
 
-          <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email Address" required className="w-full bg-black/[0.15] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white font-medium placeholder-white/40 focus:ring-1 focus:ring-white/30 focus:border-white/20 outline-none transition-all" />
+          <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email Address" required className="w-full glass-input px-5 py-4" />
           
           <div className="relative">
-            <input type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} placeholder="Password" required className="w-full bg-black/[0.15] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white font-medium placeholder-white/40 focus:ring-1 focus:ring-white/30 focus:border-white/20 outline-none transition-all pr-12" />
+            <input type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} placeholder="Password" required className="w-full glass-input px-5 py-4 pr-12" />
             <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors">
               {showPassword ? <EyeOff className="w-5 h-5" strokeWidth={1.5} /> : <Eye className="w-5 h-5" strokeWidth={1.5} />}
             </button>
@@ -178,22 +178,22 @@ const AuthPage = ({ onAuthSuccess }) => {
             </div>
           )}
 
-          <button type="submit" disabled={loading} className="w-full bg-white hover:bg-white/90 disabled:bg-white/50 disabled:cursor-not-allowed text-black font-semibold text-sm rounded-2xl py-4 mt-6 transition-all shadow-[0_4px_14px_rgba(255,255,255,0.2)] flex items-center justify-center gap-2 active:scale-[0.98]">
-            {loading ? <Loader2 className="w-5 h-5 animate-spin text-black" /> : <>{isLoginPath ? 'Sign In' : 'Continue'}<ArrowRight className="w-4 h-4"/></>}
+          <button type="submit" disabled={loading} className="w-full glass-btn-primary py-4 mt-6">
+            {loading ? <Loader2 className="w-5 h-5 animate-spin text-blue-300" /> : <>{isLoginPath ? 'Sign In' : 'Continue'}<ArrowRight className="w-4 h-4"/></>}
           </button>
         </form>
 
         <div className="flex items-center my-5">
-          <div className="flex-1 border-t border-white/10"></div>
-          <span className="px-3 text-xs text-white/40 uppercase tracking-widest font-semibold font-mono">Or</span>
-          <div className="flex-1 border-t border-white/10"></div>
+          <div className="flex-1 h-[1px] bg-gradient-to-r from-transparent to-white/10"></div>
+          <span className="px-3 text-[10px] text-white/45 uppercase tracking-widest font-semibold font-mono">Or</span>
+          <div className="flex-1 h-[1px] bg-gradient-to-r from-white/10 to-transparent"></div>
         </div>
 
         {/* Beautiful Custom Glassmorphic Google Button matching Theme */}
         <button 
           type="button" 
           onClick={handleGoogleRedirect}
-          className="w-full flex items-center justify-center gap-3 bg-black/40 border border-white/10 hover:bg-black/60 text-white font-semibold text-sm rounded-2xl py-4 transition-all active:scale-[0.98]"
+          className="w-full glass-btn-secondary py-4"
         >
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>

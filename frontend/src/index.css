@@ -44,9 +44,6 @@ body {
   flex-direction: column;
 }
 
-/* Remove the forced colors from h1/h2 so Tailwind can do its job.
-  Just enforce the typography. 
-*/
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--heading);
   font-weight: 600;
@@ -63,9 +60,7 @@ code {
   color: var(--accent);
 }
 
-/* Global Apple-Tier Glass Scrollbars 
-  Applied globally instead of needing a custom class everywhere
-*/
+/* Global Apple-Tier Glass Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -89,4 +84,280 @@ code {
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ==========================================================
+   LIQUID GLASS MORPHISM DESIGN SYSTEM
+   ========================================================== */
+
+/* Light Glass: subtle white transparency, 8px blur, soft border */
+.light-glass {
+  background: rgba(255, 255, 255, 0.02) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border-radius: 18px !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.08),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.15),
+    0 8px 32px rgba(0, 0, 0, 0.2) !important;
+  position: relative !important;
+  border: none !important; /* Ensure absolute overrides */
+}
+.light-glass::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: 18px !important;
+  padding: 1px !important; /* border thickness */
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.01) 50%, rgba(0, 0, 0, 0.1) 100%) !important;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+  -webkit-mask-composite: xor !important;
+  mask-composite: exclude !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+/* Strong Glass: 50px blur, deeper shadows, inner highlights, 32px radius */
+.strong-glass {
+  background: rgba(255, 255, 255, 0.035) !important;
+  backdrop-filter: blur(50px) !important;
+  -webkit-backdrop-filter: blur(50px) !important;
+  border-radius: 32px !important;
+  box-shadow: 
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.12),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.3),
+    0 24px 64px rgba(0, 0, 0, 0.45) !important;
+  position: relative !important;
+  border: none !important;
+}
+.strong-glass::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: 32px !important;
+  padding: 1px !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.02) 40%, rgba(0, 0, 0, 0.3) 100%) !important;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+  -webkit-mask-composite: xor !important;
+  mask-composite: exclude !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+/* Input elements: semi-transparent, blurred background, focus glow */
+.glass-input {
+  background: rgba(255, 255, 255, 0.02) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border-radius: 14px !important;
+  color: #ffffff !important;
+  outline: none !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.05),
+    0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  position: relative !important;
+  border: none !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.glass-input::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: 14px !important;
+  padding: 1px !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01) 60%, rgba(0, 0, 0, 0.1) 100%) !important;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+  -webkit-mask-composite: xor !important;
+  mask-composite: exclude !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+  transition: all 0.3s ease !important;
+}
+.glass-input:focus {
+  background: rgba(255, 255, 255, 0.035) !important;
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.08),
+    0 0 14px rgba(59, 130, 246, 0.25),
+    0 8px 24px rgba(0, 0, 0, 0.25) !important;
+}
+.glass-input:focus::before {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.1) 60%, rgba(0, 0, 0, 0.1) 100%) !important;
+}
+.glass-input::placeholder {
+  color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Glass Buttons */
+.glass-btn-primary {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05)) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-radius: 14px !important;
+  color: #93c5fd !important;
+  font-weight: 600 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.08),
+    0 8px 24px rgba(0, 0, 0, 0.18) !important;
+  position: relative !important;
+  border: none !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+.glass-btn-primary::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: 14px !important;
+  padding: 1px !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.45), rgba(59, 130, 246, 0.05) 50%, rgba(0, 0, 0, 0.15) 100%) !important;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+  -webkit-mask-composite: xor !important;
+  mask-composite: exclude !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+  transition: all 0.3s ease !important;
+}
+.glass-btn-primary:hover {
+  transform: translateY(-1.5px) scale(1.025) !important;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.22), rgba(59, 130, 246, 0.08)) !important;
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.12),
+    0 0 18px rgba(59, 130, 246, 0.3),
+    0 12px 28px rgba(0, 0, 0, 0.3) !important;
+  color: #ffffff !important;
+}
+.glass-btn-primary:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+.glass-btn-secondary {
+  background: rgba(255, 255, 255, 0.015) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border-radius: 14px !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-weight: 500 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.05),
+    0 8px 24px rgba(0, 0, 0, 0.1) !important;
+  position: relative !important;
+  border: none !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+.glass-btn-secondary::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: 14px !important;
+  padding: 1px !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01) 50%, rgba(0, 0, 0, 0.1) 100%) !important;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+  -webkit-mask-composite: xor !important;
+  mask-composite: exclude !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+  transition: all 0.3s ease !important;
+}
+.glass-btn-secondary:hover {
+  transform: translateY(-1.5px) scale(1.025) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    0 12px 28px rgba(0, 0, 0, 0.2) !important;
+  color: #ffffff !important;
+}
+.glass-btn-secondary:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+/* Red Glass for errors and cancellations */
+.glass-btn-danger {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(239, 68, 68, 0.03)) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-radius: 14px !important;
+  color: #fca5a5 !important;
+  font-weight: 600 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.05),
+    0 8px 24px rgba(0, 0, 0, 0.15) !important;
+  position: relative !important;
+  border: none !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+.glass-btn-danger::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: 14px !important;
+  padding: 1px !important;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.35), rgba(239, 68, 68, 0.05) 50%, rgba(0, 0, 0, 0.15) 100%) !important;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+  -webkit-mask-composite: xor !important;
+  mask-composite: exclude !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+  transition: all 0.3s ease !important;
+}
+.glass-btn-danger:hover {
+  transform: translateY(-1.5px) scale(1.025) !important;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.22), rgba(239, 68, 68, 0.08)) !important;
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.08),
+    0 0 18px rgba(239, 68, 68, 0.25),
+    0 12px 28px rgba(0, 0, 0, 0.25) !important;
+  color: #ffffff !important;
+}
+.glass-btn-danger:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+/* Hover Lift and Scale effect for widgets */
+.hover-lift-scale {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.hover-lift-scale:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.12),
+    0 16px 40px rgba(0, 0, 0, 0.35) !important;
+}
+.hover-lift-scale:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+/* Custom premium scrollbar styling */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
 }

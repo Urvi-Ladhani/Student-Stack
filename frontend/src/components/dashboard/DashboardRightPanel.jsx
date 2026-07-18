@@ -53,8 +53,8 @@ const DashboardRightPanel = () => {
     <div className="h-full w-full flex flex-col gap-6">
       
       {/* SECTION: Active Study Session Widget */}
-      <div className="p-5 rounded-3xl bg-gradient-to-b from-blue-900/20 to-transparent border border-blue-500/20 relative overflow-hidden group shadow-lg">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[50px] rounded-full"></div>
+      <div className="p-5 relative overflow-hidden group shadow-lg light-glass hover-lift-scale">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-[50px] rounded-full"></div>
         
         <h3 className="text-xs font-bold tracking-wider text-blue-400 uppercase mb-4">Active Session</h3>
         
@@ -68,8 +68,8 @@ const DashboardRightPanel = () => {
         </div>
 
         <div className="flex gap-2 opacity-50 pointer-events-none">
-          <button className="flex-1 bg-white hover:bg-white/90 text-black py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all">
-            <Play className="w-3 h-3 fill-black" /> Start
+          <button className="flex-1 glass-btn-secondary py-2.5 text-xs font-bold">
+            <Play className="w-3 h-3 fill-white/60" /> Start
           </button>
         </div>
       </div>
@@ -81,10 +81,10 @@ const DashboardRightPanel = () => {
         </h3>
         <div className="space-y-3">
           {urgentTasks.length === 0 ? (
-            <p className="text-xs text-white/40 text-center py-4 bg-white/[0.02] rounded-2xl border border-white/[0.05]">No upcoming deadlines.</p>
+            <p className="text-xs text-white/40 text-center py-4 light-glass shadow-inner">No upcoming deadlines.</p>
           ) : (
             urgentTasks.map(task => (
-              <div key={task._id} className="p-3 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex justify-between items-center hover:bg-white/[0.05] transition-colors cursor-default">
+              <div key={task._id} className="p-3 flex justify-between items-center hover-lift-scale light-glass cursor-default shadow">
                 <div className="truncate pr-3">
                   <p className="text-sm font-medium text-white/90 truncate">{task.title}</p>
                   <p className="text-[10px] text-white/40 uppercase tracking-wider">{task.category}</p>

@@ -402,7 +402,7 @@ const AnalyticsPanel = ({ problems, syncStats, contestHistory }) => {
     <div className="flex flex-col gap-6 mt-4 animate-in fade-in slide-in-from-top-4">
       
       {/* Total Score Card */}
-      <div className="p-6 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl flex items-center justify-between">
+      <div className="p-6 shadow-xl flex items-center justify-between light-glass hover-lift-scale">
         <div className="w-1/2 flex flex-col justify-center">
           <h3 className="text-[11px] font-bold text-white/50 uppercase tracking-widest mb-1">Total Score</h3>
           <div className="flex items-baseline gap-2">
@@ -412,20 +412,20 @@ const AnalyticsPanel = ({ problems, syncStats, contestHistory }) => {
         </div>
         <div className="w-1/2 flex flex-col items-end gap-2">
           <span className="text-sm font-bold text-blue-400">{displayPercent}% Completed</span>
-          <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
+          <div className="w-full h-2 bg-black/30 rounded-full overflow-hidden">
             <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: `${barWidth}%` }}></div>
           </div>
         </div>
       </div>
 
       {/* Heatmap Card */}
-      <div className="p-6 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl flex flex-col">
+      <div className="p-6 flex flex-col light-glass hover-lift-scale shadow-xl">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">{submissionsInYear} submissions in {selectedYear}</h3>
+          <h3 className="text-sm font-bold text-white flex items-center gap-2">{submissionsInYear} submissions in {selectedYear}</h3>
           <select 
             value={selectedYear} 
             onChange={(e) => setSelectedYear(parseInt(e.target.value))} 
-            className="bg-black/40 border border-white/10 text-white text-xs font-bold px-3 py-1.5 rounded-lg outline-none cursor-pointer hover:border-white/30 transition-all"
+            className="bg-white/5 border border-white/10 text-white text-xs font-bold px-3 py-1.5 rounded-lg outline-none cursor-pointer hover:bg-white/10 transition-all"
           >
             {yearsArray.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
@@ -461,21 +461,21 @@ const AnalyticsPanel = ({ problems, syncStats, contestHistory }) => {
       <div className="flex flex-col gap-4 mt-2">
         <h3 className="text-[11px] font-bold text-white/50 uppercase tracking-widest pl-2">Global Lifetime Sync</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl bg-black/20 border border-white/5 hover:border-blue-500/20 transition-all flex flex-col items-center justify-center gap-2">
+          <div className="p-5 flex flex-col items-center justify-center gap-2 light-glass hover-lift-scale shadow">
             <span className="text-3xl font-extrabold text-blue-400">{syncStats.leetcode}</span>
-            <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">LeetCode</span>
+            <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest">LeetCode</span>
           </div>
-          <div className="p-5 rounded-2xl bg-black/20 border border-white/5 hover:border-blue-500/20 transition-all flex flex-col items-center justify-center gap-2">
+          <div className="p-5 flex flex-col items-center justify-center gap-2 light-glass hover-lift-scale shadow">
             <span className="text-3xl font-extrabold text-blue-400">{syncStats.codeforces}</span>
-            <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Codeforces</span>
+            <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest">Codeforces</span>
           </div>
-          <div className="p-5 rounded-2xl bg-black/20 border border-white/5 hover:border-blue-500/20 transition-all flex flex-col items-center justify-center gap-2">
+          <div className="p-5 flex flex-col items-center justify-center gap-2 light-glass hover-lift-scale shadow">
             <span className="text-3xl font-extrabold text-blue-400">{syncStats.gfg}</span>
-            <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">GeeksForGeeks</span>
+            <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest">GeeksForGeeks</span>
           </div>
-          <div className="p-5 rounded-2xl bg-black/20 border border-white/5 hover:border-blue-500/20 transition-all flex flex-col items-center justify-center gap-2">
+          <div className="p-5 flex flex-col items-center justify-center gap-2 light-glass hover-lift-scale shadow">
             <span className="text-3xl font-extrabold text-blue-400">{contestHistory?.length || 0}</span>
-            <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Contests</span>
+            <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest">Contests</span>
           </div>
         </div>
       </div>
@@ -492,21 +492,21 @@ const ContestHubPanel = ({ upcomingContests, contestHistory, handleAddToCalendar
     <div className="flex flex-col gap-6 mt-4 animate-in fade-in slide-in-from-bottom-4">
       
       {/* Analytics Banner */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="p-5 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl flex flex-col items-center justify-center gap-1 shadow-lg">
+      <div className="grid grid-cols-3 gap-6">
+        <div className="p-5 flex flex-col items-center justify-center gap-1 shadow-lg light-glass hover-lift-scale">
           <TrendingUp className="w-6 h-6 text-emerald-400 mb-1" />
           <span className="text-2xl font-extrabold text-white">{maxRating || 'N/A'}</span>
-          <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Max Rating</span>
+          <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest">Max Rating</span>
         </div>
-        <div className="p-5 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl flex flex-col items-center justify-center gap-1 shadow-lg">
+        <div className="p-5 flex flex-col items-center justify-center gap-1 shadow-lg light-glass hover-lift-scale">
           <Target className="w-6 h-6 text-blue-400 mb-1" />
           <span className="text-2xl font-extrabold text-white">{contestHistory.length}</span>
-          <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Contests Logged</span>
+          <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest">Contests Logged</span>
         </div>
-        <div className="p-5 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl flex flex-col items-center justify-center gap-1 shadow-lg">
+        <div className="p-5 flex flex-col items-center justify-center gap-1 shadow-lg light-glass hover-lift-scale">
           <Award className="w-6 h-6 text-amber-400 mb-1" />
           <span className="text-2xl font-extrabold text-white">{avgRank ? `Top ${avgRank}` : 'N/A'}</span>
-          <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Average Rank</span>
+          <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest">Average Rank</span>
         </div>
       </div>
 
@@ -516,20 +516,20 @@ const ContestHubPanel = ({ upcomingContests, contestHistory, handleAddToCalendar
         <div className="lg:col-span-5 flex flex-col gap-4">
           <div className="flex items-center gap-2 pl-2">
             <Calendar className="w-4 h-4 text-white/50" />
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Upcoming Calendar</h3>
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider">Upcoming Calendar</h3>
           </div>
           
           <div className="flex flex-col gap-3">
             {upcomingContests.length === 0 ? (
-              <div className="p-4 rounded-2xl bg-black/30 border border-white/10 text-center text-white/50 text-xs">
+              <div className="p-4 rounded-2xl text-center text-white/50 text-xs light-glass">
                 Scanning Codeforces for live contests...
               </div>
             ) : (
               upcomingContests.map(contest => (
-                <div key={contest.id} className="p-4 rounded-2xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-lg hover:border-white/20 transition-all group">
+                <div key={contest.id} className="p-4 shadow-lg hover-lift-scale group light-glass">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex flex-col">
-                      <span className="text-[10px] font-bold uppercase tracking-wider mb-1 text-blue-400">
+                      <span className="text-[9px] font-bold uppercase tracking-wider mb-1 text-blue-400">
                         {contest.platform}
                       </span>
                       <h4 className="text-sm font-bold text-white group-hover:text-blue-300 transition-colors">{contest.name}</h4>
@@ -568,7 +568,7 @@ const ContestHubPanel = ({ upcomingContests, contestHistory, handleAddToCalendar
             </div>
           </div>
 
-          <div className="p-1 rounded-2xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-lg overflow-hidden min-h-[300px]">
+          <div className="p-1 shadow-lg overflow-hidden min-h-[300px] light-glass">
             {contestHistory.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full pt-16 text-white/40">
                 <Database className="w-10 h-10 mb-2 opacity-50" />
@@ -655,9 +655,9 @@ const DailyChallengePanel = ({ dailyChallenges, replaceChallenge, skipChallenge,
       
       {/* 🏆 THE DAILY POST-MATCH REPORT */}
       {isBoardCleared && (
-        <div className="mb-8 p-6 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/30 backdrop-blur-xl shadow-[0_0_30px_rgba(99,102,241,0.15)] animate-in zoom-in-95 duration-500">
+        <div className="mb-8 p-6 strong-glass shadow-2xl animate-in zoom-in-95 duration-500">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/40 shadow-inner">
+            <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-inner">
               <Trophy className="w-8 h-8 text-indigo-400" />
             </div>
             <div>
@@ -667,7 +667,7 @@ const DailyChallengePanel = ({ dailyChallenges, replaceChallenge, skipChallenge,
           </div>
 
           {completedTodayChallenges.length === 0 ? (
-            <div className="p-4 rounded-xl bg-black/40 text-center text-white/50 text-sm">
+            <div className="p-4 rounded-xl text-center text-white/50 text-sm light-glass">
               You skipped all challenges today. Rest up and hit the arena tomorrow!
             </div>
           ) : (
@@ -676,7 +676,7 @@ const DailyChallengePanel = ({ dailyChallenges, replaceChallenge, skipChallenge,
                 const lastAttempt = c.attempts?.[c.attempts.length - 1];
                 const { runtime, memory } = extractStats(lastAttempt?.notes);
                 return (
-                  <div key={i} className="p-4 rounded-2xl bg-black/40 border border-white/5 flex flex-col gap-3">
+                  <div key={i} className="p-4 flex flex-col gap-3 light-glass shadow">
                     <span className="text-xs font-bold text-white/70 truncate">{c.title}</span>
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-1.5 text-emerald-400"><Zap className="w-4 h-4" /><span className="text-sm font-bold">{runtime}</span></div>
@@ -709,8 +709,8 @@ const DailyChallengePanel = ({ dailyChallenges, replaceChallenge, skipChallenge,
           
           if (challenge.status === 'skipped') {
             return (
-              <div key={index} className="p-6 rounded-3xl bg-black/20 border border-white/5 flex flex-col items-center justify-center min-h-[300px]">
-                <span className="text-white/20 mb-2 font-bold uppercase tracking-widest text-xs">Skipped</span>
+              <div key={index} className="p-6 flex flex-col items-center justify-center min-h-[300px] light-glass">
+                <span className="text-white/20 mb-2 font-bold uppercase tracking-widest text-[10px]">Skipped</span>
                 {!isBoardCleared && <button onClick={() => replaceChallenge(index)} className="text-xs font-bold text-indigo-400 hover:text-indigo-300">Generate New</button>}
               </div>
             );
@@ -738,9 +738,9 @@ const DailyChallengePanel = ({ dailyChallenges, replaceChallenge, skipChallenge,
             }
 
             return (
-              <div key={index} className="p-6 rounded-3xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col relative overflow-hidden group shadow-[0_0_20px_rgba(52,211,153,0.1)]">
+              <div key={index} className="p-6 flex flex-col relative overflow-hidden group shadow-[0_0_20px_rgba(52,211,153,0.15)] light-glass border-emerald-500/30">
                 <div className="flex justify-between items-start mb-4">
-                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 flex items-center gap-1">
+                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center gap-1">
                     {challenge.questIcon} {challenge.questType}
                   </span>
                 </div>
@@ -748,21 +748,21 @@ const DailyChallengePanel = ({ dailyChallenges, replaceChallenge, skipChallenge,
                 <h3 className="text-lg font-bold text-white mb-4 line-clamp-2 min-h-[56px]">{challenge.title}</h3>
                 
                 <div className="grid grid-cols-3 gap-2 mt-auto mb-4">
-                  <div className="p-2 rounded-xl bg-black/40 border border-emerald-500/20 flex flex-col items-center justify-center text-center">
-                    <span className="text-[9px] font-bold text-white/50 uppercase tracking-widest mb-1 flex items-center gap-1"><Clock className="w-3 h-3" /> Time</span>
+                  <div className="p-2 rounded-xl bg-white/5 flex flex-col items-center justify-center text-center">
+                    <span className="text-[8px] font-bold text-white/50 uppercase tracking-widest mb-1 flex items-center gap-1"><Clock className="w-3 h-3" /> Time</span>
                     <span className="text-xs font-extrabold text-emerald-400">{timeTakenDisplay}</span>
                   </div>
-                  <div className="p-2 rounded-xl bg-black/40 border border-emerald-500/20 flex flex-col items-center justify-center text-center">
-                    <span className="text-[9px] font-bold text-white/50 uppercase tracking-widest mb-1 flex items-center gap-1"><Zap className="w-3 h-3" /> Speed</span>
+                  <div className="p-2 rounded-xl bg-white/5 flex flex-col items-center justify-center text-center">
+                    <span className="text-[8px] font-bold text-white/50 uppercase tracking-widest mb-1 flex items-center gap-1"><Zap className="w-3 h-3" /> Speed</span>
                     <span className="text-xs font-extrabold text-emerald-400">{runtime}</span>
                   </div>
-                  <div className="p-2 rounded-xl bg-black/40 border border-emerald-500/20 flex flex-col items-center justify-center text-center">
-                    <span className="text-[9px] font-bold text-white/50 uppercase tracking-widest mb-1 flex items-center gap-1"><Cpu className="w-3 h-3" /> Space</span>
+                  <div className="p-2 rounded-xl bg-white/5 flex flex-col items-center justify-center text-center">
+                    <span className="text-[8px] font-bold text-white/50 uppercase tracking-widest mb-1 flex items-center gap-1"><Cpu className="w-3 h-3" /> Space</span>
                     <span className="text-xs font-extrabold text-emerald-400">{memory}</span>
                   </div>
                 </div>
 
-                <div className="w-full py-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-sm font-bold flex justify-center items-center gap-2">
+                <div className="w-full py-3 rounded-xl bg-emerald-500/15 text-emerald-400 text-sm font-bold flex justify-center items-center gap-2">
                   <CheckCircle2 className="w-5 h-5" /> Quest Completed
                 </div>
               </div>
@@ -771,7 +771,7 @@ const DailyChallengePanel = ({ dailyChallenges, replaceChallenge, skipChallenge,
 
           // ACTIVE PENDING CARD
           return (
-            <div key={index} className="p-6 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl flex flex-col relative overflow-hidden group hover:border-indigo-500/30 transition-all">
+            <div key={index} className="p-6 flex flex-col relative overflow-hidden group hover-lift-scale transition-all light-glass shadow-lg">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
               
               <div className="flex justify-between items-start mb-4">
@@ -800,15 +800,15 @@ const DailyChallengePanel = ({ dailyChallenges, replaceChallenge, skipChallenge,
                   target="_blank" 
                   rel="noopener noreferrer"
                   onClick={() => startQuestTimer(challenge)}
-                  className="w-full py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold flex justify-center items-center gap-2 transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)]"
+                  className="w-full py-3 glass-btn-primary flex justify-center items-center gap-2"
                 >
-                  <Play className="w-4 h-4 fill-current" /> Solve Now
+                  <Play className="w-4 h-4 fill-current text-white/80" /> Solve Now
                 </a>
                 
                 <div className="grid grid-cols-3 gap-2 mt-1">
-                  <button onClick={() => replaceChallenge(index)} className="py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-[10px] font-bold flex justify-center items-center gap-1 transition-all"><RefreshCcw className="w-3 h-3" /> Replace</button>
-                  <button onClick={() => toggleStar(challenge)} className="py-2 rounded-xl bg-white/5 hover:bg-amber-500/10 text-white/60 hover:text-amber-400 text-[10px] font-bold flex justify-center items-center gap-1 transition-all"><Star className="w-3 h-3" /> Revision</button>
-                  <button onClick={() => skipChallenge(index)} className="py-2 rounded-xl bg-white/5 hover:bg-red-500/10 text-white/60 hover:text-red-400 text-[10px] font-bold flex justify-center items-center gap-1 transition-all"><X className="w-3 h-3" /> Skip</button>
+                  <button onClick={() => replaceChallenge(index)} className="py-2 glass-btn-secondary text-[9px] flex justify-center items-center gap-1"><RefreshCcw className="w-3 h-3 text-indigo-400" /> Replace</button>
+                  <button onClick={() => toggleStar(challenge)} className="py-2 glass-btn-secondary text-[9px] flex justify-center items-center gap-1"><Star className="w-3 h-3 text-amber-400" /> Revision</button>
+                  <button onClick={() => skipChallenge(index)} className="py-2 glass-btn-secondary text-[9px] flex justify-center items-center gap-1"><X className="w-3 h-3 text-red-400" /> Skip</button>
                 </div>
               </div>
             </div>
@@ -885,11 +885,10 @@ const DsaPage = () => {
   return (
     <DashboardLayout rightPanelContent={<DsaRightPanel problems={problems} />}>
       <div className="w-full flex flex-col h-full min-h-screen pb-24">
-        
         {/* TOP COMMAND BOARD */}
-        <div className="sticky top-0 z-30 bg-black/20 backdrop-blur-2xl px-6 py-4 -mx-6 border-b border-white/10 shadow-lg mb-6 flex flex-col gap-4">
+        <div className="sticky top-0 z-30 px-6 py-4 -mx-6 rounded-b-2xl mb-6 flex flex-col gap-4 light-glass shadow-md">
           <div className="flex items-center justify-between">
-            <div className="flex bg-black/40 border border-white/10 rounded-lg p-1">
+            <div className="flex bg-white/5 border border-white/10 rounded-lg p-1 shadow-inner">
               {[ 
                 { id: 'roadmaps', label: 'Roadmaps', icon: GitBranch }, 
                 { id: 'analytics', label: 'Analytics', icon: BarChart2 }, 
@@ -924,10 +923,10 @@ const DsaPage = () => {
                <div 
                  key={rm._id} 
                  onClick={() => handleRoadmapSwitch(rm._id)} 
-                 className="p-5 rounded-2xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-xl hover:border-blue-500/50 cursor-pointer transition-all"
+                 className="p-5 hover-lift-scale cursor-pointer transition-all light-glass shadow-xl"
                >
                  <div className="flex justify-between items-start mb-6">
-                   <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                   <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shadow-inner">
                      <BookOpen className="w-5 h-5 text-blue-400" />
                    </div>
                  </div>
@@ -936,7 +935,7 @@ const DsaPage = () => {
                </div>
              ))}
            </div>
-        )}
+         )}
 
         {/* ROADMAPS TAB - WORKSPACE VIEW */}
         {activeTab === 'roadmaps' && roadmapView === 'workspace' && (
@@ -955,7 +954,7 @@ const DsaPage = () => {
                  </button>
                  <button 
                    onClick={() => {setRoadmapView('library'); setShowStarredOnly(false);}} 
-                   className="px-4 py-2 rounded-xl bg-white/5 text-white/80 hover:bg-white/10 transition-all text-xs font-bold flex items-center gap-2 border border-white/10"
+                   className="px-4 py-2 rounded-xl glass-btn-secondary text-xs font-bold"
                  >
                    <ArrowDownUp className="w-4 h-4 rotate-90" /> Back to Roadmaps
                  </button>
@@ -973,13 +972,13 @@ const DsaPage = () => {
                      <div 
                        key={topic._id} 
                        onClick={() => setActiveTopicId(topic._id)} 
-                       className="p-4 rounded-xl bg-black/30 border border-white/10 shadow-lg hover:bg-black/40 cursor-pointer group"
+                       className="p-4 cursor-pointer group light-glass hover-lift-scale shadow"
                      >
                        <div className="flex justify-between items-start mb-4">
-                         <h3 className="text-sm font-medium text-white group-hover:text-blue-300">{topic.name}</h3>
+                         <h3 className="text-sm font-medium text-white group-hover:text-blue-300 transition-colors">{topic.name}</h3>
                          <span className="text-[10px] font-bold text-white/50">{solved}/{topicProbs.length}</span>
                        </div>
-                       <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                       <div className="w-full h-1.5 bg-black/30 rounded-full overflow-hidden">
                          <div className="h-full bg-blue-500 rounded-full" style={{ width: `${progress}%` }}></div>
                        </div>
                      </div>
@@ -995,7 +994,7 @@ const DsaPage = () => {
                    <ChevronRight className="w-3 h-3 rotate-180" /> Back to Modules
                  </button>
                  {problems.filter(p => p.topicId === activeTopicId && (!showStarredOnly || p.isStarred)).map(p => (
-                   <div key={p._id} className="grid grid-cols-12 gap-4 p-4 rounded-xl bg-black/30 border border-white/10 items-center group hover:bg-black/40 transition-all">
+                   <div key={p._id} className="grid grid-cols-12 gap-4 p-4 items-center group hover-lift-scale transition-all light-glass shadow-sm">
                      <div className="col-span-1 flex justify-center">
                        <button onClick={() => toggleProblem(p)} className="hover:scale-110 transition-transform">
                          {p.status === 'solved' ? <CheckCircle2 className="w-5 h-5 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" /> : <Circle className="w-5 h-5 text-white/20 hover:text-emerald-400/50" />}
@@ -1018,12 +1017,12 @@ const DsaPage = () => {
                </div>
              )}
            </div>
-        )}
+         )}
 
         {/* SYNC ENGINE TAB UI */}
         {activeTab === 'sync' && (
           <div className="max-w-2xl mx-auto mt-10 animate-in fade-in slide-in-from-bottom-4">
-            <div className="p-8 rounded-3xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-2xl">
+            <div className="p-8 strong-glass shadow-2xl">
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
                   <Database className="w-8 h-8 text-blue-400" />
@@ -1037,7 +1036,7 @@ const DsaPage = () => {
               {(!syncProfile.leetcode && !syncProfile.codeforces && !syncProfile.geeksforgeeks) || isEditingSync ? (
                 <form onSubmit={handleSaveCredentials} className="space-y-6">
                   <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 mb-6">
-                    <p className="text-sm text-blue-200">Connect your handles once. The Sync Engine will automatically verify your progress silently in the background.</p>
+                    <p className="text-sm text-blue-200 font-medium">Connect your handles once. The Sync Engine will automatically verify your progress silently in the background.</p>
                   </div>
                   <div>
                     <label className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-2">LeetCode Username</label>
@@ -1045,7 +1044,7 @@ const DsaPage = () => {
                       type="text" 
                       value={localSyncParams.leetcode} 
                       onChange={(e) => setLocalSyncParams({...localSyncParams, leetcode: e.target.value})} 
-                      className="w-full bg-black/40 border border-white/10 focus:border-amber-500/50 rounded-xl px-4 py-3 text-sm text-white outline-none" 
+                      className="w-full glass-input px-4 py-3 text-sm" 
                       placeholder="e.g. urvicf" 
                     />
                   </div>
@@ -1055,7 +1054,7 @@ const DsaPage = () => {
                       type="text" 
                       value={localSyncParams.codeforces} 
                       onChange={(e) => setLocalSyncParams({...localSyncParams, codeforces: e.target.value})} 
-                      className="w-full bg-black/40 border border-white/10 focus:border-blue-500/50 rounded-xl px-4 py-3 text-sm text-white outline-none" 
+                      className="w-full glass-input px-4 py-3 text-sm" 
                       placeholder="e.g. tourist" 
                     />
                   </div>
@@ -1065,16 +1064,16 @@ const DsaPage = () => {
                       type="text" 
                       value={localSyncParams.geeksforgeeks} 
                       onChange={(e) => setLocalSyncParams({...localSyncParams, geeksforgeeks: e.target.value})} 
-                      className="w-full bg-black/40 border border-white/10 focus:border-emerald-500/50 rounded-xl px-4 py-3 text-sm text-white outline-none" 
+                      className="w-full glass-input px-4 py-3 text-sm" 
                       placeholder="e.g. urvi123" 
                     />
                   </div>
                   
-                  <div className="pt-4 border-t border-white/10 flex justify-end gap-3">
+                  <div className="pt-4 border-t border-white/5 flex justify-end gap-3">
                     {syncProfile.leetcode || syncProfile.codeforces ? (
                       <button type="button" onClick={() => setIsEditingSync(false)} className="px-6 py-3 rounded-xl hover:bg-white/5 text-white/50 text-sm font-bold transition-all">Cancel</button>
                     ) : null}
-                    <button type="submit" className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition-all">Lock & Sync Data</button>
+                    <button type="submit" className="px-6 py-3 glass-btn-primary text-sm font-bold">Lock & Sync Data</button>
                   </div>
                 </form>
               ) : (
@@ -1093,26 +1092,26 @@ const DsaPage = () => {
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="p-4 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-1">
-                      <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">LeetCode</span>
+                    <div className="p-4 flex flex-col gap-1 light-glass shadow-sm hover-lift-scale">
+                      <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest">LeetCode</span>
                       <span className="text-sm font-medium text-white truncate">{syncProfile.leetcode || 'Not Linked'}</span>
                     </div>
-                    <div className="p-4 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-1">
-                      <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Codeforces</span>
+                    <div className="p-4 flex flex-col gap-1 light-glass shadow-sm hover-lift-scale">
+                      <span className="text-[9px] font-bold text-blue-400 uppercase tracking-widest">Codeforces</span>
                       <span className="text-sm font-medium text-white truncate">{syncProfile.codeforces || 'Not Linked'}</span>
                     </div>
-                    <div className="p-4 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-1">
-                      <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">GFG</span>
+                    <div className="p-4 flex flex-col gap-1 light-glass shadow-sm hover-lift-scale">
+                      <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">GFG</span>
                       <span className="text-sm font-medium text-white truncate">{syncProfile.geeksforgeeks || 'Not Linked'}</span>
                     </div>
                   </div>
 
-                  <div className="pt-6 border-t border-white/10 flex justify-between items-center">
+                  <div className="pt-6 border-t border-white/5 flex justify-between items-center">
                     <button onClick={() => setIsEditingSync(true)} className="text-xs font-bold text-white/40 hover:text-white transition-colors">Edit Credentials</button>
                     <button 
                       onClick={() => triggerAutoSync(syncProfile, false)} 
                       disabled={isSyncing} 
-                      className={`px-6 py-2.5 rounded-xl border text-sm font-bold flex items-center gap-2 transition-all ${isSyncing ? 'bg-white/5 text-white/30 border-white/10 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20 text-white border-white/10'}`}
+                      className="px-6 py-2.5 glass-btn-secondary text-xs flex items-center gap-2"
                     >
                       <RefreshCcw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} /> Force Manual Sync
                     </button>

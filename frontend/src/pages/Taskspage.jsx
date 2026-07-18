@@ -170,16 +170,16 @@ const TaskModal = ({ isOpen, onClose, onSave, initialData }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-black/40 border border-white/10 backdrop-blur-2xl rounded-3xl p-6 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-md animate-in fade-in">
+      <div className="w-full max-w-md strong-glass p-7 shadow-2xl">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-white drop-shadow-sm">{initialData ? 'Edit Task' : 'Create New Task'}</h3>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Task Title</label>
-            <input type="text" required value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:border-blue-500/50 outline-none transition-all" />
+            <input type="text" required value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="w-full glass-input px-4 py-3 text-sm" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -194,16 +194,16 @@ const TaskModal = ({ isOpen, onClose, onSave, initialData }) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Deadline</label>
-              <input type="date" required value={formData.deadline} onChange={(e) => setFormData({...formData, deadline: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500/50 outline-none transition-all cursor-pointer [color-scheme:dark]" />
+              <input type="date" required value={formData.deadline} onChange={(e) => setFormData({...formData, deadline: e.target.value})} className="w-full glass-input px-4 py-3 text-sm cursor-pointer [color-scheme:dark]" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Est. Minutes</label>
-              <input type="number" min="5" value={formData.estimatedMinutes} onChange={(e) => setFormData({...formData, estimatedMinutes: e.target.value})} placeholder="30" className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500/50 outline-none transition-all" />
+              <input type="number" min="5" value={formData.estimatedMinutes} onChange={(e) => setFormData({...formData, estimatedMinutes: e.target.value})} placeholder="30" className="w-full glass-input px-4 py-3 text-sm" />
             </div>
           </div>
-          <div className="pt-4 mt-2 border-t border-white/10 flex gap-3">
-            <button type="button" onClick={onClose} disabled={isSubmitting} className="flex-1 py-3 rounded-xl bg-white/5 text-white/70 font-semibold hover:bg-white/10 hover:text-white transition-all border border-transparent disabled:opacity-50">Cancel</button>
-            <button type="submit" disabled={isSubmitting} className="flex-1 py-3 rounded-xl bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30 hover:bg-blue-500/30 transition-all shadow-[0_0_15px_rgba(59,130,246,0.2)] flex items-center justify-center gap-2 disabled:opacity-50">
+          <div className="pt-4 mt-2 border-t border-white/5 flex gap-3">
+            <button type="button" onClick={onClose} disabled={isSubmitting} className="flex-1 py-3 glass-btn-secondary text-sm disabled:opacity-50">Cancel</button>
+            <button type="submit" disabled={isSubmitting} className="flex-1 py-3 glass-btn-primary text-sm disabled:opacity-50">
               {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (initialData ? 'Save Changes' : 'Create Task')}
             </button>
           </div>
@@ -337,7 +337,7 @@ const Taskspage = () => {
     return (
       <div 
         draggable onDragStart={(e) => handleDragStart(e, task._id)} onDragEnd={handleDragEnd}
-        className={`relative p-4 rounded-xl backdrop-blur-xl shadow-xl transition-all cursor-grab active:cursor-grabbing group w-full ${hFull ? 'h-full flex flex-col justify-between' : ''} ${isSelected ? 'bg-blue-500/20 border border-blue-500/40' : 'bg-black/30 border border-white/10 hover:border-white/30'} ${activeDropdown === task._id ? 'z-50' : 'z-10'}`}
+        className={`relative p-4 cursor-grab active:cursor-grabbing group w-full hover-lift-scale light-glass ${hFull ? 'h-full flex flex-col justify-between' : ''} ${isSelected ? 'shadow-[0_0_15px_rgba(59,130,246,0.25)]' : ''} ${activeDropdown === task._id ? 'z-50' : 'z-10'}`}
       >
         <div>
           <div className="flex justify-between items-start mb-3">
@@ -353,7 +353,7 @@ const Taskspage = () => {
           <div className="flex items-center gap-3 text-xs text-white/40 mb-4"><span className="flex items-center gap-1"><Tag className="w-3 h-3" /> {task.category}</span></div>
         </div>
         
-        <div className="pt-3 border-t border-white/10 flex justify-between items-center">
+        <div className="pt-3 border-t border-white/5 flex justify-between items-center">
           <GlassDropdown variant="status" value={task.status} options={[{value: 'todo', label: 'To Do'}, {value: 'in_progress', label: 'In Progress'}, {value: 'done', label: 'Done'}]} onChange={(v) => updateTaskStatus(task._id, v)} />
           {task.status !== 'done' && (
             <button onClick={(e) => { e.stopPropagation(); alert(`Starting Study Session for: ${task.title}`); }} className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 px-2 py-1.5 rounded-lg transition-colors border border-emerald-500/20">
@@ -366,7 +366,7 @@ const Taskspage = () => {
   };
 
   const TaskListItem = ({ task }) => (
-    <div className={`flex items-center justify-between p-4 rounded-xl bg-black/30 border border-white/10 backdrop-blur-xl shadow-lg hover:bg-black/40 transition-all group relative ${activeDropdown === task._id ? 'z-50' : 'z-10'}`}>
+    <div className={`flex items-center justify-between p-4 group relative hover-lift-scale light-glass shadow ${activeDropdown === task._id ? 'z-50' : 'z-10'}`}>
       <div className="flex items-center gap-5">
         <GlassDropdown variant="status" value={task.status} options={[{value: 'todo', label: 'To Do'}, {value: 'in_progress', label: 'In Progress'}, {value: 'done', label: 'Done'}]} onChange={(v) => updateTaskStatus(task._id, v)} />
         <div>
@@ -391,20 +391,20 @@ const Taskspage = () => {
       <div className="w-full flex flex-col h-full min-h-screen relative" onClick={() => setActiveDropdown(null)}>
         
         {/* COMMAND BOARD & FILTERS */}
-        <div className="sticky top-0 z-30 bg-black/20 backdrop-blur-2xl px-6 py-4 -mx-6 border-b border-white/10 shadow-lg shadow-black/20 rounded-b-2xl mb-6 flex flex-col gap-4">
+        <div className="sticky top-0 z-30 px-6 py-4 -mx-6 rounded-b-2xl mb-6 flex flex-col gap-4 light-glass shadow-md">
           <div className="flex items-center justify-between">
-            <div className="flex bg-black/40 border border-white/10 rounded-lg p-1 shadow-inner">
+            <div className="flex bg-white/5 border border-white/10 rounded-lg p-1 shadow-inner">
               {[{ id: 'today', icon: Sun, label: 'Today' }, { id: 'list', icon: LayoutList, label: 'List' }, { id: 'board', icon: Kanban, label: 'Board' }, { id: 'calendar', icon: CalendarDays, label: 'Calendar' }].map(v => (
-                <button key={v.id} onClick={() => setView(v.id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${view === v.id ? 'bg-white/10 text-white shadow border border-white/5' : 'text-white/40 hover:text-white/80'}`}>
+                <button key={v.id} onClick={() => setView(v.id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${view === v.id ? 'bg-white/10 text-white shadow' : 'text-white/40 hover:text-white/80'}`}>
                   <v.icon className="w-4 h-4" /> {v.label}
                 </button>
               ))}
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setView('archived')} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${view === 'archived' ? 'bg-white/10 text-white shadow border border-white/5' : 'bg-black/40 border border-white/10 text-white/40 hover:text-white/80'}`}>
+              <button onClick={() => setView('archived')} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${view === 'archived' ? 'bg-white/10 text-white shadow' : 'bg-white/5 border border-white/10 text-white/45 hover:text-white/80'}`}>
                 <Archive className="w-4 h-4" />
               </button>
-              <button onClick={() => setModalState({ isOpen: true, data: null })} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs font-bold hover:bg-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+              <button onClick={() => setModalState({ isOpen: true, data: null })} className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold glass-btn-primary shadow-lg">
                 <Plus className="w-4 h-4" /> Add Task
               </button>
             </div>
@@ -414,7 +414,7 @@ const Taskspage = () => {
             <div className="flex items-center gap-3 z-20">
               <div className="relative flex-1 max-w-xs">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                <input type="text" placeholder="Search tasks..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-xs text-white outline-none focus:border-white/30 transition-all" />
+                <input type="text" placeholder="Search tasks..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full glass-input pl-9 pr-4 py-2 text-xs" />
               </div>
               <div className="w-40"><GlassDropdown icon={FilterIcon} value={categoryFilter} options={[{value: 'All', label: 'All Categories'}, {value: 'Academic', label: 'Academic'}, {value: 'DSA', label: 'DSA'}, {value: 'Internship', label: 'Internship'}, {value: 'Personal', label: 'Personal'}]} onChange={setCategoryFilter} /></div>
               <div className="w-44"><GlassDropdown icon={ArrowDownUp} value={sortBy} options={[{value: 'deadline-asc', label: 'Earliest Deadline'}, {value: 'deadline-desc', label: 'Latest Deadline'}, {value: 'priority', label: 'Highest Priority'}]} onChange={setSortBy} /></div>
@@ -430,7 +430,7 @@ const Taskspage = () => {
               <h2 className="text-xl font-bold tracking-wide">Your Focus Today</h2>
             </div>
             {todaysTasks.length === 0 ? (
-              <div className="text-center text-white/40 mt-10 p-10 bg-black/20 rounded-2xl border border-white/5">
+              <div className="text-center text-white/40 mt-10 p-10 light-glass rounded-2xl">
                 <p>No pending tasks due today. Enjoy your day!</p>
               </div>
             ) : (
@@ -449,7 +449,7 @@ const Taskspage = () => {
               {activeTasks.map(task => <TaskListItem key={task._id} task={task} />)}
             </div>
             {overdueTasks.length > 0 && (
-              <div className="mt-8 pt-6 border-t border-white/10">
+              <div className="mt-8 pt-6 border-t border-white/5">
                 <div className="flex items-center gap-2 text-white/60 mb-4 font-semibold text-sm tracking-wide"><AlertTriangle className="w-4 h-4 text-blue-400" /> Overdue Tasks</div>
                 <div className="flex flex-col gap-3">{overdueTasks.map(task => <TaskListItem key={task._id} task={task} />)}</div>
               </div>
@@ -463,18 +463,18 @@ const Taskspage = () => {
             <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide">
               {['todo', 'in_progress', 'done'].map(status => (
                 <div key={status} className="flex-1 min-w-[300px] flex flex-col gap-4">
-                  <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                  <div className="flex items-center justify-between pb-2 border-b border-white/5">
                     <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">{status.replace('_', ' ')}</h3>
-                    <span className="w-6 h-6 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-xs text-white/60 font-mono shadow-inner">{activeTasks.filter(t => t.status === status).length}</span>
+                    <span className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-xs text-white/60 font-mono shadow-inner">{activeTasks.filter(t => t.status === status).length}</span>
                   </div>
-                  <div className="flex-1 rounded-2xl p-3 flex flex-col gap-3 min-h-[300px] bg-black/10 border border-white/5 transition-all" onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, status)}>
+                  <div className="flex-1 rounded-2xl p-3 flex flex-col gap-3 min-h-[300px] bg-white/[0.01] border border-white/5 transition-all" onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, status)}>
                     {activeTasks.filter(t => t.status === status).map(task => <TaskCard key={task._id} task={task} />)}
                   </div>
                 </div>
               ))}
             </div>
             {overdueTasks.length > 0 && (
-              <div className="mt-8 pt-6 border-t border-white/10">
+              <div className="mt-8 pt-6 border-t border-white/5">
                 <div className="flex items-center gap-2 text-white/60 mb-4 font-semibold text-sm tracking-wide"><AlertTriangle className="w-4 h-4 text-blue-400" /> Overdue Tasks</div>
                 <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">{overdueTasks.map(task => <div key={task._id} className="min-w-[300px] max-w-[300px] flex"><TaskCard task={task} hFull={true} /></div>)}</div>
               </div>
@@ -484,22 +484,22 @@ const Taskspage = () => {
 
         {/* WORKSPACE: CALENDAR VIEW */}
         {view === 'calendar' && (
-          <div className="flex-1 flex flex-col bg-black/20 border border-white/10 rounded-3xl backdrop-blur-xl shadow-2xl p-6 overflow-y-auto scrollbar-hide pb-24">
+          <div className="flex-1 flex flex-col light-glass p-6 overflow-y-auto scrollbar-hide pb-24 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
                 <h2 className="text-2xl font-bold text-white drop-shadow-md">{monthNames[safeMonth]} {safeYear}</h2>
                 <button onClick={() => setCurrentDate(new Date())} className="px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-colors text-xs font-semibold">Today</button>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setCurrentDate(new Date(safeYear, safeMonth - 1, 1))} className="p-2 rounded-xl bg-black/40 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-colors shadow-inner"><ChevronLeft className="w-5 h-5" /></button>
-                <button onClick={() => setCurrentDate(new Date(safeYear, safeMonth + 1, 1))} className="p-2 rounded-xl bg-black/40 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-colors shadow-inner"><ChevronRight className="w-5 h-5" /></button>
+                <button onClick={() => setCurrentDate(new Date(safeYear, safeMonth - 1, 1))} className="p-2 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-colors"><ChevronLeft className="w-5 h-5" /></button>
+                <button onClick={() => setCurrentDate(new Date(safeYear, safeMonth + 1, 1))} className="p-2 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-colors"><ChevronRight className="w-5 h-5" /></button>
               </div>
             </div>
             <div className="grid grid-cols-7 gap-4 mb-4">
               {dayNames.map(day => (<div key={day} className="text-center text-xs font-bold uppercase tracking-wider text-white/40">{day}</div>))}
             </div>
             <div className="grid grid-cols-7 gap-3 flex-1 auto-rows-fr">
-              {Array.from({ length: firstDay || 0 }).map((_, i) => (<div key={`blank-${i}`} className="min-h-[100px] rounded-xl bg-black/10 border border-white/5 opacity-50"></div>))}
+              {Array.from({ length: firstDay || 0 }).map((_, i) => (<div key={`blank-${i}`} className="min-h-[100px] rounded-xl bg-white/5 border border-white/5 opacity-50"></div>))}
               {Array.from({ length: daysInMonth || 0 }).map((_, i) => {
                 const dayNumber = i + 1;
                 const isToday = new Date().getDate() === dayNumber && new Date().getMonth() === safeMonth && new Date().getFullYear() === safeYear;
@@ -511,11 +511,11 @@ const Taskspage = () => {
                 });
                 
                 return (
-                  <div key={`day-${dayNumber}`} className={`min-h-[120px] rounded-xl p-2 border transition-all ${isToday ? 'bg-blue-500/10 border-blue-500/40 shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'bg-black/30 border-white/5 hover:border-white/20'}`}>
+                  <div key={`day-${dayNumber}`} className={`min-h-[120px] rounded-xl p-2 transition-all light-glass hover-lift-scale ${isToday ? 'shadow-[0_0_15px_rgba(59,130,246,0.2)] border-blue-500/30' : ''}`}>
                     <div className="flex justify-end mb-1"><span className={`flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold ${isToday ? 'bg-blue-500 text-white shadow-md' : 'text-white/60'}`}>{dayNumber}</span></div>
                     <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[80px] scrollbar-hide">
                       {dayTasks.map(task => (
-                        <div key={task._id} className={`px-2 py-1.5 rounded-md border text-[10px] leading-tight font-medium truncate shadow-sm transition-colors cursor-pointer ${task.status === 'done' ? 'bg-black/40 border-white/5 text-white/30 line-through' : 'bg-black/40 border-white/10 text-white/80'}`}>{task.title}</div>
+                        <div key={task._id} className="px-2 py-1.5 rounded-md bg-white/5 border border-white/5 text-[10px] leading-tight font-medium truncate transition-colors cursor-pointer">{task.title}</div>
                       ))}
                     </div>
                   </div>
@@ -529,12 +529,12 @@ const Taskspage = () => {
         {view === 'archived' && (
           <div className="flex-1 flex flex-col gap-3 overflow-y-auto pb-24 scrollbar-hide">
             {archivedTasks.length === 0 ? <div className="text-center text-white/40 mt-10">No archived tasks found.</div> : archivedTasks.map(task => (
-                <div key={task._id} className="flex items-center justify-between p-4 rounded-xl bg-black/40 border border-white/5 backdrop-blur-xl opacity-70">
+                <div key={task._id} className="flex items-center justify-between p-4 light-glass opacity-75">
                   <div>
                     <h4 className="text-sm font-medium text-white/60">{task.title}</h4>
                     <span className="flex items-center gap-1 text-xs text-white/40 mt-1.5"><Tag className="w-3 h-3" /> {task.category}</span>
                   </div>
-                  <button onClick={() => unarchiveTask(task._id)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 text-xs font-bold transition-all border border-white/10">
+                  <button onClick={() => unarchiveTask(task._id)} className="flex items-center gap-2 px-3 py-1.5 glass-btn-secondary text-xs">
                     <RotateCcw className="w-3 h-3" /> Restore Task
                   </button>
                 </div>
@@ -545,11 +545,11 @@ const Taskspage = () => {
 
       {/* BULK ACTIONS */}
       {selectedTasks.length > 0 && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 p-3 bg-black/60 backdrop-blur-3xl border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.8)] rounded-2xl animate-in slide-in-from-bottom-10 fade-in">
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 p-3 strong-glass shadow-2xl animate-in slide-in-from-bottom-10 fade-in">
           <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold text-sm">{selectedTasks.length}</div>
-          <span className="text-white/80 text-sm font-semibold pr-4 border-r border-white/10">Tasks Selected</span>
-          <button onClick={handleBulkComplete} className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/30 transition-all flex items-center gap-2"><CheckCircle2 className="w-4 h-4"/> Complete</button>
-          <button onClick={handleBulkDelete} className="px-4 py-2 rounded-xl text-xs font-bold bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30 transition-all flex items-center gap-2"><Trash2 className="w-4 h-4"/> Delete</button>
+          <span className="text-white/80 text-sm font-semibold pr-4 border-r border-white/5">Tasks Selected</span>
+          <button onClick={handleBulkComplete} className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500/25 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-500/30 transition-all flex items-center gap-2"><CheckCircle2 className="w-4 h-4"/> Complete</button>
+          <button onClick={handleBulkDelete} className="px-4 py-2 rounded-xl text-xs font-bold bg-red-500/25 text-red-300 hover:bg-red-500/40 border border-red-500/30 transition-all flex items-center gap-2"><Trash2 className="w-4 h-4"/> Delete</button>
           <button onClick={() => setSelectedTasks([])} className="p-2 ml-2 rounded-lg hover:bg-white/10 text-white/50 transition-all"><X className="w-4 h-4"/></button>
         </div>
       )}

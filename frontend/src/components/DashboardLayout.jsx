@@ -148,16 +148,16 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
   };
 
   return (
-    <div className="w-full h-screen flex overflow-hidden font-sans relative text-slate-50">
+    <div className="w-full h-screen flex gap-6 p-6 overflow-hidden font-sans relative text-slate-50 box-border bg-[#040712]/30">
       
       {/* Subtle Global Tint */}
       <div className="absolute inset-0 bg-black/20 pointer-events-none z-0"></div>
 
       {/* 1. LEFT SIDEBAR (Apple-Tier Glass) */}
-      <aside className="relative z-20 w-[240px] h-screen bg-black/30 backdrop-blur-[40px] border-r border-white/10 flex flex-col justify-between p-5 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.4)]">
-        <div className="space-y-8">
+      <aside className="strong-glass z-20 w-[240px] h-full flex flex-col justify-between p-6 shrink-0 shadow-2xl">
+        <div className="space-y-8 animate-in slide-in-from-left duration-500">
           
-          <div className="flex items-center gap-3 px-2 cursor-pointer" onClick={() => navigate('/dashboard')}>
+          <div className="flex items-center gap-3 px-2 cursor-pointer transition-transform hover:scale-[1.02]" onClick={() => navigate('/dashboard')}>
             <div className="p-1.5 rounded-lg bg-white/10 border border-white/20 shadow-inner">
               <Command className="w-5 h-5 text-blue-400" />
             </div>
@@ -171,13 +171,13 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
                 setSessionName('');
               }
             }}
-            className="w-full flex items-center justify-center gap-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-400/30 py-2.5 rounded-xl text-xs font-semibold transition-all group backdrop-blur-md shadow-lg shadow-blue-900/20"
+            className="w-full py-2.5 rounded-xl text-xs font-semibold glass-btn-primary group"
           >
             <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
             Quick Action
           </button>
 
-          <nav className="space-y-1.5">
+          <nav className="space-y-2">
             {[
               { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
               { label: 'Task OS', icon: CheckSquare, path: '/tasks' }, 
@@ -188,9 +188,9 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
               <button 
                 key={item.label}
                 onClick={() => navigate(item.path)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-xs font-medium transition-all text-left ${
+                className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-medium transition-all text-left hover-lift-scale ${
                   isActive(item.path) 
-                    ? 'bg-white/10 text-white border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.2)] font-semibold' 
+                    ? 'light-glass text-white font-semibold shadow-lg' 
                     : 'text-white/60 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -205,31 +205,31 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
           
           {/* Active Study Session Countdown */}
           {sessionActive ? (
-            <div className="p-3.5 rounded-xl bg-black/20 border border-white/10 backdrop-blur-xl flex items-center justify-between shadow-lg group/timer">
+            <div className="p-3.5 rounded-xl light-glass flex items-center justify-between shadow-lg group/timer hover-lift-scale">
               <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
-                <div className="p-2 bg-emerald-500/20 rounded-lg border border-emerald-500/30 shrink-0">
+                <div className="p-2 bg-emerald-500/15 rounded-lg shrink-0">
                   <Timer className="w-4 h-4 text-emerald-400 animate-pulse" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider drop-shadow-sm truncate">{sessionName}</p>
+                  <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider truncate">{sessionName}</p>
                   <p className="text-sm font-semibold font-mono text-white/90">{formatTime(timeLeft)}</p>
                 </div>
               </div>
               <button 
                 onClick={stopFocusSession}
                 title="Cancel Session"
-                className="p-1 rounded bg-white/5 border border-white/10 text-white/40 hover:text-red-400 hover:bg-red-500/20 transition-all opacity-0 group-hover/timer:opacity-100 shrink-0"
+                className="p-1 rounded bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-500/20 transition-all opacity-0 group-hover/timer:opacity-100 shrink-0"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : (
-            <div className="p-3.5 rounded-xl bg-black/20 border border-white/10 backdrop-blur-xl flex items-center gap-3 shadow-lg">
-              <div className="p-2 bg-white/5 rounded-lg border border-white/10">
+            <div className="p-3.5 rounded-xl light-glass flex items-center gap-3 shadow-lg hover-lift-scale">
+              <div className="p-2 bg-white/5 rounded-lg shrink-0">
                 <Timer className="w-4 h-4 text-white/30" />
               </div>
               <div>
-                <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider drop-shadow-sm">Focus Arena</p>
+                <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Focus Arena</p>
                 <p className="text-xs font-semibold text-white/50">Ready to start</p>
               </div>
             </div>
@@ -240,7 +240,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
               localStorage.clear();
               window.location.href = '/login';
             })}
-            className="w-full flex items-center gap-3 px-3 py-3 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 rounded-xl text-xs font-medium transition-all"
+            className="w-full px-3.5 py-3 text-red-400/80 glass-btn-danger text-xs font-semibold"
           >
             <LogOut className="w-4 h-4" />
             Log Out
@@ -249,15 +249,15 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
       </aside>
 
       {/* 2. MAIN WORKSPACE */}
-      <main className="relative z-10 flex-1 h-screen overflow-y-auto px-8 pt-6 pb-12">
-        <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none -z-10"></div>
-        <div className="w-full max-w-5xl mx-auto relative z-20">
+      <main className="relative z-10 flex-1 h-full overflow-y-auto custom-scrollbar px-2">
+        <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+        <div className="w-full max-w-5xl mx-auto relative z-20 h-full">
           {children}
         </div>
       </main>
 
       {/* 3. RIGHT CONTEXT PANEL */}
-      <aside className="relative z-20 w-[320px] h-screen bg-black/30 backdrop-blur-[40px] border-l border-white/10 p-6 shrink-0 flex flex-col gap-6 overflow-y-auto hidden xl:flex shadow-[-4px_0_24px_rgba(0,0,0,0.4)]">
+      <aside className="strong-glass z-20 w-[320px] h-full p-6 shrink-0 flex flex-col gap-6 overflow-y-auto hidden xl:flex shadow-2xl custom-scrollbar">
         {rightPanelContent ? (
           rightPanelContent
         ) : (
@@ -269,15 +269,15 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
 
       {/* COMMAND CENTER QUICK ACTION MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div className="w-full max-w-md bg-black/40 border border-white/10 backdrop-blur-2xl rounded-3xl p-6 shadow-2xl text-white">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md animate-in fade-in">
+          <div className="w-full max-w-md strong-glass p-7 shadow-2xl text-white">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-blue-400" /> Command Center
               </h3>
               <button 
                 onClick={() => setIsModalOpen(false)} 
-                className="p-1 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+                className="p-1.5 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -308,7 +308,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
                     value={sessionName} 
                     onChange={(e) => setSessionName(e.target.value)} 
                     placeholder="e.g. DSA Practice, Math Revision..." 
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:border-blue-500/50 outline-none transition-all"
+                    className="w-full glass-input px-4 py-3"
                   />
                 </div>
                 
@@ -323,7 +323,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
                       <button 
                         key={btn.val}
                         onClick={() => startFocusSession(btn.val, sessionName || 'Deep Work')}
-                        className="py-3 rounded-xl bg-white/5 hover:bg-blue-500/20 hover:text-blue-300 border border-white/10 hover:border-blue-500/30 text-xs font-bold transition-all flex flex-col items-center justify-center gap-1"
+                        className="py-3 rounded-xl glass-btn-secondary text-xs flex flex-col items-center justify-center gap-1.5"
                       >
                         <Clock className="w-4 h-4 text-blue-400" />
                         {btn.label}
@@ -335,19 +335,19 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
             ) : (
               <form onSubmit={handleQuickJotSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Jot Down a Idea / Task</label>
-                  <div className="flex bg-black/40 border border-white/10 rounded-xl p-1 mb-4">
+                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Jot Down an Idea / Task</label>
+                  <div className="flex bg-white/5 border border-white/10 rounded-xl p-1 mb-4">
                     <button 
                       type="button"
                       onClick={() => setJotType('task')}
-                      className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${jotType === 'task' ? 'bg-white/10 text-white border border-white/5 shadow' : 'text-white/40'}`}
+                      className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${jotType === 'task' ? 'bg-white/10 text-white shadow' : 'text-white/40'}`}
                     >
                       Quick Task
                     </button>
                     <button 
                       type="button"
                       onClick={() => setJotType('note')}
-                      className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${jotType === 'note' ? 'bg-white/10 text-white border border-white/5 shadow' : 'text-white/40'}`}
+                      className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${jotType === 'note' ? 'bg-white/10 text-white shadow' : 'text-white/40'}`}
                     >
                       Quick Note
                     </button>
@@ -359,13 +359,13 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
                     value={jotTitle} 
                     onChange={(e) => setJotTitle(e.target.value)} 
                     placeholder={jotType === 'task' ? "I need to complete..." : "Write quick note title..."} 
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:border-blue-500/50 outline-none transition-all"
+                    className="w-full glass-input px-4 py-3"
                   />
                 </div>
 
                 <button 
                   type="submit" 
-                  className="w-full py-3 mt-2 rounded-xl bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30 hover:bg-blue-500/30 transition-all shadow-[0_0_15px_rgba(59,130,246,0.2)] flex items-center justify-center gap-2"
+                  className="w-full py-3 mt-2 glass-btn-primary"
                 >
                   <Plus className="w-4 h-4" /> Save Instance
                 </button>
@@ -377,8 +377,8 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
 
       {/* DIALOG BOX OVERLAY */}
       {dialogState.isOpen && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-xs bg-black/40 border border-white/10 backdrop-blur-2xl rounded-3xl p-6 shadow-2xl text-white text-center flex flex-col items-center gap-4">
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md animate-in fade-in">
+          <div className="w-full max-w-xs strong-glass p-6 text-white text-center flex flex-col items-center gap-4">
             <div className={`w-12 h-12 rounded-full flex items-center justify-center border ${
               dialogState.type === 'error' 
                 ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' 
@@ -396,7 +396,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
             </div>
             <button 
               onClick={handleDialogClose}
-              className="w-full py-2.5 rounded-xl bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30 hover:bg-blue-500/30 transition-all text-xs"
+              className="w-full py-2.5 glass-btn-primary text-xs"
             >
               Got it!
             </button>

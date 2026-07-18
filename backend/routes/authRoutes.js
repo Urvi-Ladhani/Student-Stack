@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const protect = require("../middleware/authMiddleware");
 
 // Import all the controller functions you made earlier
 const { signupUser, loginUser, getProfile, googleAuth } = require("../controllers/authController");
@@ -10,6 +11,6 @@ router.post("/login", loginUser);
 router.post("/google", googleAuth);
 
 // Get route for fetching user info (since you had getProfile in your controller)
-router.get("/profile", getProfile);
+router.get("/profile", protect, getProfile);
 
 module.exports = router;

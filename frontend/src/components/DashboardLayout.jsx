@@ -1,13 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Command, LayoutDashboard, CheckSquare, Code2, 
-  BookOpen, Briefcase, Timer, Plus, LogOut, X, Sparkles, Clock, Play, CheckCircle2, Menu, ChevronLeft
+  BookOpen, Briefcase, Timer, Plus, LogOut, X, Sparkles, Clock, Play, CheckCircle2, Menu, ChevronLeft, Settings
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      return stored ? JSON.parse(stored) : user;
+    } catch (e) {
+      return user;
+    }
+  });
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      try {
+        const stored = localStorage.getItem('user');
+        if (stored) setCurrentUser(JSON.parse(stored));
+      } catch (e) {}
+    };
+    window.addEventListener('dashboard-data-updated', handleUpdate);
+    window.addEventListener('study-session-logged', handleUpdate);
+    return () => {
+      window.removeEventListener('dashboard-data-updated', handleUpdate);
+      window.removeEventListener('study-session-logged', handleUpdate);
+    };
+  }, [user]);
 
   const isActive = (path) => location.pathname === path;
 
@@ -227,7 +251,12 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
         });
       } else if (type === 'dsa') {
         if (!quickDsa.topicId) {
-          alert("Please select a DSA topic.");
+          setDialogState({
+            isOpen: true,
+            title: 'Notice',
+            message: 'Please select a DSA topic.',
+            type: 'error'
+          });
           return;
         }
         res = await fetch('http://localhost:5000/api/dsa/problems', {
@@ -269,7 +298,12 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
         if (window.location.pathname === '/internships') window.location.reload();
       } else {
         const err = await res.json().catch(() => ({}));
-        alert(`Error: ${err.message || 'Operation failed'}`);
+        setDialogState({
+          isOpen: true,
+          title: 'Error',
+          message: `Error: ${err.message || 'Operation failed'}`,
+          type: 'error'
+        });
       }
     } catch (err) {
       console.error("Quick action save error:", err);
@@ -355,46 +389,25 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
           </nav>
         </div>
 
-        <div className="space-y-4">
-          {sessionActive ? (
-            <div className="p-3.5 rounded-xl light-glass flex items-center justify-between shadow-lg hover-lift-scale">
-              <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
-                <div className="p-2 bg-emerald-500/15 rounded-lg shrink-0">
-                  <Timer className="w-4 h-4 text-emerald-400 animate-pulse" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider truncate">{sessionName}</p>
-                  <p className="text-sm font-semibold font-mono text-white/90">{formatTime(timeLeft)}</p>
-                </div>
-              </div>
-              <button 
-                onClick={stopFocusSession}
-                className="p-1 rounded bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-500/20 transition-all shrink-0"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ) : (
-            <div className="p-3.5 rounded-xl light-glass flex items-center gap-3 shadow-lg hover-lift-scale">
-              <div className="p-2 bg-white/5 rounded-lg shrink-0">
-                <Timer className="w-4 h-4 text-white/30" />
-              </div>
-              <div>
-                <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Focus Arena</p>
-                <p className="text-xs font-semibold text-white/50">Ready</p>
-              </div>
-            </div>
-          )}
-
+        <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-center w-full gap-4 px-1 shrink-0">
+          <button 
+            onClick={() => { navigate('/settings'); setIsMobileSidebarOpen(false); }}
+            title="Settings"
+            className={`p-2 rounded-xl text-white/50 hover:text-white transition-all hover:bg-white/5 ${
+              isActive('/settings') ? 'text-blue-400 bg-white/5 border border-white/10' : ''
+            }`}
+          >
+            <Settings className="w-5 h-5" />
+          </button>
           <button 
             onClick={onLogout || (() => {
               localStorage.clear();
               window.location.href = '/login';
             })}
-            className="w-full px-3.5 py-3 text-red-400/80 glass-btn-danger text-xs font-semibold"
+            title="Log Out"
+            className="p-2 rounded-xl text-white/50 hover:text-rose-400 transition-all hover:bg-white/5"
           >
-            <LogOut className="w-4 h-4" />
-            Log Out
+            <LogOut className="w-5 h-5" />
           </button>
         </div>
       </aside>
@@ -449,51 +462,29 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
           </nav>
         </div>
 
-        <div className="space-y-4 w-full flex flex-col md:items-center lg:items-stretch">
-          
-          {/* Active Study Session Countdown */}
-          {sessionActive ? (
-            <div className="p-3 rounded-xl light-glass flex items-center justify-center lg:justify-between shadow-lg group/timer hover-lift-scale w-full min-w-0 overflow-hidden" title={sessionName}>
-              <div className="flex items-center justify-center lg:justify-start gap-2.5 min-w-0 flex-1 lg:pr-2">
-                <div className="p-2 bg-emerald-500/15 rounded-lg shrink-0 animate-pulse" onClick={stopFocusSession} title="Stop Session">
-                  <Timer className="w-4.5 h-4.5 text-emerald-400" />
-                </div>
-                <div className="min-w-0 flex-1 hidden lg:block">
-                  <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider truncate">{sessionName}</p>
-                  <p className="text-xs font-semibold font-mono text-white/90">{formatTime(timeLeft)}</p>
-                </div>
-              </div>
-              <button 
-                onClick={stopFocusSession}
-                title="Cancel Session"
-                className="p-1 rounded bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-500/20 transition-all opacity-0 group-hover/timer:opacity-100 shrink-0 hidden lg:block"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ) : (
-            <div className="p-3 rounded-xl light-glass flex items-center justify-center lg:justify-start gap-2.5 shadow-lg hover-lift-scale w-full" title="Focus Arena">
-              <div className="p-2 bg-white/5 rounded-lg shrink-0">
-                <Timer className="w-4.5 h-4.5 text-white/30" />
-              </div>
-              <div className="hidden lg:block truncate">
-                <p className="text-[9px] text-white/40 font-bold uppercase tracking-wider">Focus Arena</p>
-                <p className="text-[10px] font-semibold text-white/50">Ready</p>
-              </div>
-            </div>
-          )}
-
-          <button 
-            onClick={onLogout || (() => {
-              localStorage.clear();
-              window.location.href = '/login';
-            })}
-            className="w-full py-3 text-red-400/80 glass-btn-danger text-xs font-semibold flex items-center justify-center gap-2"
-            title="Log Out"
-          >
-            <LogOut className="w-4.5 h-4.5 shrink-0" />
-            <span className="hidden lg:inline">Log Out</span>
-          </button>
+        <div className="w-full flex flex-col items-center mt-auto pt-4 border-t border-white/5 shrink-0">
+          {/* Unified Actions Row (Settings and Logout only) */}
+          <div className="flex flex-row items-center justify-center w-full gap-4 px-1">
+            <button 
+              onClick={() => navigate('/settings')}
+              title="Settings"
+              className={`p-2 rounded-xl text-white/50 hover:text-white transition-all hover:bg-white/5 ${
+                isActive('/settings') ? 'text-blue-400 bg-white/5 border border-white/10' : ''
+              }`}
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={onLogout || (() => {
+                localStorage.clear();
+                window.location.href = '/login';
+              })}
+              title="Log Out"
+              className="p-2 rounded-xl text-white/50 hover:text-rose-400 transition-all hover:bg-white/5"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </aside>
 

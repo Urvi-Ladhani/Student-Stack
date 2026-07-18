@@ -29,24 +29,29 @@ const signupUser = async (req, res) => {
 
         // 3. Generate a token immediately so they are auto-logged in
         const token = jwt.sign(
-            { id: user._id },
+            { id: user._id, tokenVersion: user.tokenVersion || 0 },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
 
         // Send back BOTH token and profile data to the client
-        // ... inside signupUser, change the user object to match the model
         res.status(201).json({
             message: "User created successfully",
             token,
             user: {
                 id: user._id,
-                name: user.name, // Changed from fullName to name
+                name: user.name,
                 email: user.email,
+                avatar: user.avatar || "",
+                isGoogleConnected: user.isGoogleConnected || false,
                 university: user.university,
                 branch: user.branch,
                 semester: user.semester,
-                targetRole: user.targetRole
+                targetRole: user.targetRole,
+                degree: user.degree || "",
+                graduationYear: user.graduationYear || "",
+                bio: user.bio || "",
+                settings: user.settings
             }
         });
 
@@ -76,7 +81,7 @@ const loginUser = async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: user._id },
+            { id: user._id, tokenVersion: user.tokenVersion || 0 },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
@@ -89,10 +94,16 @@ const loginUser = async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
+                avatar: user.avatar || "",
+                isGoogleConnected: user.isGoogleConnected || false,
                 university: user.university,
                 branch: user.branch,
                 semester: user.semester,
-                targetRole: user.targetRole
+                targetRole: user.targetRole,
+                degree: user.degree || "",
+                graduationYear: user.graduationYear || "",
+                bio: user.bio || "",
+                settings: user.settings
             }
         });
 
@@ -140,6 +151,10 @@ const googleAuth = async (req, res) => {
             if (isSignup) {
                 return res.status(400).json({ message: "Email already registered. Please sign in." });
             }
+            if (!user.isGoogleConnected) {
+                user.isGoogleConnected = true;
+                await user.save();
+            }
         } else {
             // Create user in the database
             const placeholderPassword = Math.random().toString(36).slice(-8);
@@ -151,12 +166,13 @@ const googleAuth = async (req, res) => {
                 university: "Tech University",
                 branch: "Computer Science",
                 semester: "6th",
-                targetRole: "Software Engineer"
+                targetRole: "Software Engineer",
+                isGoogleConnected: true
             });
         }
 
         const token = jwt.sign(
-            { id: user._id },
+            { id: user._id, tokenVersion: user.tokenVersion || 0 },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
@@ -168,10 +184,16 @@ const googleAuth = async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
+                avatar: user.avatar || "",
+                isGoogleConnected: user.isGoogleConnected || false,
                 university: user.university,
                 branch: user.branch,
                 semester: user.semester,
-                targetRole: user.targetRole
+                targetRole: user.targetRole,
+                degree: user.degree || "",
+                graduationYear: user.graduationYear || "",
+                bio: user.bio || "",
+                settings: user.settings
             }
         });
     } catch (error) {
@@ -224,10 +246,126 @@ const logStudySession = async (req, res) => {
     }
 };
 
+const updateProfile = async (req, res) => {
+    try {
+        const { name, university, degree, graduationYear, bio, avatar, settings } = req.body;
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        if (name !== undefined) user.name = name;
+        if (university !== undefined) user.university = university;
+        if (degree !== undefined) user.degree = degree;
+        if (graduationYear !== undefined) user.graduationYear = graduationYear;
+        if (bio !== undefined) user.bio = bio;
+        if (avatar !== undefined) user.avatar = avatar; 
+
+        if (settings !== undefined) {
+            user.settings = {
+                ...user.settings.toObject(),
+                ...settings
+            };
+        }
+
+        await user.save();
+        res.status(200).json({
+            message: "Profile updated successfully",
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar || "",
+                isGoogleConnected: user.isGoogleConnected || false,
+                university: user.university,
+                branch: user.branch,
+                semester: user.semester,
+                targetRole: user.targetRole,
+                degree: user.degree || "",
+                graduationYear: user.graduationYear || "",
+                bio: user.bio || "",
+                settings: user.settings
+            }
+        });
+    } catch (error) {
+        console.error("Update profile error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const updatePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        if (user.password) {
+            const isMatch = await bcrypt.compare(currentPassword, user.password);
+            if (!isMatch) {
+                return res.status(400).json({ message: "Incorrect current password" });
+            }
+        }
+
+        if (!newPassword || newPassword.length < 6 || !/\d/.test(newPassword)) {
+            return res.status(400).json({ message: "New password must be at least 6 characters long and contain at least one number." });
+        }
+
+        user.password = await bcrypt.hash(newPassword, 10);
+        await user.save();
+        res.status(200).json({ message: "Password updated successfully" });
+    } catch (error) {
+        console.error("Update password error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const logoutAllDevices = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        user.tokenVersion = (user.tokenVersion || 0) + 1;
+        await user.save();
+        res.status(200).json({ message: "Logged out from all devices successfully." });
+    } catch (error) {
+        console.error("Logout all devices error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const deleteAccount = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        const Task = require("../models/Task");
+        const Note = require("../models/Note");
+        const Folder = require("../models/Folder");
+        const DSAProblem = require("../models/DSAProblem");
+        const Internship = require("../models/Internship");
+        const Resume = require("../models/Resume");
+
+        await Task.deleteMany({ userId });
+        await Note.deleteMany({ userId });
+        await Folder.deleteMany({ userId });
+        await DSAProblem.deleteMany({ userId });
+        await Internship.deleteMany({ userId });
+        await Resume.deleteMany({ userId });
+
+        await User.findByIdAndDelete(userId);
+
+        res.status(200).json({ message: "Account deleted successfully." });
+    } catch (error) {
+        console.error("Delete account error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     signupUser,
     loginUser,
     getProfile,
     googleAuth,
-    logStudySession
+    logStudySession,
+    updateProfile,
+    updatePassword,
+    logoutAllDevices,
+    deleteAccount
 };

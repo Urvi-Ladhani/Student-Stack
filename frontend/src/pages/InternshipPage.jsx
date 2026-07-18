@@ -590,19 +590,19 @@ const InternshipPage = () => {
                     key={column.id} 
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDropColumn(e, column.id)}
-                    className="w-full h-[550px] flex flex-col overflow-hidden transition-all light-glass shadow"
+                    className="w-full h-[350px] md:h-[72vh] lg:h-[75vh] flex flex-col overflow-hidden transition-all light-glass shadow"
                   >
                     {/* Header with stage color underline */}
-                    <div className="p-4 border-b border-white/5 bg-white/[0.02] flex items-center justify-between sticky top-0 z-10">
+                    <div className="p-4 border-b border-white/5 bg-white/[0.02] flex items-center justify-between sticky top-0 z-10 animate-in fade-in">
                       <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full border ${column.color}`}></div>
-                        <span className="text-sm font-bold text-white/90">{column.title}</span>
+                        <span className="text-xs font-bold text-white/90 uppercase tracking-wider">{column.title}</span>
                       </div>
                       <span className="text-xs font-bold text-white/40 bg-white/5 px-2 py-0.5 rounded-md">{columnApps.length}</span>
                     </div>
                     
                     {/* Cards Container */}
-                    <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3 scrollbar-hide">
+                    <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3 custom-scrollbar scroll-smooth">
                       {columnApps.length > 0 ? (
                         columnApps.map(app => (
                           <div 

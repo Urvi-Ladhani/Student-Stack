@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Command, LayoutDashboard, CheckSquare, Code2, 
-  BookOpen, Briefcase, Timer, Plus, LogOut, X, Sparkles, Clock, Play, CheckCircle2
+  BookOpen, Briefcase, Timer, Plus, LogOut, X, Sparkles, Clock, Play, CheckCircle2, Menu
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -13,6 +13,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
 
   // Command Center Modal & Timer States
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('focus'); // 'focus' | 'jot'
   const [sessionActive, setSessionActive] = useState(false);
   const [sessionName, setSessionName] = useState('');
@@ -148,30 +149,43 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
   };
 
   return (
-    <div className="w-full h-screen flex gap-6 p-6 overflow-hidden font-sans relative text-slate-50 box-border bg-[#040712]/30">
+    <div className="w-full h-screen flex flex-col md:flex-row gap-4 md:gap-6 p-4 md:p-6 overflow-hidden font-sans relative text-slate-50 box-border bg-[#040712]/30">
       
       {/* Subtle Global Tint */}
       <div className="absolute inset-0 bg-black/20 pointer-events-none z-0"></div>
 
-      {/* 1. LEFT SIDEBAR (Apple-Tier Glass) */}
-      <aside className="strong-glass z-20 w-[240px] h-full flex flex-col justify-between p-6 shrink-0 shadow-2xl">
-        <div className="space-y-8 animate-in slide-in-from-left duration-500">
-          
-          <div className="flex items-center gap-3 px-2 cursor-pointer transition-transform hover:scale-[1.02]" onClick={() => navigate('/dashboard')}>
-            <div className="p-1.5 rounded-lg bg-white/10 border border-white/20 shadow-inner">
-              <Command className="w-5 h-5 text-blue-400" />
+      {/* Mobile Drawer Overlay Backdrop */}
+      {isMobileSidebarOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden transition-opacity duration-300"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        ></div>
+      )}
+
+      {/* MOBILE DRAWER SIDEBAR */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-[240px] h-full flex flex-col justify-between p-6 shrink-0 shadow-2xl transition-transform duration-300 ease-in-out md:hidden strong-glass ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="space-y-8">
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => { navigate('/dashboard'); setIsMobileSidebarOpen(false); }}>
+              <div className="p-1.5 rounded-lg bg-white/10 border border-white/20 shadow-inner">
+                <Command className="w-5 h-5 text-blue-400" />
+              </div>
+              <span className="font-bold tracking-wide text-md text-white drop-shadow-md">Student Stack</span>
             </div>
-            <span className="font-bold tracking-wide text-md text-white drop-shadow-md">Student Stack</span>
+            <button onClick={() => setIsMobileSidebarOpen(false)} className="p-1 text-white/50 hover:text-white md:hidden">
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
           <button 
             onClick={() => {
+              setIsMobileSidebarOpen(false);
               setIsModalOpen(true);
               if (!sessionActive) {
                 setSessionName('');
               }
             }}
-            className="w-full py-2.5 rounded-xl text-xs font-semibold glass-btn-primary group"
+            className="w-full py-2.5 rounded-xl text-xs font-semibold glass-btn-primary group flex items-center justify-center gap-2"
           >
             <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
             Quick Action
@@ -187,7 +201,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
             ].map((item) => (
               <button 
                 key={item.label}
-                onClick={() => navigate(item.path)}
+                onClick={() => { navigate(item.path); setIsMobileSidebarOpen(false); }}
                 className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-medium transition-all text-left hover-lift-scale ${
                   isActive(item.path) 
                     ? 'light-glass text-white font-semibold shadow-lg' 
@@ -202,10 +216,8 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
         </div>
 
         <div className="space-y-4">
-          
-          {/* Active Study Session Countdown */}
           {sessionActive ? (
-            <div className="p-3.5 rounded-xl light-glass flex items-center justify-between shadow-lg group/timer hover-lift-scale">
+            <div className="p-3.5 rounded-xl light-glass flex items-center justify-between shadow-lg hover-lift-scale">
               <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
                 <div className="p-2 bg-emerald-500/15 rounded-lg shrink-0">
                   <Timer className="w-4 h-4 text-emerald-400 animate-pulse" />
@@ -217,8 +229,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
               </div>
               <button 
                 onClick={stopFocusSession}
-                title="Cancel Session"
-                className="p-1 rounded bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-500/20 transition-all opacity-0 group-hover/timer:opacity-100 shrink-0"
+                className="p-1 rounded bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-500/20 transition-all shrink-0"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -230,7 +241,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
               </div>
               <div>
                 <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Focus Arena</p>
-                <p className="text-xs font-semibold text-white/50">Ready to start</p>
+                <p className="text-xs font-semibold text-white/50">Ready</p>
               </div>
             </div>
           )}
@@ -248,10 +259,122 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
         </div>
       </aside>
 
+      {/* 1. LEFT SIDEBAR (Apple-Tier Glass - Collapsible for tablet/desktop) */}
+      <aside className="strong-glass z-20 hidden md:flex md:w-[80px] lg:w-[240px] h-full flex-col justify-between p-4 lg:p-6 shrink-0 shadow-2xl transition-all duration-300">
+        <div className="space-y-8 animate-in slide-in-from-left duration-500 flex flex-col md:items-center lg:items-stretch">
+          
+          <div className="flex items-center justify-center lg:justify-start gap-3 px-2 cursor-pointer transition-transform hover:scale-[1.02]" onClick={() => navigate('/dashboard')}>
+            <div className="p-1.5 rounded-lg bg-white/10 border border-white/20 shadow-inner">
+              <Command className="w-5 h-5 text-blue-400" />
+            </div>
+            <span className="font-bold tracking-wide text-md text-white drop-shadow-md hidden lg:inline">Student Stack</span>
+          </div>
+
+          <button 
+            onClick={() => {
+              setIsModalOpen(true);
+              if (!sessionActive) {
+                setSessionName('');
+              }
+            }}
+            className="w-full py-2.5 rounded-xl text-xs font-semibold glass-btn-primary group flex items-center justify-center gap-2"
+            title="Quick Action"
+          >
+            <Plus className="w-4.5 h-4.5 group-hover:rotate-90 transition-transform shrink-0" />
+            <span className="hidden lg:inline">Quick Action</span>
+          </button>
+
+          <nav className="space-y-2 w-full">
+            {[
+              { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+              { label: 'Task OS', icon: CheckSquare, path: '/tasks' }, 
+              { label: 'DSA OS', icon: Code2, path: '/dsa' },
+              { label: 'Notes OS', icon: BookOpen, path: '/notes' },
+              { label: 'Internship OS', icon: Briefcase, path: '/internships' },
+            ].map((item) => (
+              <button 
+                key={item.label}
+                onClick={() => navigate(item.path)}
+                className={`w-full flex items-center justify-center lg:justify-start gap-3 px-3.5 py-3 rounded-xl text-xs font-medium transition-all hover-lift-scale ${
+                  isActive(item.path) 
+                    ? 'light-glass text-white font-semibold shadow-lg' 
+                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                }`}
+                title={item.label}
+              >
+                <item.icon className={`w-4.5 h-4.5 shrink-0 ${isActive(item.path) ? 'text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]' : ''}`} />
+                <span className="hidden lg:inline truncate">{item.label}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="space-y-4 w-full flex flex-col md:items-center lg:items-stretch">
+          
+          {/* Active Study Session Countdown */}
+          {sessionActive ? (
+            <div className="p-3 rounded-xl light-glass flex items-center justify-center lg:justify-between shadow-lg group/timer hover-lift-scale w-full min-w-0 overflow-hidden" title={sessionName}>
+              <div className="flex items-center justify-center lg:justify-start gap-2.5 min-w-0 flex-1 lg:pr-2">
+                <div className="p-2 bg-emerald-500/15 rounded-lg shrink-0 animate-pulse" onClick={stopFocusSession} title="Stop Session">
+                  <Timer className="w-4.5 h-4.5 text-emerald-400" />
+                </div>
+                <div className="min-w-0 flex-1 hidden lg:block">
+                  <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider truncate">{sessionName}</p>
+                  <p className="text-xs font-semibold font-mono text-white/90">{formatTime(timeLeft)}</p>
+                </div>
+              </div>
+              <button 
+                onClick={stopFocusSession}
+                title="Cancel Session"
+                className="p-1 rounded bg-white/5 text-white/40 hover:text-red-400 hover:bg-red-500/20 transition-all opacity-0 group-hover/timer:opacity-100 shrink-0 hidden lg:block"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <div className="p-3 rounded-xl light-glass flex items-center justify-center lg:justify-start gap-2.5 shadow-lg hover-lift-scale w-full" title="Focus Arena">
+              <div className="p-2 bg-white/5 rounded-lg shrink-0">
+                <Timer className="w-4.5 h-4.5 text-white/30" />
+              </div>
+              <div className="hidden lg:block truncate">
+                <p className="text-[9px] text-white/40 font-bold uppercase tracking-wider">Focus Arena</p>
+                <p className="text-[10px] font-semibold text-white/50">Ready</p>
+              </div>
+            </div>
+          )}
+
+          <button 
+            onClick={onLogout || (() => {
+              localStorage.clear();
+              window.location.href = '/login';
+            })}
+            className="w-full py-3 text-red-400/80 glass-btn-danger text-xs font-semibold flex items-center justify-center gap-2"
+            title="Log Out"
+          >
+            <LogOut className="w-4.5 h-4.5 shrink-0" />
+            <span className="hidden lg:inline">Log Out</span>
+          </button>
+        </div>
+      </aside>
+
       {/* 2. MAIN WORKSPACE */}
-      <main className="relative z-10 flex-1 h-full overflow-y-auto custom-scrollbar px-2">
+      <main className="relative z-10 flex-1 h-full overflow-y-auto custom-scrollbar px-2 flex flex-col min-w-0">
+        {/* Mobile Header Row */}
+        <div className="flex items-center justify-between p-3.5 mb-4 -mx-2 bg-white/5 border-b border-white/5 backdrop-blur-md md:hidden rounded-b-xl z-30 shrink-0">
+          <button 
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="p-2 rounded-xl bg-white/5 text-white/80 border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <span className="font-extrabold tracking-wide text-sm text-white flex items-center gap-2">
+            <Command className="w-4 h-4 text-blue-400" /> Student Stack
+          </span>
+          <div className="w-9"></div>
+        </div>
+
         <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
-        <div className="w-full max-w-5xl mx-auto relative z-20 h-full">
+        <div className="w-full max-w-5xl mx-auto relative z-20 h-full flex flex-col">
           {children}
         </div>
       </main>

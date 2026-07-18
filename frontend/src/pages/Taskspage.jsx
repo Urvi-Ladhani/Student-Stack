@@ -388,7 +388,7 @@ const Taskspage = () => {
 
   return (
     <DashboardLayout rightPanelContent={<TaskRightPanel tasks={tasks.filter(t => !t.isArchived)} />}>
-      <div className="w-full flex flex-col h-full min-h-screen relative" onClick={() => setActiveDropdown(null)}>
+      <div className="w-full flex flex-col h-full relative" onClick={() => setActiveDropdown(null)}>
         
         {/* COMMAND BOARD & FILTERS */}
         <div className="sticky top-0 z-30 px-6 py-4 -mx-6 rounded-b-2xl mb-6 flex flex-col gap-4 light-glass shadow-md">
@@ -459,24 +459,30 @@ const Taskspage = () => {
 
         {/* WORKSPACE: BOARD VIEW */}
         {view === 'board' && (
-          <div className="flex-1 flex flex-col overflow-y-auto pb-24 scrollbar-hide">
-            <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide">
+          <div className="flex-1 flex flex-col min-h-0 pb-10">
+            <div className="flex flex-col md:flex-row gap-6 h-[72vh] md:h-[75vh] overflow-y-auto md:overflow-y-hidden overflow-x-auto pb-4">
               {['todo', 'in_progress', 'done'].map(status => (
-                <div key={status} className="flex-1 min-w-[300px] flex flex-col gap-4">
+                <div key={status} className="flex-1 min-w-[280px] md:min-w-[300px] flex flex-col gap-4 h-auto md:h-full">
                   <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                    <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">{status.replace('_', ' ')}</h3>
+                    <h3 className="text-xs font-bold text-white/80 uppercase tracking-wider">{status.replace('_', ' ')}</h3>
                     <span className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-xs text-white/60 font-mono shadow-inner">{activeTasks.filter(t => t.status === status).length}</span>
                   </div>
-                  <div className="flex-1 rounded-2xl p-3 flex flex-col gap-3 min-h-[300px] bg-white/[0.01] border border-white/5 transition-all" onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, status)}>
-                    {activeTasks.filter(t => t.status === status).map(task => <TaskCard key={task._id} task={task} />)}
+                  <div className="flex-1 rounded-2xl p-3 flex flex-col gap-3 min-h-[300px] md:min-h-0 md:h-full overflow-y-auto scroll-smooth custom-scrollbar light-glass shadow-inner" onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, status)}>
+                    {activeTasks.filter(t => t.status === status).length > 0 ? (
+                      activeTasks.filter(t => t.status === status).map(task => <TaskCard key={task._id} task={task} />)
+                    ) : (
+                      <div className="flex-1 flex items-center justify-center text-white/20 text-xs italic border border-dashed border-white/5 rounded-xl py-10">
+                        Drop tasks here
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
             {overdueTasks.length > 0 && (
-              <div className="mt-8 pt-6 border-t border-white/5">
-                <div className="flex items-center gap-2 text-white/60 mb-4 font-semibold text-sm tracking-wide"><AlertTriangle className="w-4 h-4 text-blue-400" /> Overdue Tasks</div>
-                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">{overdueTasks.map(task => <div key={task._id} className="min-w-[300px] max-w-[300px] flex"><TaskCard task={task} hFull={true} /></div>)}</div>
+              <div className="mt-6 pt-4 border-t border-white/5 shrink-0">
+                <div className="flex items-center gap-2 text-white/60 mb-3 font-semibold text-xs tracking-wide"><AlertTriangle className="w-4 h-4 text-blue-400" /> Overdue Tasks</div>
+                <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">{overdueTasks.map(task => <div key={task._id} className="min-w-[280px] max-w-[280px] flex"><TaskCard task={task} hFull={true} /></div>)}</div>
               </div>
             )}
           </div>

@@ -31,6 +31,7 @@ app.use('/api/dsa', dsaRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/internships', require('./routes/internshipRoutes'));
 app.use('/api/resumes', require('./routes/resumeRoutes'));
+app.use('/api/study-sessions', require('./routes/studySessionRoutes'));
 
 app.get("/", (req,res) => {
    res.send("StudentStack Backend Running");

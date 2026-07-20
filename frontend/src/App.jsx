@@ -11,8 +11,11 @@ import OnboardingPage from './components/OnboardingPage';
 import NotesPage from './pages/NotesPage';
 import PdfAnnotatorPage from './pages/PdfAnnotatorPage';
 import InternshipPage from './pages/InternshipPage';
+import StudySessionsPage from './pages/StudySessionsPage';
 import SettingsPage from './pages/SettingsPage';
 import SettingsRightPanel from './components/settings/SettingsRightPanel';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import { X, CheckCircle2 } from 'lucide-react';
 
 function App() {
@@ -97,6 +100,14 @@ function App() {
             path="/signup" 
             element={!token ? <AuthPage onAuthSuccess={handleAuthSuccess} /> : <Navigate to="/dashboard" replace />} 
           />
+          <Route 
+            path="/forgot-password" 
+            element={!token ? <ForgotPasswordPage /> : <Navigate to="/dashboard" replace />} 
+          />
+          <Route 
+            path="/reset-password" 
+            element={!token ? <ResetPasswordPage /> : <Navigate to="/dashboard" replace />} 
+          />
 
           {/* 3. PROTECTED ROUTES */}
           <Route 
@@ -126,6 +137,14 @@ function App() {
           <Route 
             path="/internships"
             element={token ? <InternshipPage /> : <Navigate to="/login" replace />}
+          />
+          <Route 
+            path="/study-sessions"
+            element={token ? (
+              <DashboardLayout user={user} onLogout={handleLogout}>
+                <StudySessionsPage />
+              </DashboardLayout>
+            ) : <Navigate to="/login" replace />}
           />
           <Route 
             path="/settings" 

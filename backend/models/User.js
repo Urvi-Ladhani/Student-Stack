@@ -8,6 +8,8 @@ const userSchema = new mongoose.Schema({
   avatar: { type: String, default: "" },
   isGoogleConnected: { type: Boolean, default: false },
   tokenVersion: { type: Number, default: 0 },
+  resetPasswordToken: { type: String, default: "" },
+  resetPasswordExpire: { type: Date },
   
   // 2. Demographics (Your original fields - highly useful for Internship OS)
   university: { type: String, default: "" },
@@ -35,6 +37,21 @@ const userSchema = new mongoose.Schema({
       overdueTaskAlert: { type: Boolean, default: true },
       revisionDue: { type: Boolean, default: true },
       applicationDeadline: { type: Boolean, default: true }
+    },
+    studySessionSettings: {
+      defaultSessionType: { type: String, enum: ['stopwatch', 'timer'], default: 'timer' },
+      defaultTimerDuration: { type: Number, default: 25 },
+      breakReminder: { type: Boolean, default: true },
+      breakReminderMinutes: { type: Number, default: 5 },
+      autoStartNextSession: { type: Boolean, default: false },
+      playSoundOnCompletion: { type: Boolean, default: true },
+      desktopNotification: { type: Boolean, default: true },
+      showTimerInDashboard: { type: Boolean, default: true },
+      autoSaveSession: { type: Boolean, default: true },
+      enableFocusModeByDefault: { type: Boolean, default: false },
+      weeklyStudyGoalHours: { type: Number, default: 20 },
+      dailyStudyGoalHours: { type: Number, default: 4 },
+      timezone: { type: String, default: 'UTC' }
     }
   },
 

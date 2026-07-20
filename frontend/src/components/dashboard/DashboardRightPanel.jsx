@@ -176,17 +176,25 @@ const DashboardRightPanel = () => {
     <div className="h-full w-full flex flex-col gap-6">
       
       {/* SECTION: Active Study Session Widget */}
-      <div className="p-5 relative overflow-hidden group shadow-lg light-glass hover-lift-scale">
+      <div 
+        onClick={() => window.location.href = '/study-sessions'}
+        className="p-5 relative overflow-hidden group shadow-lg light-glass hover-lift-scale cursor-pointer border border-white/5 hover:border-blue-500/30 transition-all"
+      >
         <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-[50px] rounded-full"></div>
         
-        <h3 className="text-xs font-bold tracking-wider text-blue-400 uppercase mb-4">Active Session</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xs font-bold tracking-wider text-blue-400 uppercase">Active Session</h3>
+          <span className="text-[10px] font-bold text-blue-300 hover:underline flex items-center gap-1">
+            Arena &rarr;
+          </span>
+        </div>
         
         <div className="mb-4">
-          <p className="text-sm text-white/80 font-medium mb-1">
+          <p className="text-sm text-white/80 font-semibold mb-1 truncate">
             {sessionActive ? sessionName : 'No Active Session'}
           </p>
           <p className="text-xs text-white/45">
-            {sessionActive ? (isPaused ? 'Session Paused' : 'Ticking down...') : 'Start a timer from Quick Action'}
+            {sessionActive ? (isPaused ? 'Session Paused' : 'Ticking down...') : 'Click to launch Focus Arena'}
           </p>
         </div>
 
@@ -195,7 +203,7 @@ const DashboardRightPanel = () => {
         </div>
 
         {sessionActive ? (
-          <div className="flex gap-2">
+          <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
             {isPaused ? (
               <button 
                 onClick={handleResume}
@@ -220,9 +228,12 @@ const DashboardRightPanel = () => {
             </button>
           </div>
         ) : (
-          <div className="flex gap-2 opacity-30 pointer-events-none">
-            <button className="flex-1 glass-btn-secondary py-2.5 text-xs font-bold flex items-center justify-center gap-1.5">
-              <Play className="w-3.5 h-3.5" /> Start
+          <div className="flex gap-2">
+            <button 
+              onClick={() => window.location.href = '/study-sessions'}
+              className="flex-1 glass-btn-primary py-2 text-xs font-bold flex items-center justify-center gap-1.5"
+            >
+              <Play className="w-3.5 h-3.5" /> Launch Arena
             </button>
           </div>
         )}

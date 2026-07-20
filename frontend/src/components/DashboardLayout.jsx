@@ -368,6 +368,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
           <nav className="space-y-2">
             {[
               { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+              { label: 'Study Sessions', icon: Timer, path: '/study-sessions' },
               { label: 'Task OS', icon: CheckSquare, path: '/tasks' }, 
               { label: 'DSA OS', icon: Code2, path: '/dsa' },
               { label: 'Notes OS', icon: BookOpen, path: '/notes' },
@@ -440,6 +441,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
           <nav className="space-y-2 w-full">
             {[
               { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+              { label: 'Study Sessions', icon: Timer, path: '/study-sessions' },
               { label: 'Task OS', icon: CheckSquare, path: '/tasks' }, 
               { label: 'DSA OS', icon: Code2, path: '/dsa' },
               { label: 'Notes OS', icon: BookOpen, path: '/notes' },
@@ -568,7 +570,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
                   </button>
 
                   <button 
-                    onClick={() => setCommandAction('focus')}
+                    onClick={() => { setIsModalOpen(false); navigate('/study-sessions'); }}
                     className="p-4 rounded-xl light-glass text-left hover-lift-scale flex flex-col gap-3 group border border-white/5 hover:border-emerald-500/20"
                   >
                     <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500/20 transition-colors">

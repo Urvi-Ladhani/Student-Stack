@@ -39,6 +39,16 @@ const TaskRightPanel = ({ tasks = [] }) => {
   return (
     <div className="flex flex-col gap-6 h-full">
       
+      {/* Quick Launch Study Session */}
+      <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-center">
+        <button
+          onClick={() => window.location.href = '/study-sessions?module=Task OS'}
+          className="w-full py-2.5 glass-btn-primary text-xs font-bold flex items-center justify-center gap-2"
+        >
+          <Clock className="w-4 h-4 text-blue-300" /> Start Task Study Session
+        </button>
+      </div>
+
       {/* Priority Summary */}
       <div className="p-5 rounded-2xl bg-black/20 border border-white/10 backdrop-blur-xl shadow-xl shadow-black/20">
         <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-4 flex items-center gap-2">

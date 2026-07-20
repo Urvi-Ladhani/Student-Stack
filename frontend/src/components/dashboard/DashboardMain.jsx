@@ -12,6 +12,7 @@ const DashboardMain = ({ userName = "Student" }) => {
   const [dsaTopics, setDsaTopics] = useState([]);
   const [internships, setInternships] = useState([]);
   const [profile, setProfile] = useState(null);
+  const [studyStats, setStudyStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchDashboardData = async () => {
@@ -20,12 +21,13 @@ const DashboardMain = ({ userName = "Student" }) => {
       const headers = { 'Authorization': `Bearer ${token}` };
 
       // Fetch all core modules in parallel
-      const [tasksRes, dsaRes, rmRes, intRes, profRes] = await Promise.all([
+      const [tasksRes, dsaRes, rmRes, intRes, profRes, studyStatsRes] = await Promise.all([
         fetch('http://localhost:5000/api/tasks', { headers }),
         fetch('http://localhost:5000/api/dsa/problems', { headers }),
         fetch('http://localhost:5000/api/dsa/roadmaps', { headers }),
         fetch('http://localhost:5000/api/internships', { headers }),
-        fetch('http://localhost:5000/api/auth/profile', { headers })
+        fetch('http://localhost:5000/api/auth/profile', { headers }),
+        fetch('http://localhost:5000/api/study-sessions/stats', { headers })
       ]);
 
       if (tasksRes.ok) setTasks(await tasksRes.json());
@@ -38,6 +40,7 @@ const DashboardMain = ({ userName = "Student" }) => {
       }
       if (intRes.ok) setInternships(await intRes.json());
       if (profRes.ok) setProfile(await profRes.json());
+      if (studyStatsRes.ok) setStudyStats(await studyStatsRes.json());
 
       // Secondary fetch: If roadmaps exist and one is active, fetch its topics
       const activeRm = rms.find(r => r.isActive);
@@ -169,18 +172,14 @@ const DashboardMain = ({ userName = "Student" }) => {
 
   // Statistics Calculation
   const statsMetrics = useMemo(() => {
-    const streakDays = profile?.stats?.studyStreak || 0;
+    const streakDays = studyStats?.studyStreak ?? profile?.stats?.studyStreak ?? 0;
     const dsaSolvedCount = dsaProblems.filter(p => p.status === 'solved').length;
     
     // Tasks completed today
     const todayStr = new Date().toDateString();
     const tasksDoneToday = completedTasks.filter(t => t.updatedAt && new Date(t.updatedAt).toDateString() === todayStr).length;
 
-    // Study session minutes logged today
-    const todayMinutes = (profile?.studySessions || [])
-      .filter(s => s.date && new Date(s.date).toDateString() === todayStr)
-      .reduce((acc, s) => acc + s.minutes, 0);
-    const studyHoursToday = (todayMinutes / 60).toFixed(1);
+    const studyHoursToday = studyStats?.todaysHours ?? '0.0';
 
     return {
       streak: `${streakDays} Day${streakDays !== 1 ? 's' : ''}`,
@@ -188,7 +187,7 @@ const DashboardMain = ({ userName = "Student" }) => {
       tasksDone: tasksDoneToday,
       studyHours: `${studyHoursToday}h`
     };
-  }, [profile, dsaProblems, completedTasks]);
+  }, [profile, dsaProblems, completedTasks, studyStats]);
 
   // Task Timeline format helper
   const getFormattedTime = (task) => {
@@ -371,12 +370,16 @@ const DashboardMain = ({ userName = "Student" }) => {
       {/* SECTION 3: Streak & Momentum */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {[
-          { label: "Study Streak", value: statsMetrics.streak, icon: Flame },
-          { label: "DSA Solved", value: statsMetrics.dsaSolved, icon: Code2 },
-          { label: "Tasks Done", value: statsMetrics.tasksDone, icon: CheckCircle2 },
-          { label: "Study Hours", value: statsMetrics.studyHours, icon: Clock }
+          { label: "Study Streak", value: statsMetrics.streak, icon: Flame, path: '/study-sessions' },
+          { label: "DSA Solved", value: statsMetrics.dsaSolved, icon: Code2, path: '/dsa' },
+          { label: "Tasks Done", value: statsMetrics.tasksDone, icon: CheckCircle2, path: '/tasks' },
+          { label: "Study Hours", value: statsMetrics.studyHours, icon: Clock, path: '/study-sessions' }
         ].map((stat, i) => (
-          <div key={i} className="p-4 flex flex-col justify-center items-center text-center shadow-lg light-glass border border-white/5 hover:border-blue-500/10 hover-lift-scale">
+          <div 
+            key={i} 
+            onClick={() => window.location.href = stat.path}
+            className="p-4 flex flex-col justify-center items-center text-center shadow-lg light-glass border border-white/5 hover:border-blue-500/20 hover-lift-scale cursor-pointer transition-all"
+          >
             <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-blue-400 mb-2.5 shadow-inner">
               <stat.icon className="w-4 h-4 drop-shadow-sm" />
             </div>

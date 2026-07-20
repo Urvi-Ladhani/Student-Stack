@@ -172,6 +172,18 @@ const AuthPage = ({ onAuthSuccess }) => {
             </button>
           </div>
 
+          {isLoginPath && (
+            <div className="flex justify-end text-xs -mt-1 px-1">
+              <button
+                type="button"
+                onClick={() => navigate('/forgot-password')}
+                className="text-white/50 hover:text-white transition-colors font-medium cursor-pointer"
+              >
+                Forgot Password?
+              </button>
+            </div>
+          )}
+
           {error && (
             <div className="text-red-300 text-sm font-medium text-center bg-red-900/30 border border-red-500/20 py-3 rounded-xl">
               {error}

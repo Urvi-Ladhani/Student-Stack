@@ -1,6 +1,8 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const { sendEmail, getResetPasswordTemplate } = require("../config/emailService");
 
 const signupUser = async (req, res) => {
     try {
@@ -358,6 +360,115 @@ const deleteAccount = async (req, res) => {
     }
 };
 
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ message: "Email is required." });
+        }
+
+        const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+        const successMessage = "If an account exists for this email, a password reset link has been sent.";
+
+        if (!user) {
+            // Return safe response to avoid revealing user accounts
+            return res.status(200).json({ message: successMessage });
+        }
+
+        // Generate a secure random token
+        const resetToken = crypto.randomBytes(32).toString("hex");
+
+        // Hash it before saving to the database
+        const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+        
+        user.resetPasswordToken = hashedToken;
+        user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 minutes expiration
+
+        await user.save();
+
+        // Create reset URL
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+        const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+
+        // Send HTML email
+        const emailHtml = getResetPasswordTemplate(user.name, resetUrl);
+        await sendEmail({
+            to: user.email,
+            subject: "Reset Your StudentStack Password",
+            html: emailHtml
+        });
+
+        res.status(200).json({ message: successMessage });
+    } catch (error) {
+        console.error("Forgot password controller error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const verifyResetToken = async (req, res) => {
+    try {
+        const { token } = req.params;
+        if (!token) {
+            return res.status(400).json({ message: "Token is required." });
+        }
+
+        const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+        const user = await User.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpire: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: "Invalid or expired reset token." });
+        }
+
+        res.status(200).json({ message: "Token is valid." });
+    } catch (error) {
+        console.error("Verify reset token error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+        if (!token || !newPassword) {
+            return res.status(400).json({ message: "Token and new password are required." });
+        }
+
+        const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+        const user = await User.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpire: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: "Invalid or expired reset token." });
+        }
+
+        // Validate password strength: at least 6 characters and contains a number
+        if (newPassword.length < 6 || !/\d/.test(newPassword)) {
+            return res.status(400).json({ message: "Password must be at least 6 characters long and contain at least one number." });
+        }
+
+        // Hash and save new password
+        user.password = await bcrypt.hash(newPassword, 10);
+        
+        // Invalidate token immediately
+        user.resetPasswordToken = "";
+        user.resetPasswordExpire = undefined;
+
+        await user.save();
+
+        res.status(200).json({ message: "Your password has been updated successfully." });
+    } catch (error) {
+        console.error("Reset password controller error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     signupUser,
     loginUser,
@@ -367,5 +478,8 @@ module.exports = {
     updateProfile,
     updatePassword,
     logoutAllDevices,
-    deleteAccount
+    deleteAccount,
+    forgotPassword,
+    verifyResetToken,
+    resetPassword
 };

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   User, Lock, Sliders, Link, AlertTriangle, 
   Upload, Trash2, Eye, EyeOff, Save, ShieldAlert,
-  LogOut, CheckCircle2, X
+  LogOut, CheckCircle2, X, Timer
 } from 'lucide-react';
 
 const SettingsPage = ({ user, onUserUpdate, onLogout }) => {
@@ -37,7 +37,7 @@ const SettingsPage = ({ user, onUserUpdate, onLogout }) => {
   // 3. Connected Accounts states
   const [connectedProvider, setConnectedProvider] = useState('Email & Password');
 
-  // 4. Preferences states
+  // 4. Preferences & Study Sessions states
   const [preferences, setPreferences] = useState({
     theme: 'dark',
     language: 'en',
@@ -49,6 +49,22 @@ const SettingsPage = ({ user, onUserUpdate, onLogout }) => {
     overdueTaskAlert: true,
     revisionDue: true,
     applicationDeadline: true
+  });
+
+  const [studySettings, setStudySettings] = useState({
+    defaultSessionType: 'timer',
+    defaultTimerDuration: 25,
+    breakReminder: true,
+    breakReminderMinutes: 5,
+    autoStartNextSession: false,
+    playSoundOnCompletion: true,
+    desktopNotification: true,
+    showTimerInDashboard: true,
+    autoSaveSession: true,
+    enableFocusModeByDefault: false,
+    weeklyStudyGoalHours: 20,
+    dailyStudyGoalHours: 4,
+    timezone: 'UTC'
   });
 
   // 5. Danger zone modals
@@ -91,6 +107,23 @@ const SettingsPage = ({ user, onUserUpdate, onLogout }) => {
             overdueTaskAlert: settings.notificationPreferences?.overdueTaskAlert ?? true,
             revisionDue: settings.notificationPreferences?.revisionDue ?? true,
             applicationDeadline: settings.notificationPreferences?.applicationDeadline ?? true
+          });
+
+          const ss = settings.studySessionSettings || {};
+          setStudySettings({
+            defaultSessionType: ss.defaultSessionType || 'timer',
+            defaultTimerDuration: ss.defaultTimerDuration || 25,
+            breakReminder: ss.breakReminder ?? true,
+            breakReminderMinutes: ss.breakReminderMinutes || 5,
+            autoStartNextSession: ss.autoStartNextSession ?? false,
+            playSoundOnCompletion: ss.playSoundOnCompletion ?? true,
+            desktopNotification: ss.desktopNotification ?? true,
+            showTimerInDashboard: ss.showTimerInDashboard ?? true,
+            autoSaveSession: ss.autoSaveSession ?? true,
+            enableFocusModeByDefault: ss.enableFocusModeByDefault ?? false,
+            weeklyStudyGoalHours: ss.weeklyStudyGoalHours || 20,
+            dailyStudyGoalHours: ss.dailyStudyGoalHours || 4,
+            timezone: ss.timezone || 'UTC'
           });
         }
       } catch (err) {
@@ -217,7 +250,8 @@ const SettingsPage = ({ user, onUserUpdate, onLogout }) => {
               overdueTaskAlert: preferences.overdueTaskAlert,
               revisionDue: preferences.revisionDue,
               applicationDeadline: preferences.applicationDeadline
-            }
+            },
+            studySessionSettings: studySettings
           }
         })
       });
@@ -357,7 +391,8 @@ const SettingsPage = ({ user, onUserUpdate, onLogout }) => {
           {[
             { id: 'profile', label: 'Profile & Account', icon: User },
             { id: 'security', label: 'Security OS', icon: Lock },
-            { id: 'preferences', label: 'Preferences', icon: Sliders }
+            { id: 'preferences', label: 'Preferences', icon: Sliders },
+            { id: 'studySessions', label: 'Study Sessions', icon: Timer }
           ].map(tab => (
             <button
               key={tab.id}
@@ -716,6 +751,117 @@ const SettingsPage = ({ user, onUserUpdate, onLogout }) => {
                 </button>
             </div>
           </div>
+          )}
+
+          {/* TAB 4: STUDY SESSIONS CONFIGURATION */}
+          {activeTab === 'studySessions' && (
+            <div className="space-y-6">
+              <div className="border-b border-white/5 pb-4 mb-4">
+                <h3 className="text-sm font-bold text-white mb-1">Study Sessions Engine Configuration</h3>
+                <p className="text-xs text-white/40">Configure default timers, study goals, notifications, break reminders, and focus mode.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Default Session Type</label>
+                  <select
+                    value={studySettings.defaultSessionType}
+                    onChange={e => { setStudySettings({ ...studySettings, defaultSessionType: e.target.value }); setIsDirty(true); }}
+                    className="w-full glass-input px-4 py-3 text-sm text-white bg-slate-950 outline-none"
+                  >
+                    <option value="timer" className="bg-slate-900">Timer Mode (Countdown)</option>
+                    <option value="stopwatch" className="bg-slate-900">Stopwatch Mode (Countup)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Default Timer Duration (Minutes)</label>
+                  <input
+                    type="number"
+                    value={studySettings.defaultTimerDuration}
+                    onChange={e => { setStudySettings({ ...studySettings, defaultTimerDuration: Number(e.target.value) }); setIsDirty(true); }}
+                    className="w-full glass-input px-4 py-3 text-sm text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Daily Study Goal (Hours)</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={studySettings.dailyStudyGoalHours}
+                    onChange={e => { setStudySettings({ ...studySettings, dailyStudyGoalHours: Number(e.target.value) }); setIsDirty(true); }}
+                    className="w-full glass-input px-4 py-3 text-sm text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Weekly Study Goal (Hours)</label>
+                  <input
+                    type="number"
+                    step="1"
+                    value={studySettings.weeklyStudyGoalHours}
+                    onChange={e => { setStudySettings({ ...studySettings, weeklyStudyGoalHours: Number(e.target.value) }); setIsDirty(true); }}
+                    className="w-full glass-input px-4 py-3 text-sm text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Timezone</label>
+                  <input
+                    type="text"
+                    value={studySettings.timezone}
+                    onChange={e => { setStudySettings({ ...studySettings, timezone: e.target.value }); setIsDirty(true); }}
+                    className="w-full glass-input px-4 py-3 text-sm text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Break Reminder (Minutes)</label>
+                  <input
+                    type="number"
+                    value={studySettings.breakReminderMinutes}
+                    onChange={e => { setStudySettings({ ...studySettings, breakReminderMinutes: Number(e.target.value) }); setIsDirty(true); }}
+                    className="w-full glass-input px-4 py-3 text-sm text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-3">Automation & Behavior Options</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {[
+                    { key: 'breakReminder', label: 'Enable Break Reminders' },
+                    { key: 'autoStartNextSession', label: 'Auto-Start Next Session' },
+                    { key: 'playSoundOnCompletion', label: 'Play Audio Sound on Completion' },
+                    { key: 'desktopNotification', label: 'Send Desktop Notifications' },
+                    { key: 'showTimerInDashboard', label: 'Show Active Session Timer in Dashboard' },
+                    { key: 'autoSaveSession', label: 'Auto-Save Session History' },
+                    { key: 'enableFocusModeByDefault', label: 'Enable Fullscreen Focus Mode by Default' }
+                  ].map(opt => (
+                    <label key={opt.key} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={studySettings[opt.key]}
+                        onChange={e => { setStudySettings({ ...studySettings, [opt.key]: e.target.checked }); setIsDirty(true); }}
+                        className="rounded bg-black/40 border-white/10 text-blue-500 focus:ring-0 w-4 h-4"
+                      />
+                      <span className="text-xs text-white/80 font-medium">{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-white/5 flex justify-end">
+                <button
+                  onClick={handlePreferencesSave}
+                  disabled={saveLoading}
+                  className="px-6 py-3 glass-btn-primary text-xs flex items-center gap-2 font-bold shadow-lg"
+                >
+                  <Save className="w-4 h-4" /> {saveLoading ? 'Saving...' : 'Save Study Session Settings'}
+                </button>
+              </div>
+            </div>
           )}
         </main>
       </div>

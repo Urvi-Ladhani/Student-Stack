@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, CheckCircle } from 'lucide-react';
+import { Calendar, CheckCircle, Timer } from 'lucide-react';
 
 const InternshipRightPanel = ({ internships = [] }) => {
   // Extract all upcoming events from the internships array
@@ -42,6 +42,16 @@ const InternshipRightPanel = ({ internships = [] }) => {
   return (
     <div className="flex flex-col gap-6 h-full text-white">
       
+      {/* Quick Launch Internship Study Session */}
+      <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-center">
+        <button
+          onClick={() => window.location.href = '/study-sessions?module=Internship OS'}
+          className="w-full py-2.5 glass-btn-primary text-xs font-bold flex items-center justify-center gap-2"
+        >
+          <Timer className="w-4 h-4 text-blue-300" /> Start Internship Prep Session
+        </button>
+      </div>
+
       {/* Active OAs - Stacked, formatted with clean centered earlier layout */}
       <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col items-center justify-center text-center shrink-0">
         <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Active OAs</span>

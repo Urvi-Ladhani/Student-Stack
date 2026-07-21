@@ -1,10 +1,6 @@
 {
   "services": {
-    "frontend": {
-      "path": "frontend"
-    },
-    "backend": {
-      "path": "backend"
-    }
+    "frontend": {},
+    "backend": {}
   }
 }

@@ -1,7 +1,6 @@
 require("dotenv").config();
 if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
-    console.error("FATAL ERROR: .env variables are missing.");
-    process.exit(1);
+    console.warn("WARNING: .env variables (MONGO_URI, JWT_SECRET) are missing. Please ensure they are set in Environment Variables.");
 }
 
 // 1. ALL IMPORTS AT THE TOP

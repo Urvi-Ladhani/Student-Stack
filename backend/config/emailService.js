@@ -14,7 +14,7 @@ const sendEmail = async ({ to, subject, html }) => {
   const smtpHost = (process.env.SMTP_HOST || '').trim();
   const smtpUser = (process.env.SMTP_USER || '').trim();
   const smtpPass = (process.env.SMTP_PASS || ''); // Keep password as is to preserve any leading/trailing spaces in secret key
-
+ 
   const isSmtpConfigured = smtpHost && smtpUser && smtpPass;
 
   if (!isSmtpConfigured) {

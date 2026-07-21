@@ -15,7 +15,9 @@
     "lucide-react": "^1.21.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "react-router-dom": "^7.18.0"
+    "react-router-dom": "^7.18.0",
+    "react-pdf-highlighter-plus": "^1.2.0",
+    "tldraw": "^5.1.1"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",

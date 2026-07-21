@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
-import TaskRightPanel from '../components/tasks/TaskRightPanel';
+import TaskRightPanel from '../components/tasks/TaskRightpanel';
 import { 
   Plus, LayoutList, Kanban, CalendarDays, AlertTriangle, 
   Clock, Tag, MoreHorizontal, Play, X, ChevronLeft, ChevronRight,

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 import { ArrowLeft, Save, Folder, FileText, Download, BookOpen, Trash2 } from 'lucide-react';
 
 const PdfAnnotatorPage = () => {
@@ -48,7 +49,7 @@ const PdfAnnotatorPage = () => {
       formData.append('path', notePath);
       formData.append('notes', typedNotes);
 
-      const res = await fetch('http://localhost:5000/api/notes/upload-pdf', {
+      const res = await fetch(`${API_BASE_URL}/api/notes/upload-pdf`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData 

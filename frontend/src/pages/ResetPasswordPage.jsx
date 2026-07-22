@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 import { Command, Loader2, Eye, EyeOff, ArrowRight, ArrowLeft, Check, AlertTriangle, Lock } from 'lucide-react';
 
 const ResetPasswordPage = () => {
@@ -33,7 +34,7 @@ const ResetPasswordPage = () => {
       }
 
       try {
-        const response = await fetch(`http://localhost:5000/api/auth/verify-token/${token}`);
+        const response = await fetch(`${API_BASE_URL}/api/auth/verify-token/${token}`);
         if (response.ok) {
           setTokenValid(true);
         } else {
@@ -58,7 +59,7 @@ const ResetPasswordPage = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/reset-password', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, newPassword }),

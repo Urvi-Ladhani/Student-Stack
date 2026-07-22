@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { API_BASE_URL } from '../../config';
 import { 
   Flame, Trophy, CheckCircle2, Clock, Code2, 
   Briefcase, Activity, Calendar, AlertCircle, 
@@ -22,12 +23,12 @@ const DashboardMain = ({ userName = "Student" }) => {
 
       // Fetch all core modules in parallel
       const [tasksRes, dsaRes, rmRes, intRes, profRes, studyStatsRes] = await Promise.all([
-        fetch('http://localhost:5000/api/tasks', { headers }),
-        fetch('http://localhost:5000/api/dsa/problems', { headers }),
-        fetch('http://localhost:5000/api/dsa/roadmaps', { headers }),
-        fetch('http://localhost:5000/api/internships', { headers }),
-        fetch('http://localhost:5000/api/auth/profile', { headers }),
-        fetch('http://localhost:5000/api/study-sessions/stats', { headers })
+        fetch(`${API_BASE_URL}/api/tasks`, { headers }),
+        fetch(`${API_BASE_URL}/api/dsa/problems`, { headers }),
+        fetch(`${API_BASE_URL}/api/dsa/roadmaps`, { headers }),
+        fetch(`${API_BASE_URL}/api/internships`, { headers }),
+        fetch(`${API_BASE_URL}/api/auth/profile`, { headers }),
+        fetch(`${API_BASE_URL}/api/study-sessions/stats`, { headers })
       ]);
 
       if (tasksRes.ok) setTasks(await tasksRes.json());
@@ -45,7 +46,7 @@ const DashboardMain = ({ userName = "Student" }) => {
       // Secondary fetch: If roadmaps exist and one is active, fetch its topics
       const activeRm = rms.find(r => r.isActive);
       if (activeRm) {
-        const topicsRes = await fetch(`http://localhost:5000/api/dsa/topics/${activeRm._id}`, { headers });
+        const topicsRes = await fetch(`${API_BASE_URL}/api/dsa/topics/${activeRm._id}`, { headers });
         if (topicsRes.ok) setDsaTopics(await topicsRes.json());
       } else {
         setDsaTopics([]);

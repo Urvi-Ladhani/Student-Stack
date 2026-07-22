@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Play, Pause, Square, BookOpen, Calendar, Clock } from 'lucide-react';
+import { API_BASE_URL } from '../../config';
 
 const DashboardRightPanel = () => {
   const [tasks, setTasks] = useState([]);
@@ -18,8 +19,8 @@ const DashboardRightPanel = () => {
       const token = localStorage.getItem('token');
       const headers = { 'Authorization': `Bearer ${token}` };
       const [tasksRes, notesRes] = await Promise.all([
-        fetch('http://localhost:5000/api/tasks', { headers }),
-        fetch('http://localhost:5000/api/notes/workspace', { headers })
+        fetch(`${API_BASE_URL}/api/tasks`, { headers }),
+        fetch(`${API_BASE_URL}/api/notes/workspace`, { headers })
       ]);
 
       if (tasksRes.ok) setTasks(await tasksRes.json());
@@ -112,7 +113,7 @@ const DashboardRightPanel = () => {
     if (elapsedMinutes > 0) {
       try {
         const token = localStorage.getItem('token');
-        await fetch('http://localhost:5000/api/auth/study-session', {
+        await fetch(`${API_BASE_URL}/api/auth/study-session`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

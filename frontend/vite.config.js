@@ -8,6 +8,18 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/uploads': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      }
+    }
+  },
   define: {
     // Keeps Excalidraw from looking for a missing environment
     'process.env.IS_PREACT': JSON.stringify('false')

@@ -4,6 +4,7 @@ import {
   BookOpen, Briefcase, Timer, Plus, LogOut, X, Sparkles, Clock, Play, CheckCircle2, Menu, ChevronLeft, Settings
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 
 const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
   const location = useLocation();
@@ -91,7 +92,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
             if (elapsedMinutes > 0) {
               try {
                 const token = localStorage.getItem('token');
-                await fetch('http://localhost:5000/api/auth/study-session', {
+                await fetch(`${API_BASE_URL}/api/auth/study-session`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
@@ -171,7 +172,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
     if (elapsedMinutes > 0) {
       try {
         const token = localStorage.getItem('token');
-        await fetch('http://localhost:5000/api/auth/study-session', {
+        await fetch(`${API_BASE_URL}/api/auth/study-session`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -201,11 +202,11 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
         try {
           const token = localStorage.getItem('token');
           const headers = { 'Authorization': `Bearer ${token}` };
-          const rmRes = await fetch('http://localhost:5000/api/dsa/roadmaps', { headers });
+          const rmRes = await fetch(`${API_BASE_URL}/api/dsa/roadmaps`, { headers });
           if (rmRes.ok) {
             const rms = await rmRes.json();
             if (rms.length > 0) {
-              const topRes = await fetch(`http://localhost:5000/api/dsa/topics/${rms[0]._id}`, { headers });
+              const topRes = await fetch(`${API_BASE_URL}/api/dsa/topics/${rms[0]._id}`, { headers });
               if (topRes.ok) {
                 const tops = await topRes.json();
                 setDsaTopics(tops);
@@ -234,13 +235,13 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
 
       let res;
       if (type === 'task') {
-        res = await fetch('http://localhost:5000/api/tasks', {
+        res = await fetch(`${API_BASE_URL}/api/tasks`, {
           method: 'POST',
           headers,
           body: JSON.stringify(quickTask)
         });
       } else if (type === 'note') {
-        res = await fetch('http://localhost:5000/api/notes', {
+        res = await fetch(`${API_BASE_URL}/api/notes`, {
           method: 'POST',
           headers,
           body: JSON.stringify({
@@ -259,13 +260,13 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
           });
           return;
         }
-        res = await fetch('http://localhost:5000/api/dsa/problems', {
+        res = await fetch(`${API_BASE_URL}/api/dsa/problems`, {
           method: 'POST',
           headers,
           body: JSON.stringify(quickDsa)
         });
       } else if (type === 'internship') {
-        res = await fetch('http://localhost:5000/api/internships', {
+        res = await fetch(`${API_BASE_URL}/api/internships`, {
           method: 'POST',
           headers,
           body: JSON.stringify(quickInternship)

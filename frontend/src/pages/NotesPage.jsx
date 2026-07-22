@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
+import { API_BASE_URL, getUploadsUrl } from '../config';
 import NotesRightPanel from '../components/NotesRightPanel';
 import { Tldraw } from 'tldraw';
 import 'tldraw/tldraw.css';
@@ -53,7 +54,7 @@ const useNotes = () => {
   const fetchWorkspace = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/notes/workspace', { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(`${API_BASE_URL}/api/notes/workspace`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (res.ok) {
         const data = await res.json();
         setWorkspace({ folders: data.folders || [], tags: data.tags || [], notes: data.notes || [] });
@@ -65,7 +66,7 @@ const useNotes = () => {
   const saveNote = async (data) => {
     try {
       const token = localStorage.getItem('token');
-      const url = data._id ? `http://localhost:5000/api/notes/${data._id}` : 'http://localhost:5000/api/notes';
+      const url = data._id ? `${API_BASE_URL}/api/notes/${data._id}` : `${API_BASE_URL}/api/notes`;
       const method = data._id ? 'PUT' : 'POST';
       const payload = { ...data };
       if (!payload._id) delete payload._id;
@@ -81,7 +82,7 @@ const useNotes = () => {
   const deleteNote = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/notes/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/notes/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -99,7 +100,7 @@ const useNotes = () => {
   const createFolder = async (name) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch('http://localhost:5000/api/notes/folders', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ name, parentId: null }) });
+      await fetch(`${API_BASE_URL}/api/notes/folders`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ name, parentId: null }) });
       fetchWorkspace();
     } catch (err) { alert("❌ Network Error"); }
   };
@@ -325,7 +326,7 @@ const NotesPage = () => {
                         
                         {editorData.fileUrl && (
                           <a 
-                            href={`http://localhost:5000${editorData.fileUrl}`} 
+                            href={getUploadsUrl(editorData.fileUrl)} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="mt-6 px-6 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold rounded-xl shadow-[0_0_15px_rgba(99,102,241,0.4)] transition-all flex items-center gap-2"

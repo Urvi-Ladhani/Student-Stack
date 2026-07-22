@@ -4,6 +4,7 @@ import {
   Upload, Trash2, Eye, EyeOff, Save, ShieldAlert,
   LogOut, CheckCircle2, X, Timer
 } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 
 const SettingsPage = ({ user, onUserUpdate, onLogout }) => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -76,7 +77,7 @@ const SettingsPage = ({ user, onUserUpdate, onLogout }) => {
     const fetchFreshProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:5000/api/auth/profile', {
+        const res = await fetch(`${API_BASE_URL}/api/auth/profile`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -193,7 +194,7 @@ const SettingsPage = ({ user, onUserUpdate, onLogout }) => {
     setSaveLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/auth/profile', {
+      const res = await fetch(`${API_BASE_URL}/api/auth/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -231,7 +232,7 @@ const SettingsPage = ({ user, onUserUpdate, onLogout }) => {
     setSaveLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/auth/profile', {
+      const res = await fetch(`${API_BASE_URL}/api/auth/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -293,7 +294,7 @@ const SettingsPage = ({ user, onUserUpdate, onLogout }) => {
     setSaveLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/auth/password', {
+      const res = await fetch(`${API_BASE_URL}/api/auth/password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -325,7 +326,7 @@ const SettingsPage = ({ user, onUserUpdate, onLogout }) => {
     if (!window.confirm("This will log you out from all other devices. Proceed?")) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/auth/logout-all', {
+      const res = await fetch(`${API_BASE_URL}/api/auth/logout-all`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -351,7 +352,7 @@ const SettingsPage = ({ user, onUserUpdate, onLogout }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/auth/account', {
+      const res = await fetch(`${API_BASE_URL}/api/auth/account`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
+import { API_BASE_URL, getUploadsUrl } from '../config';
 import InternshipRightPanel from '../components/InternshipRightPanel';
 import { 
   Briefcase, Plus, Activity, Clock, FileText, Code, X, 
@@ -179,7 +180,7 @@ const InternshipPage = () => {
   const fetchInternships = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/internships', {
+      const res = await fetch(`${API_BASE_URL}/api/internships`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -196,7 +197,7 @@ const InternshipPage = () => {
   const fetchResumes = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/resumes', {
+      const res = await fetch(`${API_BASE_URL}/api/resumes`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -218,7 +219,7 @@ const InternshipPage = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/internships', {
+      const res = await fetch(`${API_BASE_URL}/api/internships`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -258,7 +259,7 @@ const InternshipPage = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/internships/${jobId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/internships/${jobId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -307,7 +308,7 @@ const InternshipPage = () => {
     if (!confirm("Are you sure you want to permanently delete this application?")) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/internships/${jobId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/internships/${jobId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -336,7 +337,7 @@ const InternshipPage = () => {
     setUploadingResume(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/resumes', {
+      const res = await fetch(`${API_BASE_URL}/api/resumes`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formDataObj
@@ -360,7 +361,7 @@ const InternshipPage = () => {
     if (!confirm("Are you sure you want to delete this resume?")) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/resumes/${resumeId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/resumes/${resumeId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -774,7 +775,7 @@ const InternshipPage = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <a 
-                            href={`http://localhost:5000${resume.fileUrl}`} 
+                            href={getUploadsUrl(resume.fileUrl)} 
                             target="_blank" 
                             rel="noreferrer" 
                             className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-white/60 hover:text-white transition-colors"

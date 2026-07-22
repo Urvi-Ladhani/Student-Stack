@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, ArrowRight, Command, Loader2, X } from 'lucide-react';
+import { API_BASE_URL } from '../../config';
 
 const AuthPage = ({ onAuthSuccess }) => {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ const AuthPage = ({ onAuthSuccess }) => {
     setLoading(true);
 
     const endpoint = isLoginPath ? '/api/auth/login' : '/api/auth/signup';
-    const url = `http://localhost:5000${endpoint}`;
+    const url = `${API_BASE_URL}${endpoint}`;
 
     try {
       const response = await fetch(url, {
@@ -86,7 +87,7 @@ const AuthPage = ({ onAuthSuccess }) => {
     setError('');
     
     try {
-      const response = await fetch('http://localhost:5000/api/auth/google', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken, isSignup: !isLoginPath }),

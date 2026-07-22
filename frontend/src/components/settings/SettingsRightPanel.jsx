@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Shield } from 'lucide-react';
+import { API_BASE_URL } from '../../config';
 
 const SettingsRightPanel = () => {
   const [profile, setProfile] = useState(null);
@@ -8,7 +9,7 @@ const SettingsRightPanel = () => {
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/auth/profile', {
+      const res = await fetch(`${API_BASE_URL}/api/auth/profile`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 import { 
   Timer, Clock, Play, Pause, Square, Sparkles, 
   Calendar as CalendarIcon, Filter, Layers, CheckCircle2, 
@@ -113,11 +114,11 @@ const StudySessionsPage = () => {
       const headers = { 'Authorization': `Bearer ${token}` };
 
       const [tRes, nRes, rRes, iRes, profRes] = await Promise.all([
-        fetch('http://localhost:5000/api/tasks', { headers }),
-        fetch('http://localhost:5000/api/notes/workspace', { headers }),
-        fetch('http://localhost:5000/api/dsa/roadmaps', { headers }),
-        fetch('http://localhost:5000/api/internships', { headers }),
-        fetch('http://localhost:5000/api/auth/profile', { headers })
+        fetch(`${API_BASE_URL}/api/tasks`, { headers }),
+        fetch(`${API_BASE_URL}/api/notes/workspace`, { headers }),
+        fetch(`${API_BASE_URL}/api/dsa/roadmaps`, { headers }),
+        fetch(`${API_BASE_URL}/api/internships`, { headers }),
+        fetch(`${API_BASE_URL}/api/auth/profile`, { headers })
       ]);
 
       if (tRes.ok) {
@@ -150,8 +151,8 @@ const StudySessionsPage = () => {
       const headers = { 'Authorization': `Bearer ${token}` };
 
       const [sessRes, statsRes] = await Promise.all([
-        fetch('http://localhost:5000/api/study-sessions', { headers }),
-        fetch('http://localhost:5000/api/study-sessions/stats', { headers })
+        fetch(`${API_BASE_URL}/api/study-sessions`, { headers }),
+        fetch(`${API_BASE_URL}/api/study-sessions/stats`, { headers })
       ]);
 
       if (sessRes.ok) setSessions(await sessRes.json());
@@ -369,7 +370,7 @@ const StudySessionsPage = () => {
         relatedInternship: selectedInternship || null
       };
 
-      const res = await fetch('http://localhost:5000/api/study-sessions', {
+      const res = await fetch(`${API_BASE_URL}/api/study-sessions`, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload)
@@ -427,7 +428,7 @@ const StudySessionsPage = () => {
         targetDuration: Number(scheduleForm.durationMinutes) * 60
       };
 
-      const res = await fetch('http://localhost:5000/api/study-sessions', {
+      const res = await fetch(`${API_BASE_URL}/api/study-sessions`, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload)

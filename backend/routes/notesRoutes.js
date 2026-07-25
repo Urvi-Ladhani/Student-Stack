@@ -9,7 +9,13 @@ const Note = require('../models/Note'); // Ensure this points to your Note model
 
 // 1. MULTER CONFIGURATION
 const uploadDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (err) {
+  console.warn("Upload directory creation skipped (read-only filesystem):", err.message);
+}
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) { cb(null, uploadDir); },

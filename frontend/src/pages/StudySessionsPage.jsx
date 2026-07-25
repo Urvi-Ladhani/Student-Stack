@@ -352,6 +352,27 @@ const StudySessionsPage = () => {
       const mode = localStorage.getItem('study_arena_mode') || sessionMode;
       const durSecs = secondsElapsed;
 
+      // Automatically calculate completion status
+      let calculatedStatus = 'Yes';
+      if (mode === 'timer') {
+        const target = timerTargetSeconds;
+        if (durSecs >= target - 5) { // completed (allowing a 5-sec buffer)
+          calculatedStatus = 'Yes';
+        } else if (durSecs > 15) { // studied some portion
+          calculatedStatus = 'Partially';
+        } else { // practically no time spent
+          calculatedStatus = 'No';
+        }
+      } else { // stopwatch mode
+        if (durSecs >= 60) { // studied for at least a minute
+          calculatedStatus = 'Yes';
+        } else if (durSecs > 15) { // studied some portion
+          calculatedStatus = 'Partially';
+        } else {
+          calculatedStatus = 'No';
+        }
+      }
+
       const payload = {
         module: mod,
         topic: top,
@@ -359,11 +380,11 @@ const StudySessionsPage = () => {
         duration: durSecs,
         mode,
         targetDuration: timerTargetSeconds,
-        completionStatus: completionForm.completedStatus,
-        status: completionForm.completedStatus === 'No' ? 'abandoned' : 'completed',
+        completionStatus: calculatedStatus,
+        status: calculatedStatus === 'No' ? 'abandoned' : 'completed',
         notes: completionForm.notes,
-        mood: completionForm.mood,
-        difficulty: completionForm.difficulty,
+        mood: 5,
+        difficulty: 3,
         relatedTask: selectedTask || null,
         relatedNote: selectedNote || null,
         relatedRoadmap: selectedRoadmap || null,
@@ -1194,58 +1215,6 @@ const StudySessionsPage = () => {
             </div>
 
             <form onSubmit={handleSaveCompletedSession} className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-2">Was the session completed?</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {['Yes', 'Partially', 'No'].map(st => (
-                    <button
-                      type="button"
-                      key={st}
-                      onClick={() => setCompletionForm({ ...completionForm, completedStatus: st })}
-                      className={`py-2.5 rounded-xl text-xs font-bold border transition-all ${
-                        completionForm.completedStatus === st
-                          ? 'bg-blue-500 text-white border-blue-400 shadow'
-                          : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
-                      }`}
-                    >
-                      {st}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Mood Rating</label>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map(star => (
-                    <button
-                      type="button"
-                      key={star}
-                      onClick={() => setCompletionForm({ ...completionForm, mood: star })}
-                      className="p-2 text-amber-400 hover:scale-110 transition-transform"
-                    >
-                      <Star className={`w-6 h-6 ${completionForm.mood >= star ? 'fill-amber-400' : 'text-white/20'}`} />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Difficulty Rating</label>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map(star => (
-                    <button
-                      type="button"
-                      key={star}
-                      onClick={() => setCompletionForm({ ...completionForm, difficulty: star })}
-                      className="p-2 text-purple-400 hover:scale-110 transition-transform"
-                    >
-                      <Zap className={`w-6 h-6 ${completionForm.difficulty >= star ? 'fill-purple-400' : 'text-white/20'}`} />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               <div>
                 <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1.5">Session Notes (optional)</label>
                 <textarea

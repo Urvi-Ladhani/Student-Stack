@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Command, ArrowRight, UserPlus, LogIn } from 'lucide-react';
+import { ArrowRight, UserPlus, LogIn } from 'lucide-react';
+import Logo from './Logo';
 
 const OnboardingPage = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const OnboardingPage = () => {
       <header className="w-full px-8 py-6 flex items-center justify-between z-50 relative">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-white/[0.06] border border-white/10 shadow-inner">
-            <Command className="w-5 h-5 text-white" />
+            <Logo className="w-5 h-5" />
           </div>
           <span className="text-white font-semibold tracking-wide text-lg drop-shadow-md">
             Student Stack

@@ -29,15 +29,12 @@ const DsaRightPanel = ({ problems }) => {
   return (
     <div className="p-6 h-full flex flex-col gap-10 overflow-y-auto scrollbar-hide w-full">
       
-      {/* Quick Launch DSA Study Session */}
-      <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-center">
-        <button
-          onClick={() => window.location.href = '/study-sessions?module=DSA OS'}
-          className="w-full py-2.5 glass-btn-primary text-xs font-bold flex items-center justify-center gap-2"
-        >
-          <Timer className="w-4 h-4 text-blue-300" /> Start DSA Study Session
-        </button>
-      </div>
+      <button
+        onClick={() => window.location.href = '/study-sessions?module=DSA OS'}
+        className="w-full py-3 glass-btn-primary text-xs font-bold flex items-center justify-center gap-2 shrink-0"
+      >
+        <Timer className="w-4 h-4 text-blue-300" /> Start DSA Study Session
+      </button>
 
       {/* =========================================
           PLATFORM STATS (Sidebar-Optimized)

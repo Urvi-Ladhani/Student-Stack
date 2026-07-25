@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Eye, EyeOff, ArrowRight, Command, Loader2, X } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Loader2, X } from 'lucide-react';
 import { API_BASE_URL } from '../../config';
+import Logo from '../Logo';
 
 const AuthPage = ({ onAuthSuccess }) => {
   const navigate = useNavigate();
@@ -154,7 +155,7 @@ const AuthPage = ({ onAuthSuccess }) => {
         
         <div className="mb-10 text-center flex flex-col items-center">
           <div className="mb-6 flex justify-center p-4 rounded-3xl light-glass shadow-inner">
-            <Command className="w-8 h-8 text-white stroke-[1.5]" />
+            <Logo className="w-10 h-10" />
           </div>
           
           <h1 className="text-3xl font-semibold text-white drop-shadow-md tracking-tight mb-2">

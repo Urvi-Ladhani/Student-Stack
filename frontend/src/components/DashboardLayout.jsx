@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Command, LayoutDashboard, CheckSquare, Code2, 
+  LayoutDashboard, CheckSquare, Code2, 
   BookOpen, Briefcase, Timer, Plus, LogOut, X, Sparkles, Clock, Play, CheckCircle2, Menu, ChevronLeft, Settings
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
+import Logo from './Logo';
 
 const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
   const location = useLocation();
@@ -343,7 +344,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => { navigate('/dashboard'); setIsMobileSidebarOpen(false); }}>
               <div className="p-1.5 rounded-lg bg-white/10 border border-white/20 shadow-inner">
-                <Command className="w-5 h-5 text-blue-400" />
+                <Logo className="w-5 h-5" />
               </div>
               <span className="font-bold tracking-wide text-md text-white drop-shadow-md">Student Stack</span>
             </div>
@@ -420,7 +421,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
           
           <div className="flex items-center justify-center lg:justify-start gap-3 px-2 cursor-pointer transition-transform hover:scale-[1.02]" onClick={() => navigate('/dashboard')}>
             <div className="p-1.5 rounded-lg bg-white/10 border border-white/20 shadow-inner">
-              <Command className="w-5 h-5 text-blue-400" />
+              <Logo className="w-5 h-5" />
             </div>
             <span className="font-bold tracking-wide text-md text-white drop-shadow-md hidden lg:inline">Student Stack</span>
           </div>
@@ -502,7 +503,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
             <Menu className="w-5 h-5" />
           </button>
           <span className="font-extrabold tracking-wide text-sm text-white flex items-center gap-2">
-            <Command className="w-4 h-4 text-blue-400" /> Student Stack
+            <Logo className="w-4 h-4" /> Student Stack
           </span>
           <div className="w-9"></div>
         </div>

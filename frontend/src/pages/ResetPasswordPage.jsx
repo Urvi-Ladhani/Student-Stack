@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
-import { Command, Loader2, Eye, EyeOff, ArrowRight, ArrowLeft, Check, AlertTriangle, Lock } from 'lucide-react';
+import { Loader2, Eye, EyeOff, ArrowRight, ArrowLeft, Check, AlertTriangle, Lock } from 'lucide-react';
+import Logo from '../components/Logo';
 
 const ResetPasswordPage = () => {
   const navigate = useNavigate();
@@ -148,7 +149,7 @@ const ResetPasswordPage = () => {
         
         <div className="mb-10 text-center flex flex-col items-center">
           <div className="mb-6 flex justify-center p-4 rounded-3xl light-glass shadow-inner">
-            <Command className="w-8 h-8 text-white stroke-[1.5]" />
+            <Logo className="w-10 h-10" />
           </div>
           
           <h1 className="text-3xl font-semibold text-white drop-shadow-md tracking-tight mb-2">

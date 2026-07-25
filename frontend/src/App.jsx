@@ -12,6 +12,7 @@ import NotesPage from './pages/NotesPage';
 import PdfAnnotatorPage from './pages/PdfAnnotatorPage';
 import InternshipPage from './pages/InternshipPage';
 import StudySessionsPage from './pages/StudySessionsPage';
+import StudySessionsRightPanel from './components/StudySessionsRightPanel';
 import SettingsPage from './pages/SettingsPage';
 import SettingsRightPanel from './components/settings/SettingsRightPanel';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -141,7 +142,11 @@ function App() {
           <Route 
             path="/study-sessions"
             element={token ? (
-              <DashboardLayout user={user} onLogout={handleLogout}>
+              <DashboardLayout 
+                user={user} 
+                onLogout={handleLogout}
+                rightPanelContent={<StudySessionsRightPanel />}
+              >
                 <StudySessionsPage />
               </DashboardLayout>
             ) : <Navigate to="/login" replace />}

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
-import { Command, Loader2, ArrowLeft, Mail, CheckCircle2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Mail, CheckCircle2 } from 'lucide-react';
+import Logo from '../components/Logo';
 
 const ForgotPasswordPage = () => {
   const navigate = useNavigate();
@@ -55,7 +56,7 @@ const ForgotPasswordPage = () => {
         
         <div className="mb-10 text-center flex flex-col items-center">
           <div className="mb-6 flex justify-center p-4 rounded-3xl light-glass shadow-inner">
-            <Command className="w-8 h-8 text-white stroke-[1.5]" />
+            <Logo className="w-10 h-10" />
           </div>
           
           <h1 className="text-3xl font-semibold text-white drop-shadow-md tracking-tight mb-2">

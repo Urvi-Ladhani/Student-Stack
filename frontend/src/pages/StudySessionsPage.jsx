@@ -556,19 +556,19 @@ const StudySessionsPage = () => {
       {/* QUICK STATS CARDS BAR */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="p-4 rounded-2xl light-glass border border-white/5 shadow flex flex-col justify-center items-center text-center hover-lift-scale">
-          <span className="text-2xl font-extrabold text-blue-400 drop-shadow">{stats?.todaysHours || '0.0'}h</span>
+          <span className="text-2xl font-extrabold text-blue-300 drop-shadow">{stats?.todaysHours || '0.0'}h</span>
           <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider mt-1">Today's Hours</span>
         </div>
         <div className="p-4 rounded-2xl light-glass border border-white/5 shadow flex flex-col justify-center items-center text-center hover-lift-scale">
-          <span className="text-2xl font-extrabold text-emerald-400 drop-shadow">{stats?.weeklyHours || '0.0'}h</span>
+          <span className="text-2xl font-extrabold text-emerald-300 drop-shadow">{stats?.weeklyHours || '0.0'}h</span>
           <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider mt-1">This Week</span>
         </div>
         <div className="p-4 rounded-2xl light-glass border border-white/5 shadow flex flex-col justify-center items-center text-center hover-lift-scale">
-          <span className="text-2xl font-extrabold text-orange-400 drop-shadow">{stats?.studyStreak || 0} Days</span>
+          <span className="text-2xl font-extrabold text-amber-300 drop-shadow">{stats?.studyStreak || 0} Days</span>
           <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider mt-1">Current Streak</span>
         </div>
         <div className="p-4 rounded-2xl light-glass border border-white/5 shadow flex flex-col justify-center items-center text-center hover-lift-scale">
-          <span className="text-2xl font-extrabold text-purple-400 drop-shadow">{stats?.sessionsCompleted || 0}</span>
+          <span className="text-2xl font-extrabold text-purple-300 drop-shadow">{stats?.sessionsCompleted || 0}</span>
           <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider mt-1">Completed Sessions</span>
         </div>
       </div>
@@ -970,16 +970,6 @@ const StudySessionsPage = () => {
               </button>
 
               <button
-                onClick={() => setHistoryView('calendar')}
-                className={`p-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                  historyView === 'calendar' ? 'bg-blue-500/20 text-blue-300' : 'text-white/50 hover:text-white'
-                }`}
-                title="Calendar View"
-              >
-                <CalendarIcon className="w-4 h-4" /> <span className="hidden sm:inline">Calendar</span>
-              </button>
-
-              <button
                 onClick={() => setHistoryView('stats')}
                 className={`p-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                   historyView === 'stats' ? 'bg-blue-500/20 text-blue-300' : 'text-white/50 hover:text-white'
@@ -1077,41 +1067,6 @@ const StudySessionsPage = () => {
                   </div>
                 ))
               )}
-            </div>
-          )}
-
-          {/* 3. CALENDAR VIEW */}
-          {historyView === 'calendar' && (
-            <div className="p-6 rounded-2xl light-glass border border-white/5 shadow-xl space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-white/40 mb-2">Sessions Calendar & Scheduled Events</h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredSessions.map(sess => (
-                  <div
-                    key={sess._id}
-                    onClick={() => setSelectedSessionDetail(sess)}
-                    className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                      sess.isScheduled
-                        ? 'bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20'
-                        : 'bg-white/5 border-white/10 hover:bg-white/10'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between text-xs mb-2">
-                      <span className="font-bold text-white">{sess.module}</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${sess.isScheduled ? 'bg-emerald-500/20 text-emerald-300' : 'bg-blue-500/20 text-blue-300'}`}>
-                        {sess.isScheduled ? 'Scheduled' : 'Completed'}
-                      </span>
-                    </div>
-
-                    <p className="text-xs font-semibold text-white/90 truncate mb-1">{sess.topic || sess.goal || 'Study Session'}</p>
-                    
-                    <div className="text-[10px] text-white/50 flex items-center justify-between mt-3 font-mono">
-                      <span>📅 {new Date(sess.createdAt || sess.scheduledDate).toLocaleDateString()}</span>
-                      <span>⏱️ {sess.isScheduled ? sess.scheduledDurationMinutes || 30 : Math.round((sess.duration || 0) / 60)}m</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 

@@ -30,10 +30,9 @@ const NotesRightPanel = ({ createNote }) => {
   return (
     <div className="w-full flex flex-col gap-6">
       
-      {/* Quick Launch Notes Study Session */}
       <button
         onClick={() => navigate('/study-sessions?module=Notes OS')}
-        className="w-full p-4 rounded-3xl bg-gradient-to-br from-purple-500/10 to-indigo-500/5 border border-purple-500/20 hover:border-purple-500/50 hover:bg-purple-500/10 backdrop-blur-xl shadow-lg flex items-center justify-center gap-2 text-xs font-bold text-purple-300 transition-all"
+        className="w-full py-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 hover:border-purple-500/50 hover:bg-purple-500/15 backdrop-blur-xl shadow-lg flex items-center justify-center gap-2 text-xs font-bold text-purple-300 transition-all shrink-0"
       >
         <Timer className="w-4 h-4 text-purple-400" /> Start Notes Study Session
       </button>

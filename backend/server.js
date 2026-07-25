@@ -38,8 +38,10 @@ app.get("/", (req,res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-   console.log(`Server Running on ${PORT}`);
-});
+if (!process.env.VERCEL) {
+   app.listen(PORT, () => {
+      console.log(`Server Running on ${PORT}`);
+   });
+}
 
 module.exports = app;

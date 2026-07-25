@@ -10,7 +10,14 @@
     "concurrently": "^9.0.0"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.7.1",
     "multer": "^2.2.0",
+    "nodemailer": "^9.0.3",
     "react-pdf-highlighter-plus": "^1.2.0",
     "tldraw": "^5.1.1"
   }

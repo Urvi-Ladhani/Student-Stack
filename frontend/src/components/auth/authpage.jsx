@@ -37,7 +37,15 @@ const AuthPage = ({ onAuthSuccess }) => {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      // Safely check if the response is JSON
+      const contentType = response.headers.get('content-type');
+      let data = {};
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        throw new Error(text || `HTTP error! status: ${response.status}`);
+      }
 
       if (!response.ok) {
         throw new Error(data.message || 'Authentication failed');
@@ -93,7 +101,16 @@ const AuthPage = ({ onAuthSuccess }) => {
         body: JSON.stringify({ idToken, isSignup: !isLoginPath }),
       });
 
-      const data = await response.json();
+      // Safely check if the response is JSON
+      const contentType = response.headers.get('content-type');
+      let data = {};
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        throw new Error(text || `HTTP error! status: ${response.status}`);
+      }
+
       if (!response.ok) {
         throw new Error(data.message || 'Google Authentication failed');
       }

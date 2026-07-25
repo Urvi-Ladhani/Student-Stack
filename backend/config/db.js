@@ -14,7 +14,9 @@ const connectDB = async () => {
 
     console.log(error);
 
-    process.exit(1);
+    if (!process.env.VERCEL) {
+      process.exit(1);
+    }
 
   }
 

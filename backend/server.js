@@ -44,4 +44,14 @@ if (!process.env.VERCEL) {
    });
 }
 
+app.get("/api/test-env", (req, res) => {
+   res.json({
+      hasMongoUri: !!process.env.MONGO_URI,
+      mongoUriPrefix: process.env.MONGO_URI ? process.env.MONGO_URI.substring(0, 20) : null,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+      nodeEnv: process.env.NODE_ENV,
+      isVercel: !!process.env.VERCEL
+   });
+});
+
 module.exports = app;

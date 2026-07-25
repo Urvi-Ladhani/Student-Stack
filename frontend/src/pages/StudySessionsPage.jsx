@@ -792,7 +792,7 @@ const StudySessionsPage = () => {
                   disabled={isSessionActive}
                   value={selectedModule}
                   onChange={e => setSelectedModule(e.target.value)}
-                  className="w-full glass-input px-4 py-2.5 text-xs text-white bg-slate-950 outline-none"
+                  className="w-full glass-input px-4 py-2.5 text-xs text-white outline-none"
                 >
                   {['Task OS', 'DSA OS', 'Notes OS', 'Internship OS', 'Dashboard', 'Custom Study'].map(mod => (
                     <option key={mod} value={mod} className="bg-slate-900">{mod}</option>
@@ -840,7 +840,7 @@ const StudySessionsPage = () => {
                       <select
                         value={selectedTask}
                         onChange={e => setSelectedTask(e.target.value)}
-                        className="w-full glass-input px-3 py-2 text-[11px] text-white bg-slate-950 outline-none"
+                        className="w-full glass-input px-3 py-2 text-[11px] text-white outline-none"
                       >
                         <option value="" className="bg-slate-900">None</option>
                         {availableTasks.map(t => (
@@ -859,7 +859,7 @@ const StudySessionsPage = () => {
                       <select
                         value={selectedNote}
                         onChange={e => setSelectedNote(e.target.value)}
-                        className="w-full glass-input px-3 py-2 text-[11px] text-white bg-slate-950 outline-none"
+                        className="w-full glass-input px-3 py-2 text-[11px] text-white outline-none"
                       >
                         <option value="" className="bg-slate-900">None</option>
                         {availableNotes.map(n => (
@@ -878,7 +878,7 @@ const StudySessionsPage = () => {
                       <select
                         value={selectedRoadmap}
                         onChange={e => setSelectedRoadmap(e.target.value)}
-                        className="w-full glass-input px-3 py-2 text-[11px] text-white bg-slate-950 outline-none"
+                        className="w-full glass-input px-3 py-2 text-[11px] text-white outline-none"
                       >
                         <option value="" className="bg-slate-900">None</option>
                         {availableRoadmaps.map(r => (
@@ -897,7 +897,7 @@ const StudySessionsPage = () => {
                       <select
                         value={selectedInternship}
                         onChange={e => setSelectedInternship(e.target.value)}
-                        className="w-full glass-input px-3 py-2 text-[11px] text-white bg-slate-950 outline-none"
+                        className="w-full glass-input px-3 py-2 text-[11px] text-white outline-none"
                       >
                         <option value="" className="bg-slate-900">None</option>
                         {availableInternships.map(i => (
@@ -934,7 +934,7 @@ const StudySessionsPage = () => {
                 <select
                   value={historyPeriod}
                   onChange={e => setHistoryPeriod(e.target.value)}
-                  className="glass-input px-3 py-1.5 text-xs text-white bg-slate-950 outline-none"
+                  className="glass-input px-3 py-1.5 text-xs text-white outline-none"
                 >
                   <option value="all" className="bg-slate-900">All Time</option>
                   <option value="today" className="bg-slate-900">Today</option>
@@ -950,7 +950,7 @@ const StudySessionsPage = () => {
                 <select
                   value={historyModuleFilter}
                   onChange={e => setHistoryModuleFilter(e.target.value)}
-                  className="glass-input px-3 py-1.5 text-xs text-white bg-slate-950 outline-none"
+                  className="glass-input px-3 py-1.5 text-xs text-white outline-none"
                 >
                   {['All', 'Task OS', 'DSA OS', 'Notes OS', 'Internship OS', 'Dashboard', 'Custom Study'].map(m => (
                     <option key={m} value={m} className="bg-slate-900">{m}</option>
@@ -1255,7 +1255,7 @@ const StudySessionsPage = () => {
                 <select
                   value={scheduleForm.module}
                   onChange={e => setScheduleForm({ ...scheduleForm, module: e.target.value })}
-                  className="w-full glass-input px-4 py-2.5 text-xs text-white bg-slate-950 outline-none"
+                  className="w-full glass-input px-4 py-2.5 text-xs text-white outline-none"
                 >
                   {['Task OS', 'DSA OS', 'Notes OS', 'Internship OS', 'Dashboard', 'Custom Study'].map(mod => (
                     <option key={mod} value={mod} className="bg-slate-900">{mod}</option>

@@ -581,15 +581,15 @@ const StudySessionsPage = () => {
           <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider mt-1">Today's Hours</span>
         </div>
         <div className="p-4 rounded-2xl light-glass border border-white/5 shadow flex flex-col justify-center items-center text-center hover-lift-scale">
-          <span className="text-2xl font-extrabold text-emerald-300 drop-shadow">{stats?.weeklyHours || '0.0'}h</span>
+          <span className="text-2xl font-extrabold text-blue-300 drop-shadow">{stats?.weeklyHours || '0.0'}h</span>
           <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider mt-1">This Week</span>
         </div>
         <div className="p-4 rounded-2xl light-glass border border-white/5 shadow flex flex-col justify-center items-center text-center hover-lift-scale">
-          <span className="text-2xl font-extrabold text-amber-300 drop-shadow">{stats?.studyStreak || 0} Days</span>
+          <span className="text-2xl font-extrabold text-blue-300 drop-shadow">{stats?.studyStreak || 0} Days</span>
           <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider mt-1">Current Streak</span>
         </div>
         <div className="p-4 rounded-2xl light-glass border border-white/5 shadow flex flex-col justify-center items-center text-center hover-lift-scale">
-          <span className="text-2xl font-extrabold text-purple-300 drop-shadow">{stats?.sessionsCompleted || 0}</span>
+          <span className="text-2xl font-extrabold text-blue-300 drop-shadow">{stats?.sessionsCompleted || 0}</span>
           <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider mt-1">Completed Sessions</span>
         </div>
       </div>

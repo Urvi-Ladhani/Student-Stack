@@ -81,7 +81,7 @@ const StudySessionsRightPanel = () => {
 
         {/* Weekly Hours */}
         <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 shadow-inner hover:bg-white/[0.04] transition-all flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300 flex items-center justify-center shrink-0">
             <Calendar className="w-5 h-5" />
           </div>
           <div>
@@ -92,7 +92,7 @@ const StudySessionsRightPanel = () => {
 
         {/* Current Streak */}
         <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 shadow-inner hover:bg-white/[0.04] transition-all flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300 flex items-center justify-center shrink-0">
             <Zap className="w-5 h-5" />
           </div>
           <div>
@@ -103,7 +103,7 @@ const StudySessionsRightPanel = () => {
 
         {/* Completed Sessions */}
         <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 shadow-inner hover:bg-white/[0.04] transition-all flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-300 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300 flex items-center justify-center shrink-0">
             <CheckCircle2 className="w-5 h-5" />
           </div>
           <div>
@@ -114,7 +114,7 @@ const StudySessionsRightPanel = () => {
 
         {/* Average Session Duration */}
         <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 shadow-inner hover:bg-white/[0.04] transition-all flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300 flex items-center justify-center shrink-0">
             <Award className="w-5 h-5" />
           </div>
           <div>
@@ -125,7 +125,7 @@ const StudySessionsRightPanel = () => {
 
         {/* Most Studied Module */}
         <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 shadow-inner hover:bg-white/[0.04] transition-all flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-300 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300 flex items-center justify-center shrink-0">
             <Layers className="w-5 h-5" />
           </div>
           <div>

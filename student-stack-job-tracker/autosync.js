@@ -5,7 +5,7 @@ function syncToken() {
     chrome.storage.local.get(['jobTrackerToken'], (result) => {
       if (result.jobTrackerToken !== token) {
         chrome.storage.local.set({ jobTrackerToken: token }, () => {
-          alert("✅ STUDENTSTACK: Token successfully locked into Chrome!");
+          console.log("✅ STUDENTSTACK: Token successfully locked into Chrome!");
         });
       } else {
         console.log("✅ StudentStack Extension is connected and ready.");

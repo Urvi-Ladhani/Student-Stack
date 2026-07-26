@@ -1,3 +1,5 @@
+const BASE_URL = "https://student-stack-3f9j-4i1cr7t6q-urvi2.vercel.app";
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "EXECUTE_HEIST") {
     console.log("🕵️‍♂️ Background Agent: Multi-Platform Heist initialized.");
@@ -41,15 +43,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               if (!lcData.has_next) keepFetching = false;
               else {
                 offset += dump.length;
-                await new Promise(resolve => setTimeout(resolve, 2500)); // Normal 2.5s delay
+                await new Promise(resolve => setTimeout(resolve, 2500));
               }
             } else if (lcResponse.status === 429 || lcResponse.status === 403) {
-              // 🔥 THE NEW FIX: Don't give up! Just wait 10 seconds and try again.
               console.warn(`⚠️ LeetCode Firewall hit at offset ${offset}! Pausing for 10 seconds to cool down...`);
               await new Promise(resolve => setTimeout(resolve, 10000)); 
             } else {
               console.error("❌ Fatal LeetCode Error:", lcResponse.status);
-              keepFetching = false; // Give up only if it's a completely unknown server error
+              keepFetching = false;
             }
           }
         }
@@ -66,8 +67,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               if (cfData.status === "OK") {
                 cfData.result.forEach(sub => {
                   if (sub.verdict === "OK") {
-                    // Codeforces problem titles often have the letter attached (e.g. "A. Watermelon")
-                    // The backend should ideally match loosely, but we pass the exact name.
                     solvedProblemsMap.set(`CF-${sub.problem.name}`, { title: sub.problem.name, platform: "Codeforces" });
                   }
                 });
@@ -82,13 +81,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.handles?.geeksforgeeks) {
           console.log(`🟢 Starting GFG Heist for ${request.handles.geeksforgeeks}...`);
           try {
-            // GFG doesn't have a clean API, so we scrape the user's practice profile
             const gfgRes = await fetch(`https://www.geeksforgeeks.org/user/${request.handles.geeksforgeeks}/`);
             if (gfgRes.ok) {
               const htmlText = await gfgRes.text();
-              
-              // We use a regular expression to rip the problem names out of the HTML tags
-              // GFG lists solved problems in anchor tags like: <a href=".../problem-name/">Problem Name</a>
               const regex = /<a href="https:\/\/practice\.geeksforgeeks\.org\/problems\/[^"]+">([^<]+)<\/a>/g;
               let match;
               while ((match = regex.exec(htmlText)) !== null) {
@@ -100,12 +95,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
 
         // ==========================================
-        // 4. SEND FINAL PAYLOAD TO BACKEND
+        // 4. SEND FINAL PAYLOAD TO LIVE BACKEND
         // ==========================================
         const finalPayload = Array.from(solvedProblemsMap.values());
         console.log(`🚀 Multi-Heist Complete! Extracted ${finalPayload.length} total solutions. Sending to backend...`);
 
-        const backendRes = await fetch("http://localhost:5000/api/dsa/extension-sync", {
+        const backendRes = await fetch(`${BASE_URL}/api/dsa/extension-sync`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -130,9 +125,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// Add this inside your existing background.js (Service Worker)
-
-// Add/Replace this block in your background.js
+// Real-time Single Submission Tracking
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "LEETCODE_SUBMISSION_ACCEPTED") {
         
@@ -143,7 +136,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
 
             try {
-                const response = await fetch('http://localhost:5000/api/dsa/problems/track-submission', {
+                const response = await fetch(`${BASE_URL}/api/dsa/problems/track-submission`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -160,7 +153,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     chrome.tabs.sendMessage(sender.tab.id, { type: "SERVER_ERROR", message: `⚠️ SERVER REJECTED (${response.status}): ${errData.message}` });
                 }
             } catch (err) {
-                chrome.tabs.sendMessage(sender.tab.id, { type: "SERVER_ERROR", message: `❌ FETCH FAILED: Is your Node server running?` });
+                chrome.tabs.sendMessage(sender.tab.id, { type: "SERVER_ERROR", message: `❌ FETCH FAILED: Is your server running?` });
             }
         });
     }

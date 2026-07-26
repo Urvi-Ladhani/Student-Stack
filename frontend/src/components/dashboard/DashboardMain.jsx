@@ -335,6 +335,8 @@ const DashboardMain = ({ userName = "Student" }) => {
     );
   }
 
+  const FocusIcon = todaysFocus.icon;
+
   return (
     <div className="w-full space-y-6 pb-12">
       
@@ -359,7 +361,7 @@ const DashboardMain = ({ userName = "Student" }) => {
         <h2 className="text-[10px] font-bold text-white/40 tracking-wider uppercase mb-2.5 drop-shadow-sm">Today's Focus</h2>
         <div className="p-4.5 rounded-2xl light-glass hover-lift-scale shadow-lg flex items-center gap-4 border border-white/5">
           <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-blue-400 shrink-0 shadow-inner">
-            <todaysFocus.icon className="w-5 h-5 drop-shadow-md" />
+            <FocusIcon className="w-5 h-5 drop-shadow-md" />
           </div>
           <div>
             <h3 className="text-white/90 font-bold text-sm mb-0.5">Priority Directive</h3>
@@ -375,19 +377,22 @@ const DashboardMain = ({ userName = "Student" }) => {
           { label: "DSA Solved", value: statsMetrics.dsaSolved, icon: Code2, path: '/dsa' },
           { label: "Tasks Done", value: statsMetrics.tasksDone, icon: CheckCircle2, path: '/tasks' },
           { label: "Study Hours", value: statsMetrics.studyHours, icon: Clock, path: '/study-sessions' }
-        ].map((stat, i) => (
-          <div 
-            key={i} 
-            onClick={() => window.location.href = stat.path}
-            className="p-4 flex flex-col justify-center items-center text-center shadow-lg light-glass border border-white/5 hover:border-blue-500/20 hover-lift-scale cursor-pointer transition-all"
-          >
-            <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-blue-400 mb-2.5 shadow-inner">
-              <stat.icon className="w-4 h-4 drop-shadow-sm" />
+        ].map((stat, i) => {
+          const StatIcon = stat.icon;
+          return (
+            <div 
+              key={i} 
+              onClick={() => window.location.href = stat.path}
+              className="p-4 flex flex-col justify-center items-center text-center shadow-lg light-glass border border-white/5 hover:border-blue-500/20 hover-lift-scale cursor-pointer transition-all"
+            >
+              <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-blue-400 mb-2.5 shadow-inner">
+                <StatIcon className="w-4 h-4 drop-shadow-sm" />
+              </div>
+              <h4 className="text-xl font-bold text-white mb-0.5 drop-shadow-sm">{stat.value}</h4>
+              <p className="text-[9px] text-white/40 font-semibold uppercase tracking-wider">{stat.label}</p>
             </div>
-            <h4 className="text-xl font-bold text-white mb-0.5 drop-shadow-sm">{stat.value}</h4>
-            <p className="text-[9px] text-white/40 font-semibold uppercase tracking-wider">{stat.label}</p>
-          </div>
-        ))}
+          );
+        })}
       </section>
 
       {/* SECTION 4: Timeline & DSA Progress (Side-by-Side) */}
@@ -524,20 +529,23 @@ const DashboardMain = ({ userName = "Student" }) => {
             <p className="text-white/40 text-xs text-center py-6">No recent activity.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              {recentActivities.map(act => (
-                <div key={act.id} className="flex gap-2.5 items-center p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
-                  <div className={`w-7.5 h-7.5 rounded-full ${act.bg} flex items-center justify-center shrink-0`}>
-                    <act.icon className={`w-3.5 h-3.5 ${act.color}`} />
+              {recentActivities.map(act => {
+                const ActIcon = act.icon;
+                return (
+                  <div key={act.id} className="flex gap-2.5 items-center p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors">
+                    <div className={`w-7.5 h-7.5 rounded-full ${act.bg} flex items-center justify-center shrink-0`}>
+                      <ActIcon className={`w-3.5 h-3.5 ${act.color}`} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-white/90 font-medium truncate">{act.text}</p>
+                      <p className="text-[10px] text-white/40">{act.desc}</p>
+                    </div>
+                    <span className="text-[9px] text-white/30 font-medium font-mono shrink-0">
+                      {act.date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs text-white/90 font-medium truncate">{act.text}</p>
-                    <p className="text-[10px] text-white/40">{act.desc}</p>
-                  </div>
-                  <span className="text-[9px] text-white/30 font-medium font-mono shrink-0">
-                    {act.date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

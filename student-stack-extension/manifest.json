@@ -12,6 +12,8 @@
     "https://leetcode.com/*",
     "https://codeforces.com/*",
     "https://*.geeksforgeeks.org/*",
+    "https://student-stack-3f9j-4i1cr7t6q-urvi2.vercel.app/*",
+    "https://*.vercel.app/*",
     "http://localhost:5000/*",
     "http://localhost:5173/*"
   ],
@@ -21,6 +23,8 @@
   "content_scripts": [
     {
       "matches": [
+        "https://student-stack-3f9j-4i1cr7t6q-urvi2.vercel.app/*",
+        "https://*.vercel.app/*",
         "http://localhost:5173/*",
         "https://leetcode.com/*",
         "https://codeforces.com/*",

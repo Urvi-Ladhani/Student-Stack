@@ -375,20 +375,23 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
               { label: 'DSA OS', icon: Code2, path: '/dsa' },
               { label: 'Notes OS', icon: BookOpen, path: '/notes' },
               { label: 'Internship OS', icon: Briefcase, path: '/internships' },
-            ].map((item) => (
-              <button 
-                key={item.label}
-                onClick={() => { navigate(item.path); setIsMobileSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-medium transition-all text-left hover-lift-scale ${
-                  isActive(item.path) 
-                    ? 'light-glass text-white font-semibold shadow-lg' 
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <item.icon className={`w-4 h-4 ${isActive(item.path) ? 'text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]' : ''}`} />
-                {item.label}
-              </button>
-            ))}
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <button 
+                  key={item.label}
+                  onClick={() => { navigate(item.path); setIsMobileSidebarOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-medium transition-all text-left hover-lift-scale ${
+                    isActive(item.path) 
+                      ? 'light-glass text-white font-semibold shadow-lg' 
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${isActive(item.path) ? 'text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]' : ''}`} />
+                  {item.label}
+                </button>
+              );
+            })}
           </nav>
         </div>
 
@@ -448,21 +451,24 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
               { label: 'DSA OS', icon: Code2, path: '/dsa' },
               { label: 'Notes OS', icon: BookOpen, path: '/notes' },
               { label: 'Internship OS', icon: Briefcase, path: '/internships' },
-            ].map((item) => (
-              <button 
-                key={item.label}
-                onClick={() => navigate(item.path)}
-                className={`w-full flex items-center justify-center lg:justify-start gap-3 px-3.5 py-3 rounded-xl text-xs font-medium transition-all hover-lift-scale ${
-                  isActive(item.path) 
-                    ? 'light-glass text-white font-semibold shadow-lg' 
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-                title={item.label}
-              >
-                <item.icon className={`w-4.5 h-4.5 shrink-0 ${isActive(item.path) ? 'text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]' : ''}`} />
-                <span className="hidden lg:inline truncate">{item.label}</span>
-              </button>
-            ))}
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <button 
+                  key={item.label}
+                  onClick={() => navigate(item.path)}
+                  className={`w-full flex items-center justify-center lg:justify-start gap-3 px-3.5 py-3 rounded-xl text-xs font-medium transition-all hover-lift-scale ${
+                    isActive(item.path) 
+                      ? 'light-glass text-white font-semibold shadow-lg' 
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                  }`}
+                  title={item.label}
+                >
+                  <Icon className={`w-4.5 h-4.5 shrink-0 ${isActive(item.path) ? 'text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]' : ''}`} />
+                  <span className="hidden lg:inline truncate">{item.label}</span>
+                </button>
+              );
+            })}
           </nav>
         </div>
 

@@ -4,7 +4,7 @@ import { API_BASE_URL } from '../config';
 import { 
   Timer, Clock, Play, Pause, Square, Sparkles, 
   Calendar as CalendarIcon, Filter, Layers, CheckCircle2, 
-  Star, Award, BookOpen, Code2, CheckSquare, Briefcase, 
+  Award, BookOpen, Code2, CheckSquare, Briefcase, 
   Maximize2, Minimize2, X, Plus, ChevronRight, BarChart3, 
   List, Grid, Zap, Shield, RotateCcw, AlertCircle, Heart, Sliders
 } from 'lucide-react';
@@ -1036,10 +1036,6 @@ const StudySessionsPage = () => {
                       </div>
 
                       <div className="flex items-center gap-4 text-xs shrink-0 self-end sm:self-auto">
-                        <div className="flex items-center gap-1 text-amber-300 font-bold">
-                          <Star className="w-3.5 h-3.5 fill-amber-300" /> {sess.mood || 5}
-                        </div>
-                        <span className="text-white/30">•</span>
                         <span className="text-white/40 font-mono text-[11px]">
                           {new Date(sess.createdAt || sess.scheduledDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </span>
@@ -1081,9 +1077,6 @@ const StudySessionsPage = () => {
 
                     <div className="pt-3 border-t border-white/5 flex justify-between items-center text-[10px] text-white/40">
                       <span>{new Date(sess.createdAt || sess.scheduledDate).toLocaleDateString()}</span>
-                      <div className="flex items-center gap-1 text-amber-300">
-                        <Star className="w-3 h-3 fill-amber-300" /> {sess.mood || 5} / 5
-                      </div>
                     </div>
                   </div>
                 ))

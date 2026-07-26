@@ -25,12 +25,12 @@ window.addEventListener("message", (event) => {
 // Helper Function to Beam Data to Node.js
 const sendToStudentStack = (url, platform, runtime, memory) => {
   chrome.runtime.sendMessage({
-      type: "LEETCODE_SUBMISSION_ACCEPTED", // Reusing this event name for all platforms
+      type: "LEETCODE_SUBMISSION_ACCEPTED",
       payload: { problemUrl: url, platform: platform, isAccepted: true, runtime: runtime, memory: memory }
   });
 };
 
-// Listen for Server Replies (The X-Ray Vision)
+// Listen for Server Replies
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === "SERVER_REPLY") console.log("%c" + msg.message, "color: #00ff00; font-weight: bold; font-size: 16px;");
   if (msg.type === "SERVER_ERROR") console.log("%c" + msg.message, "color: #ff0000; font-weight: bold; font-size: 16px;");
@@ -68,14 +68,12 @@ if (window.location.hostname.includes("geeksforgeeks.org")) {
   console.log("🟢 StudentStack GFG Interceptor Active");
   const observer = new MutationObserver(() => {
       const fullText = document.body.innerText;
-      // GFG usually says "Problem Solved Successfully"
       if ((fullText.includes("Problem Solved Successfully") || fullText.includes("Correct Answer")) && !window.hasTrackedThisSubmission) {
           window.hasTrackedThisSubmission = true; 
           setTimeout(() => {
               const txt = document.body.innerText;
               const timeMatch = txt.match(/Time Taken:\s*([0-9.]+)/i);
               const runtime = timeMatch ? timeMatch[1] + " sec" : "N/A";
-              // GFG rarely shows strict memory usage on the success screen, default to N/A
               sendToStudentStack(window.location.href, "GeeksForGeeks", runtime, "N/A");
           }, 1500);
           setTimeout(() => { window.hasTrackedThisSubmission = false; }, 5000);
@@ -90,11 +88,9 @@ if (window.location.hostname.includes("geeksforgeeks.org")) {
 if (window.location.hostname.includes("codeforces.com")) {
   console.log("🟢 StudentStack Codeforces Interceptor Active");
   const observer = new MutationObserver(() => {
-      // CF shows "Accepted" with this specific class in their status table
       const acceptedTag = document.querySelector('.verdict-accepted');
       if (acceptedTag && !window.hasTrackedThisSubmission) {
           window.hasTrackedThisSubmission = true; 
-          // CF live scraping is tricky because of the table layout, default to N/A
           sendToStudentStack(window.location.href, "Codeforces", "N/A", "N/A");
           setTimeout(() => { window.hasTrackedThisSubmission = false; }, 5000);
       }

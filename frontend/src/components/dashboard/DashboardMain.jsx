@@ -337,6 +337,18 @@ const DashboardMain = ({ userName = "Student" }) => {
 
   const FocusIcon = todaysFocus.icon;
 
+  const formatActivityDate = (date) => {
+    const now = new Date();
+    const isToday = date.getDate() === now.getDate() &&
+                    date.getMonth() === now.getMonth() &&
+                    date.getFullYear() === now.getFullYear();
+    if (isToday) {
+      return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    }
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ', ' + 
+           date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
     <div className="w-full space-y-6 pb-12">
       
@@ -541,7 +553,7 @@ const DashboardMain = ({ userName = "Student" }) => {
                       <p className="text-[10px] text-white/40">{act.desc}</p>
                     </div>
                     <span className="text-[9px] text-white/30 font-medium font-mono shrink-0">
-                      {act.date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                      {formatActivityDate(act.date)}
                     </span>
                   </div>
                 );

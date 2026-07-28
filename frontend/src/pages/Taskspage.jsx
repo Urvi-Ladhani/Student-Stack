@@ -42,6 +42,7 @@ const useTasks = () => {
       const res = await fetch(`${API_BASE_URL}/api/tasks${url}`, options);
       if (res.ok) { 
         fetchTasks(); 
+        window.dispatchEvent(new Event('dashboard-data-updated'));
         return true; 
       } else {
         const errData = await res.json().catch(() => ({}));
@@ -87,6 +88,7 @@ const useTasks = () => {
         body: JSON.stringify({ status: newStatus })
       });
       if (!response.ok) throw new Error('Failed to update task');
+      window.dispatchEvent(new Event('dashboard-data-updated'));
     } catch (error) {
       console.error("Error updating status:", error);
       fetchTasks();

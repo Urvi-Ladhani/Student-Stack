@@ -194,7 +194,11 @@ const useDSA = () => {
       const options = { method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } };
       if (body) options.body = JSON.stringify(body);
       const res = await fetch(`${API_BASE_URL}/api/dsa${url}`, options);
-      if (res.ok) { fetchData(); return true; }
+      if (res.ok) { 
+        fetchData(); 
+        window.dispatchEvent(new Event('dashboard-data-updated'));
+        return true; 
+      }
       return false;
     } catch (err) { return false; }
   };
@@ -231,6 +235,7 @@ const useDSA = () => {
       
       if (res.ok) {
         alert(`Successfully added ${contest.name} to your Task Calendar!`);
+        window.dispatchEvent(new Event('dashboard-data-updated'));
       } else {
         const errorData = await res.json();
         alert(`Failed: ${errorData.message}`);
@@ -266,6 +271,7 @@ const useDSA = () => {
         
         fetchData(); 
         setIsSyncing(false); 
+        window.dispatchEvent(new Event('dashboard-data-updated'));
         
         if (!isSilent) alert(`Auto-Sync Complete! Verified ${event.data.count} solutions and updated Contest History.`);
       } 

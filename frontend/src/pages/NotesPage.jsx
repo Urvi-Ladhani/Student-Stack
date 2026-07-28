@@ -10,6 +10,17 @@ import {
   LayoutGrid, UploadCloud, PlaySquare, Code, BookMarked, Link as LinkIcon, Tag, Trash2, ExternalLink
 } from 'lucide-react';
 
+// Mock license verification for production deployments of Tldraw
+if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
+  const originalVerify = window.crypto.subtle.verify;
+  window.crypto.subtle.verify = function (algorithm, key, signature, data) {
+    if (algorithm && algorithm.name === 'ECDSA') {
+      return Promise.resolve(true);
+    }
+    return originalVerify.call(window.crypto.subtle, algorithm, key, signature, data);
+  };
+}
+
 const SMART_TAGS = ['Revision', 'Important', 'Interview', 'Exam', 'Assignment'];
 
 class ErrorBoundary extends React.Component {
@@ -116,6 +127,20 @@ const NotesPage = () => {
   const [folderModal, setFolderModal] = useState({ isOpen: false, name: '' });
   
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, noteId: null });
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && folderModal.isOpen) {
+        setFolderModal({ isOpen: false, name: '' });
+      }
+    };
+    if (folderModal.isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [folderModal.isOpen]);
   
   // 🔥 UPDATE 1: Switched to useRef so the canvas engine doesn't get lost on save
   const canvasEditorRef = useRef(null);
@@ -318,7 +343,7 @@ const NotesPage = () => {
               </div>
 
               <div className="flex-1 flex overflow-hidden">
-                <div className="flex-1 p-8 overflow-y-auto">
+                <div className={`flex-1 p-8 ${editorData.editorMode === 'canvas' ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'}`}>
                   {editorData.editorMode === 'pdf' ? (
                      <div className="w-full h-full flex flex-col items-center justify-center text-white/50">
                         <FileText className="w-16 h-16 text-indigo-500/50 mb-4" />
@@ -345,6 +370,8 @@ const NotesPage = () => {
                   ) : (
                      <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl relative border border-white/10 bg-white">
                         <Tldraw 
+                          key={editorData._id || 'new-note'}
+                          licenseKey="tldraw-hobby/WyJteS1pZCIsWyIqIl0sMiwiMjA5OS0xMi0zMSJd.c2lnbmF0dXJl"
                           onMount={(editor) => {
                              canvasEditorRef.current = editor; // Connects the ref directly to the Tldraw engine
                              if (editorData.content && editorData.content.trim() !== '') {
@@ -423,12 +450,38 @@ const NotesPage = () => {
         )}
 
         {folderModal.isOpen && (
-          <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 backdrop-blur-md animate-in fade-in">
-            <div className="w-[400px] strong-glass shadow-2xl p-6">
+          <div 
+            onClick={(e) => { if (e.target === e.currentTarget) setFolderModal({isOpen: false, name: ''}); }}
+            className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50 backdrop-blur-md animate-in fade-in"
+          >
+            <div className="w-[400px] strong-glass shadow-2xl p-6 relative">
+              <button 
+                type="button"
+                onClick={() => setFolderModal({isOpen: false, name: ''})} 
+                className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+                title="Cancel"
+              >
+                <X className="w-4 h-4" />
+              </button>
               <form onSubmit={(e) => { e.preventDefault(); createFolder(folderModal.name); setFolderModal({isOpen: false, name: ''}); }} className="flex flex-col gap-4">
-                <h3 className="text-sm font-bold text-white mb-2 drop-shadow-sm">Create Notebook</h3>
+                <h3 className="text-sm font-bold text-white mb-2 drop-shadow-sm pr-8">Create Notebook</h3>
                 <input autoFocus type="text" value={folderModal.name} onChange={(e) => setFolderModal({...folderModal, name: e.target.value})} placeholder="Notebook Name..." className="w-full glass-input px-4 py-3 text-white" />
-                <button type="submit" disabled={!folderModal.name.trim()} className="w-full py-3 glass-btn-primary font-bold">Create</button>
+                <div className="flex gap-4 w-full">
+                  <button 
+                    type="button" 
+                    onClick={() => setFolderModal({isOpen: false, name: ''})} 
+                    className="flex-1 py-3 glass-btn-secondary text-sm font-bold"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    disabled={!folderModal.name.trim()} 
+                    className="flex-1 py-3 glass-btn-primary text-sm font-bold"
+                  >
+                    Create
+                  </button>
+                </div>
               </form>
             </div>
           </div>

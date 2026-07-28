@@ -241,6 +241,7 @@ const InternshipPage = () => {
           jobDescription: ''
         });
         fetchInternships();
+        window.dispatchEvent(new Event('dashboard-data-updated'));
       }
     } catch (error) {
       console.error("Failed to add internship", error);
@@ -276,6 +277,7 @@ const InternshipPage = () => {
         if (selectedJob && selectedJob._id === jobId) {
           setSelectedJob(data);
         }
+        window.dispatchEvent(new Event('dashboard-data-updated'));
       } else {
         fetchInternships();
       }
@@ -315,6 +317,7 @@ const InternshipPage = () => {
       if (res.ok) {
         setSelectedJob(null);
         fetchInternships();
+        window.dispatchEvent(new Event('dashboard-data-updated'));
       }
     } catch (error) {
       console.error("Failed to delete application", error);

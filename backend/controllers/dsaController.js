@@ -171,7 +171,12 @@ exports.logAttempt = async (req, res) => {
     if (!problem) return res.status(404).json({ message: 'Not found' });
 
     problem.attempts.push({ outcome, confidenceRating, timeTakenMinutes, date: new Date() });
-    problem.status = outcome === 'solved' ? 'solved' : 'attempted';
+    if (outcome === 'solved') {
+      problem.status = 'solved';
+      problem.solvedAt = new Date();
+    } else {
+      problem.status = 'attempted';
+    }
     problem.confidenceRating = confidenceRating;
     
     let interval = problem.revisionSchedule?.interval || 0;
@@ -255,7 +260,7 @@ exports.runAutoSync = async (req, res) => {
       const updateResult = await DSAProblem.updateMany(
         { userId: req.user._id, title: { $in: solvedTitles }, status: { $ne: 'solved' } },
         { 
-          $set: { status: 'solved', confidenceRating: 3 },
+          $set: { status: 'solved', confidenceRating: 3, solvedAt: new Date() },
           $push: { attempts: { outcome: 'solved', confidenceRating: 3, timeTakenMinutes: 0, date: new Date() } }
         }
       );
@@ -290,21 +295,29 @@ exports.extensionSync = async (req, res) => {
         title: sub.title 
       });
 
-      if (problem && problem.status !== 'solved') {
-        problem.status = 'solved';
-        
-        // Convert Unix timestamp to a real JS Date, or use current date if missing
+      if (problem) {
         const exactDate = sub.timestamp ? new Date(sub.timestamp * 1000) : new Date();
-        
-        problem.attempts.push({
-          date: exactDate,
-          outcome: 'solved',
-          confidenceRating: 3, 
-          timeTakenMinutes: 0
-        });
-        
-        await problem.save();
-        problemsUpdated++;
+        let changed = false;
+
+        if (problem.status !== 'solved') {
+          problem.status = 'solved';
+          problem.solvedAt = exactDate;
+          problem.attempts.push({
+            date: exactDate,
+            outcome: 'solved',
+            confidenceRating: 3, 
+            timeTakenMinutes: 0
+          });
+          changed = true;
+        } else if (!problem.solvedAt) {
+          problem.solvedAt = exactDate;
+          changed = true;
+        }
+
+        if (changed) {
+          await problem.save();
+          problemsUpdated++;
+        }
       }
     }
 
@@ -490,6 +503,7 @@ exports.trackLiveSubmission = async (req, res) => {
 
     // Update to solved
     problem.status = 'solved';
+    problem.solvedAt = new Date();
     
     // Ensure attempts array exists before pushing
     if (!problem.attempts) problem.attempts = []; 

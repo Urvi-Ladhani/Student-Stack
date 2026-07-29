@@ -51,7 +51,7 @@ const TaskRightPanel = ({ tasks = [] }) => {
         <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-4 flex items-center gap-2">
           <AlertCircle className="w-3 h-3 text-blue-400" /> Priority Breakdown
         </h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-2 gap-4">
           <div className="p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 hover:bg-white/10 transition-all flex flex-col items-center justify-center">
             <span className="text-2xl font-extrabold text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]">{criticalCount}</span>
             <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mt-1">Critical</span>

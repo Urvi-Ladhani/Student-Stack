@@ -249,8 +249,8 @@ const NotesPage = () => {
               <button onClick={() => { setEditorData({ _id: null, title: '', content: '', sourceModule: 'General', tags: [], attachments: [], folderId: activeFolderId || '', editorMode: 'text', fileUrl: '' }); canvasEditorRef.current = null; setIsEditorOpen(true); }} className="px-5 py-2.5 rounded-xl text-xs font-bold glass-btn-primary"><Plus className="w-4 h-4" /> New Note</button>
             </div>
 
-            <div className="flex flex-1 gap-6 min-h-0 overflow-hidden">
-              <div className="w-64 flex flex-col overflow-hidden shrink-0 light-glass shadow">
+            <div className="flex flex-col md:flex-row flex-1 gap-6 min-h-0 overflow-hidden">
+              <div className="w-full md:w-64 h-[160px] md:h-auto flex flex-col overflow-hidden shrink-0 light-glass shadow">
                 <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]"><h2 className="text-xs font-bold text-white/50 uppercase flex items-center gap-2"><BookOpen className="w-4 h-4" /> Notebooks</h2><button onClick={() => setFolderModal({ isOpen: true, name: '' })} className="hover:text-white text-white/50"><Plus className="w-4 h-4" /></button></div>
                 <div className="flex-1 overflow-y-auto p-3 scrollbar-hide space-y-1">
                   <button onClick={() => setActiveFolderId(null)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all mb-2 hover-lift-scale ${activeFolderId === null ? 'bg-white/10 text-white font-bold shadow' : 'text-white/50 hover:bg-white/5'}`}><LayoutGrid className="w-4 h-4" /> All Notes</button>
@@ -301,30 +301,30 @@ const NotesPage = () => {
 
         {isEditorOpen && (
           <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 backdrop-blur-md p-4 animate-in fade-in">
-            <div className="w-full max-w-6xl h-[85vh] strong-glass shadow-2xl flex flex-col overflow-hidden">
+            <div className="w-full max-w-6xl h-[85vh] strong-glass shadow-2xl flex flex-col overflow-hidden rounded-3xl">
               
-              <div className="h-20 shrink-0 border-b border-white/5 px-8 flex items-center justify-between bg-transparent">
+              <div className="h-auto min-h-20 py-4 shrink-0 border-b border-white/5 px-4 sm:px-8 flex flex-col sm:flex-row gap-4 items-center justify-between bg-transparent">
                 <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
                   <button onClick={() => setEditorData({...editorData, editorMode: 'text'})} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${editorData.editorMode === 'text' ? 'bg-white/15 text-white shadow' : 'text-white/50 hover:text-white'}`}><BookOpen className="w-3.5 h-3.5" /> Text</button>
                   <button onClick={() => setEditorData({...editorData, editorMode: 'canvas'})} className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ${editorData.editorMode === 'canvas' ? 'bg-white/15 text-white shadow' : 'text-white/50 hover:text-white'}`}><PenTool className="w-3.5 h-3.5" /> Flowchart</button>
                 </div>
                 <div className="flex items-center gap-4">
-                  <button onClick={handleSaveAndClose} className="px-6 py-2.5 rounded-xl text-sm font-bold glass-btn-primary"><Save className="w-4 h-4" /> Save</button>
-                  <button onClick={() => setIsEditorOpen(false)} className="w-10 h-10 flex items-center justify-center rounded-xl glass-btn-danger"><X className="w-5 h-5" /></button>
+                  <button onClick={handleSaveAndClose} className="px-6 py-2.5 rounded-xl text-sm font-bold glass-btn-primary flex items-center gap-2 shadow"><Save className="w-4 h-4" /> Save</button>
+                  <button onClick={() => setIsEditorOpen(false)} className="w-10 h-10 flex items-center justify-center rounded-xl glass-btn-danger shadow"><X className="w-5 h-5" /></button>
                 </div>
               </div>
 
-              <div className="px-8 py-5 border-b border-white/5 bg-transparent shrink-0 flex flex-col gap-4">
-                <div className="flex items-center gap-6">
-                  <input type="text" value={editorData.title} onChange={(e) => setEditorData({...editorData, title: e.target.value})} placeholder="Note Title..." className="flex-1 bg-transparent text-4xl font-extrabold text-white placeholder-white/40 border-none outline-none drop-shadow-md" />
-                  <div className="flex gap-3">
+              <div className="px-4 sm:px-8 py-5 border-b border-white/5 bg-transparent shrink-0 flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <input type="text" value={editorData.title} onChange={(e) => setEditorData({...editorData, title: e.target.value})} placeholder="Note Title..." className="flex-1 bg-transparent text-2xl sm:text-4xl font-extrabold text-white placeholder-white/40 border-none outline-none drop-shadow-md w-full" />
+                  <div className="flex flex-wrap sm:flex-nowrap gap-3 w-full sm:w-auto shrink-0">
                     <GlassDropdown icon={Folder} value={editorData.folderId} options={folderOptions} onChange={(val) => setEditorData({...editorData, folderId: val})} placeholder="Select Notebook" />
                     <GlassDropdown icon={Briefcase} value={editorData.sourceModule} options={moduleOptions} onChange={(val) => setEditorData({...editorData, sourceModule: val})} placeholder="Select Module" />
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  <Tag className="w-4 h-4 text-white/50" />
+                  <Tag className="w-4 h-4 text-white/50 shrink-0" />
                   <div className="flex flex-wrap items-center gap-2">
                     {SMART_TAGS.map(tag => (
                       <button key={tag} onClick={() => toggleSmartTag(tag)} className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border ${safeEditorTags.includes(tag) ? 'bg-indigo-500/30 text-indigo-200 border-indigo-400 shadow-[0_0_10px_rgba(99,102,241,0.4)]' : 'bg-transparent text-white/60 border-white/20 hover:border-white/50'}`}>
@@ -343,7 +343,7 @@ const NotesPage = () => {
               </div>
 
               <div className="flex-1 flex overflow-hidden">
-                <div className={`flex-1 p-8 ${editorData.editorMode === 'canvas' ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'}`}>
+                <div className={`flex-1 p-4 sm:p-8 ${editorData.editorMode === 'canvas' ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'}`}>
                   {editorData.editorMode === 'pdf' ? (
                      <div className="w-full h-full flex flex-col items-center justify-center text-white/50">
                         <FileText className="w-16 h-16 text-indigo-500/50 mb-4" />

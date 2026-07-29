@@ -66,7 +66,7 @@ const StudySessionsRightPanel = () => {
       </div>
 
       {/* Grid of Stats Cards */}
-      <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-3">
         
         {/* Today's Hours */}
         <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 shadow-inner hover:bg-white/[0.04] transition-all flex items-center gap-4">

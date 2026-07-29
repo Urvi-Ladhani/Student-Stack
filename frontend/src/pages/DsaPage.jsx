@@ -28,6 +28,19 @@ const useDSA = () => {
   
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncPaused, setSyncPaused] = useState(false);
+  const [currentSyncPlatform, setCurrentSyncPlatform] = useState(null);
+
+  useEffect(() => {
+    const progressListener = (event) => {
+      if (event.data && event.data.type === "SYNC_PROGRESS_UPDATE") {
+        setCurrentSyncPlatform(event.data.platform);
+        setSyncPaused(event.data.isPaused);
+      }
+    };
+    window.addEventListener("message", progressListener);
+    return () => window.removeEventListener("message", progressListener);
+  }, []);
 
   // --- DAILY CHALLENGE ENGINE ---
   // --- DAILY CHALLENGE ENGINE (WITH LOCALSTORAGE LOCK) ---
@@ -318,6 +331,8 @@ const useDSA = () => {
     const syncTimeoutId = setTimeout(() => {
       window.removeEventListener("message", listener);
       setIsSyncing(false);
+      setCurrentSyncPlatform(null);
+      setSyncPaused(false);
       
       const timeoutStates = {};
       if (handles.leetcode && platformStates.leetcode === 'Verifying') timeoutStates.leetcode = 'SyncFailed';
@@ -340,6 +355,8 @@ const useDSA = () => {
         clearTimeout(syncTimeoutId);
         window.removeEventListener("message", listener);
         setIsSyncing(false);
+        setCurrentSyncPlatform(null);
+        setSyncPaused(false);
 
         const results = event.data.platformStatuses || {};
         const finalStates = {};
@@ -423,7 +440,8 @@ const useDSA = () => {
     handleReview, fetchTopicsForRoadmap, saveSyncProfile, 
     triggerAutoSync, handleAddToCalendar, 
     startQuestTimer,
-    platformStates, setPlatformStates, checkExtensionAvailable
+    platformStates, setPlatformStates, checkExtensionAvailable,
+    syncPaused, setSyncPaused, currentSyncPlatform, setCurrentSyncPlatform
   };
 }; // <-- This is the end of useDSA()
 
@@ -1038,8 +1056,19 @@ const DsaPage = () => {
     replaceChallenge, skipChallenge, toggleProblem, toggleStar, 
     fetchTopicsForRoadmap, saveSyncProfile, triggerAutoSync, handleAddToCalendar,
     startQuestTimer,
-    platformStates, setPlatformStates, checkExtensionAvailable
+    platformStates, setPlatformStates, checkExtensionAvailable,
+    syncPaused, currentSyncPlatform
   } = useDSA();
+
+  const handlePauseSync = () => {
+    window.postMessage({ type: "PAUSE_STUDENTSTACK_SYNC" }, "*");
+  };
+  const handleResumeSync = () => {
+    window.postMessage({ type: "RESUME_STUDENTSTACK_SYNC" }, "*");
+  };
+  const handleStopSync = () => {
+    window.postMessage({ type: "STOP_STUDENTSTACK_SYNC" }, "*");
+  };
   
   const [activeTab, setActiveTab] = useState('roadmaps'); 
   const [roadmapView, setRoadmapView] = useState('library'); 
@@ -1204,8 +1233,8 @@ const DsaPage = () => {
       <div className="w-full flex flex-col h-full min-h-screen pb-24">
         {/* TOP COMMAND BOARD */}
         <div className="sticky top-0 z-30 px-6 py-4 -mx-6 rounded-b-2xl mb-6 flex flex-col gap-4 light-glass shadow-md">
-          <div className="flex items-center justify-between">
-            <div className="flex bg-white/5 border border-white/10 rounded-lg p-1 shadow-inner">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex bg-white/5 border border-white/10 rounded-lg p-1 shadow-inner overflow-x-auto scrollbar-hide max-w-full">
               {[ 
                 { id: 'roadmaps', label: 'Roadmaps', icon: GitBranch }, 
                 { id: 'analytics', label: 'Analytics', icon: BarChart2 }, 
@@ -1219,7 +1248,7 @@ const DsaPage = () => {
                     setActiveTab(v.id); 
                     if (v.id === 'roadmaps') setRoadmapView('library'); 
                   }} 
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${activeTab === v.id ? 'bg-white/10 text-white shadow border border-white/5' : 'text-white/40 hover:text-white/80'}`}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all shrink-0 ${activeTab === v.id ? 'bg-white/10 text-white shadow border border-white/5' : 'text-white/40 hover:text-white/80'}`}
                 >
                   <v.icon className="w-4 h-4" /> {v.label}
                 </button>
@@ -1426,23 +1455,57 @@ const DsaPage = () => {
                     </div>
                   )}
 
-                  <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between">
+                  <div className="p-6 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                      <div className={`w-3 h-3 rounded-full ${isSyncing ? 'bg-amber-400 animate-ping' : 'bg-emerald-400 animate-pulse'} shadow-[0_0_10px_rgba(52,211,153,0.8)]`}></div>
+                      <div className={`w-3 h-3 rounded-full ${isSyncing ? (syncPaused ? 'bg-amber-400 animate-pulse shadow-[0_0_10px_rgba(251,191,36,0.5)]' : 'bg-blue-400 animate-ping shadow-[0_0_10px_rgba(96,165,250,0.8)]') : 'bg-blue-400 animate-pulse shadow-[0_0_10px_rgba(96,165,250,0.8)]'}`}></div>
                       <div>
-                        <h3 className="text-lg font-bold text-emerald-400">{isSyncing ? "Syncing Platform Progress..." : "Auto-Sync Active"}</h3>
-                        <p className="text-xs text-emerald-400/60 font-medium mt-1">
-                          {isSyncing ? "Fetching solved solutions via extension..." : `Last synced: ${syncProfile.lastSyncAt ? new Date(syncProfile.lastSyncAt).toLocaleString() : 'Just now'}`}
+                        <h3 className="text-lg font-bold text-blue-400">
+                          {isSyncing ? (syncPaused ? "Sync Paused" : `Syncing ${currentSyncPlatform || "Platform"}...`) : "Auto-Sync Active"}
+                        </h3>
+                        <p className="text-xs text-blue-400/60 font-medium mt-1">
+                          {isSyncing 
+                            ? (syncPaused ? "Sync process is paused by user." : `Fetching solved solutions from ${currentSyncPlatform || "platforms"}...`) 
+                            : `Last synced: ${syncProfile.lastSyncAt ? new Date(syncProfile.lastSyncAt).toLocaleString() : 'Just now'}`}
                         </p>
                       </div>
                     </div>
-                    {isSyncing && <RefreshCcw className="w-5 h-5 text-emerald-400 animate-spin" />}
+                    
+                    {isSyncing ? (
+                      <div className="flex items-center gap-2">
+                        {syncPaused ? (
+                          <button 
+                            type="button"
+                            onClick={handleResumeSync}
+                            className="px-4 py-2 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-blue-300 text-xs font-bold transition-all"
+                          >
+                            Resume Sync
+                          </button>
+                        ) : (
+                          <button 
+                            type="button"
+                            onClick={handlePauseSync}
+                            className="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-300 text-xs font-bold transition-all"
+                          >
+                            Pause Sync
+                          </button>
+                        )}
+                        <button 
+                          type="button"
+                          onClick={handleStopSync}
+                          className="px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-300 text-xs font-bold transition-all"
+                        >
+                          Cancel/Stop
+                        </button>
+                      </div>
+                    ) : (
+                      isSyncing && <RefreshCcw className="w-5 h-5 text-blue-400 animate-spin" />
+                    )}
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {/* LeetCode Card */}
                     <div className="p-4 flex flex-col gap-2 light-glass shadow-sm hover-lift-scale relative group overflow-hidden">
-                      <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest">LeetCode</span>
+                      <span className="text-[9px] font-bold text-blue-400 uppercase tracking-widest">LeetCode</span>
                       <span className="text-sm font-medium text-white truncate">{syncProfile.leetcode || 'Not Linked'}</span>
                       {syncProfile.leetcode && (
                         <div className="mt-1">
@@ -1462,7 +1525,7 @@ const DsaPage = () => {
                     </div>
                     {/* GeeksForGeeks Card */}
                     <div className="p-4 flex flex-col gap-2 light-glass shadow-sm hover-lift-scale relative group overflow-hidden">
-                      <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">GFG</span>
+                      <span className="text-[9px] font-bold text-blue-400 uppercase tracking-widest">GFG</span>
                       <span className="text-sm font-medium text-white truncate">{syncProfile.geeksforgeeks || 'Not Linked'}</span>
                       {syncProfile.geeksforgeeks && (
                         <div className="mt-1">

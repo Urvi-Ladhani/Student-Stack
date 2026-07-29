@@ -52,7 +52,7 @@ const ForgotPasswordPage = () => {
       className="min-h-screen w-full flex items-center justify-center p-6 bg-cover bg-center font-sans"
       style={{ backgroundImage: "url('/mountain-bg.jpg')" }} 
     >
-      <div className="w-full max-w-[480px] strong-glass p-10 shadow-[0_24px_64px_rgba(0,0,0,0.5)] z-10 animate-in zoom-in-95 duration-500">
+      <div className="w-full max-w-[480px] strong-glass p-6 sm:p-10 shadow-[0_24px_64px_rgba(0,0,0,0.5)] z-10 animate-in zoom-in-95 duration-500">
         
         <div className="mb-10 text-center flex flex-col items-center">
           <div className="mb-6 flex justify-center p-4 rounded-3xl light-glass shadow-inner">

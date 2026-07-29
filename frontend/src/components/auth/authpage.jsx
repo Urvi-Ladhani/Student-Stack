@@ -151,7 +151,7 @@ const AuthPage = ({ onAuthSuccess }) => {
       className="min-h-screen w-full flex items-center justify-center p-6 bg-cover bg-center font-sans"
       style={{ backgroundImage: "url('/mountain-bg.jpg')" }} 
     >
-      <div className="w-full max-w-[480px] strong-glass p-10 shadow-[0_24px_64px_rgba(0,0,0,0.5)] z-10 animate-in zoom-in-95 duration-500">
+      <div className="w-full max-w-[480px] strong-glass p-6 sm:p-10 shadow-[0_24px_64px_rgba(0,0,0,0.5)] z-10 animate-in zoom-in-95 duration-500">
         
         <div className="mb-10 text-center flex flex-col items-center">
           <div className="mb-6 flex justify-center p-4 rounded-3xl light-glass shadow-inner">
@@ -171,11 +171,11 @@ const AuthPage = ({ onAuthSuccess }) => {
           {!isLoginPath && (
             <div className="space-y-4">
               <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Full Name" required={!isLoginPath} className="w-full glass-input px-5 py-4" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <input type="text" name="university" value={formData.university} onChange={handleChange} placeholder="University" className="w-full glass-input px-5 py-4" />
                 <input type="text" name="branch" value={formData.branch} onChange={handleChange} placeholder="Branch" className="w-full glass-input px-5 py-4" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <input type="text" name="semester" value={formData.semester} onChange={handleChange} placeholder="Semester" className="w-full glass-input px-5 py-4" />
                 <input type="text" name="targetRole" value={formData.targetRole} onChange={handleChange} placeholder="Target Role" className="w-full glass-input px-5 py-4" />
               </div>

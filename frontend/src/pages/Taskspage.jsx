@@ -395,32 +395,32 @@ const Taskspage = () => {
         
         {/* COMMAND BOARD & FILTERS */}
         <div className="sticky top-0 z-30 px-6 py-4 -mx-6 rounded-b-2xl mb-6 flex flex-col gap-4 light-glass shadow-md">
-          <div className="flex items-center justify-between">
-            <div className="flex bg-white/5 border border-white/10 rounded-lg p-1 shadow-inner">
+          <div className="flex items-center justify-between gap-3 w-full">
+            <div className="flex bg-white/5 border border-white/10 rounded-lg p-1 shadow-inner overflow-x-auto scrollbar-hide max-w-full">
               {[{ id: 'today', icon: Sun, label: 'Today' }, { id: 'list', icon: LayoutList, label: 'List' }, { id: 'board', icon: Kanban, label: 'Board' }, { id: 'calendar', icon: CalendarDays, label: 'Calendar' }].map(v => (
-                <button key={v.id} onClick={() => setView(v.id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${view === v.id ? 'bg-white/10 text-white shadow' : 'text-white/40 hover:text-white/80'}`}>
+                <button key={v.id} onClick={() => setView(v.id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all shrink-0 ${view === v.id ? 'bg-white/10 text-white shadow' : 'text-white/40 hover:text-white/80'}`}>
                   <v.icon className="w-4 h-4" /> {v.label}
                 </button>
               ))}
             </div>
-            <div className="flex gap-2">
-              <button onClick={() => setView('archived')} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${view === 'archived' ? 'bg-white/10 text-white shadow' : 'bg-white/5 border border-white/10 text-white/45 hover:text-white/80'}`}>
+            <div className="flex gap-2 shrink-0">
+              <button onClick={() => setView('archived')} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all shrink-0 ${view === 'archived' ? 'bg-white/10 text-white shadow' : 'bg-white/5 border border-white/10 text-white/45 hover:text-white/80'}`}>
                 <Archive className="w-4 h-4" />
               </button>
-              <button onClick={() => setModalState({ isOpen: true, data: null })} className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold glass-btn-primary shadow-lg">
+              <button onClick={() => setModalState({ isOpen: true, data: null })} className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold glass-btn-primary shadow-lg shrink-0">
                 <Plus className="w-4 h-4" /> Add Task
               </button>
             </div>
           </div>
 
           {view !== 'archived' && view !== 'calendar' && (
-            <div className="flex items-center gap-3 z-20">
-              <div className="relative flex-1 max-w-xs">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 z-20 w-full">
+              <div className="relative flex-1 w-full sm:max-w-xs">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                 <input type="text" placeholder="Search tasks..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full glass-input pl-9 pr-4 py-2 text-xs" />
               </div>
-              <div className="w-40"><GlassDropdown icon={FilterIcon} value={categoryFilter} options={[{value: 'All', label: 'All Categories'}, {value: 'Academic', label: 'Academic'}, {value: 'DSA', label: 'DSA'}, {value: 'Internship', label: 'Internship'}, {value: 'Personal', label: 'Personal'}]} onChange={setCategoryFilter} /></div>
-              <div className="w-44"><GlassDropdown icon={ArrowDownUp} value={sortBy} options={[{value: 'deadline-asc', label: 'Earliest Deadline'}, {value: 'deadline-desc', label: 'Latest Deadline'}, {value: 'priority', label: 'Highest Priority'}]} onChange={setSortBy} /></div>
+              <div className="w-full sm:w-40"><GlassDropdown icon={FilterIcon} value={categoryFilter} options={[{value: 'All', label: 'All Categories'}, {value: 'Academic', label: 'Academic'}, {value: 'DSA', label: 'DSA'}, {value: 'Internship', label: 'Internship'}, {value: 'Personal', label: 'Personal'}]} onChange={setCategoryFilter} /></div>
+              <div className="w-full sm:w-44"><GlassDropdown icon={ArrowDownUp} value={sortBy} options={[{value: 'deadline-asc', label: 'Earliest Deadline'}, {value: 'deadline-desc', label: 'Latest Deadline'}, {value: 'priority', label: 'Highest Priority'}]} onChange={setSortBy} /></div>
             </div>
           )}
         </div>
@@ -508,7 +508,7 @@ const Taskspage = () => {
               {dayNames.map(day => (<div key={day} className="text-center text-xs font-bold uppercase tracking-wider text-white/40">{day}</div>))}
             </div>
             <div className="grid grid-cols-7 gap-3 flex-1 auto-rows-fr">
-              {Array.from({ length: firstDay || 0 }).map((_, i) => (<div key={`blank-${i}`} className="min-h-[100px] rounded-xl bg-white/5 border border-white/5 opacity-50"></div>))}
+              {Array.from({ length: firstDay || 0 }).map((_, i) => (<div key={`blank-${i}`} className="min-h-[60px] sm:min-h-[100px] rounded-xl bg-white/5 border border-white/5 opacity-50"></div>))}
               {Array.from({ length: daysInMonth || 0 }).map((_, i) => {
                 const dayNumber = i + 1;
                 const isToday = new Date().getDate() === dayNumber && new Date().getMonth() === safeMonth && new Date().getFullYear() === safeYear;
@@ -520,12 +520,22 @@ const Taskspage = () => {
                 });
                 
                 return (
-                  <div key={`day-${dayNumber}`} className={`min-h-[120px] rounded-xl p-2 transition-all light-glass hover-lift-scale ${isToday ? 'shadow-[0_0_15px_rgba(59,130,246,0.2)] border-blue-500/30' : ''}`}>
-                    <div className="flex justify-end mb-1"><span className={`flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold ${isToday ? 'bg-blue-500 text-white shadow-md' : 'text-white/60'}`}>{dayNumber}</span></div>
-                    <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[80px] scrollbar-hide">
+                  <div key={`day-${dayNumber}`} className={`min-h-[60px] sm:min-h-[120px] rounded-xl p-1.5 sm:p-2 transition-all light-glass hover-lift-scale ${isToday ? 'shadow-[0_0_15px_rgba(59,130,246,0.2)] border-blue-500/30' : ''}`}>
+                    <div className="flex justify-end mb-1"><span className={`flex items-center justify-center w-5 h-5 sm:w-7 sm:h-7 rounded-full text-xs sm:text-sm font-semibold ${isToday ? 'bg-blue-500 text-white shadow-md' : 'text-white/60'}`}>{dayNumber}</span></div>
+                    
+                    {/* Full task text list on desktop/tablet */}
+                    <div className="hidden sm:flex flex-col gap-1.5 overflow-y-auto max-h-[80px] scrollbar-hide">
                       {dayTasks.map(task => (
                         <div key={task._id} className="px-2 py-1.5 rounded-md bg-white/5 border border-white/5 text-[10px] leading-tight font-medium truncate transition-colors cursor-pointer">{task.title}</div>
                       ))}
+                    </div>
+
+                    {/* Dot indicators on small mobile viewports */}
+                    <div className="flex sm:hidden flex-wrap justify-center gap-1 mt-1">
+                      {dayTasks.slice(0, 3).map(task => (
+                        <div key={task._id} className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                      ))}
+                      {dayTasks.length > 3 && <span className="text-[8px] text-white/40 font-bold leading-none">+</span>}
                     </div>
                   </div>
                 );

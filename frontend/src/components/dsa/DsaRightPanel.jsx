@@ -44,7 +44,7 @@ const DsaRightPanel = ({ problems }) => {
           <BarChart2 className="w-4 h-4" /> Platform Stats
         </h3>
         
-        <div className="flex flex-col gap-4 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-4 w-full">
           
           {/* LeetCode */}
           <div className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5 hover:border-blue-500/30 transition-all w-full group">
@@ -92,7 +92,7 @@ const DsaRightPanel = ({ problems }) => {
           <Target className="w-4 h-4" /> Difficulty
         </h3>
         
-        <div className="flex flex-col gap-6 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-6 w-full">
           {/* Easy */}
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center text-xs font-bold">

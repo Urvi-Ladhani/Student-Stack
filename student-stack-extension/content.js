@@ -53,6 +53,18 @@ window.addEventListener("message", (event) => {
       console.log("🔐 Token and Backend URL securely saved to Extension Storage:", backendUrl);
     });
   }
+
+  if (event.source === window && event.data.type === "PAUSE_STUDENTSTACK_SYNC") {
+    chrome.runtime.sendMessage({ action: "PAUSE_HEIST" });
+  }
+
+  if (event.source === window && event.data.type === "RESUME_STUDENTSTACK_SYNC") {
+    chrome.runtime.sendMessage({ action: "RESUME_HEIST" });
+  }
+
+  if (event.source === window && event.data.type === "STOP_STUDENTSTACK_SYNC") {
+    chrome.runtime.sendMessage({ action: "STOP_HEIST" });
+  }
 });
 
 // Helper Function to Beam Data to Node.js
@@ -63,10 +75,13 @@ const sendToStudentStack = (url, platform, runtime, memory) => {
   });
 };
 
-// Listen for Server Replies
+// Listen for Server Replies and Sync Progress Updates
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === "SERVER_REPLY") console.log("%c" + msg.message, "color: #00ff00; font-weight: bold; font-size: 16px;");
   if (msg.type === "SERVER_ERROR") console.log("%c" + msg.message, "color: #ff0000; font-weight: bold; font-size: 16px;");
+  if (msg.type === "SYNC_PROGRESS_UPDATE") {
+    window.postMessage(msg, "*");
+  }
 });
 
 // =======================================================

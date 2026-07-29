@@ -49,16 +49,18 @@ const InternshipRightPanel = ({ internships = [] }) => {
         <Timer className="w-4 h-4 text-blue-300" /> Start Internship Prep Session
       </button>
 
-      {/* Active OAs - Stacked, formatted with clean centered earlier layout */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col items-center justify-center text-center shrink-0">
-        <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Active OAs</span>
-        <span className="text-3xl font-extrabold text-blue-400 mt-1 drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]">{pendingOAsCount}</span>
-      </div>
+      <div className="grid grid-cols-2 xl:grid-cols-1 gap-4 shrink-0 w-full">
+        {/* Active OAs - Stacked, formatted with clean centered earlier layout */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+          <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Active OAs</span>
+          <span className="text-3xl font-extrabold text-blue-400 mt-1 drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]">{pendingOAsCount}</span>
+        </div>
 
-      {/* Interviews - Stacked, formatted with clean centered earlier layout */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col items-center justify-center text-center shrink-0">
-        <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Interviews</span>
-        <span className="text-3xl font-extrabold text-blue-400 mt-1 drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]">{scheduledInterviewsCount}</span>
+        {/* Interviews - Stacked, formatted with clean centered earlier layout */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+          <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">Interviews</span>
+          <span className="text-3xl font-extrabold text-blue-400 mt-1 drop-shadow-[0_0_8px_rgba(96,165,250,0.15)]">{scheduledInterviewsCount}</span>
+        </div>
       </div>
 
       {/* Upcoming Deadlines Widget (Fills remaining height) */}

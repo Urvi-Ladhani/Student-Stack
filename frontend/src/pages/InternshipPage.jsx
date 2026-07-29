@@ -812,15 +812,15 @@ const InternshipPage = () => {
 
       {/* ADD APPLICATION MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in">
-          <div className="w-[500px] strong-glass p-7 shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in p-4">
+          <div className="w-full max-w-[500px] strong-glass p-5 sm:p-7 shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-hide rounded-2xl">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-white">Track Application Manual Entry</h3>
               <button onClick={() => setIsModalOpen(false)} className="text-white/50 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
             
             <form onSubmit={handleAddApplication} className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-white/50 font-bold mb-1 block">Company Name</label>
                   <input required type="text" value={formData.company} onChange={(e) => setFormData({...formData, company: e.target.value})} placeholder="Google, Stripe" className="w-full glass-input px-4 py-2.5 text-xs" />
@@ -832,7 +832,7 @@ const InternshipPage = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-white/50 font-bold mb-1 block">Location</label>
                   <input type="text" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} placeholder="San Francisco, CA" className="w-full glass-input px-4 py-2.5 text-xs" />
@@ -844,7 +844,7 @@ const InternshipPage = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-white/50 font-bold mb-1 block">Work Type</label>
                   <GlassDropdown 
@@ -983,10 +983,10 @@ const InternshipPage = () => {
             </div>
 
             {/* TAB SELECTOR HEADER */}
-            <div className="bg-white/5 px-6 border-b border-white/10 flex gap-4">
+            <div className="bg-white/5 px-6 border-b border-white/10 flex gap-4 overflow-x-auto scrollbar-hide max-w-full shrink-0">
               <button 
                 onClick={() => setActiveTab('details')}
-                className={`py-3 text-xs font-bold border-b-2 transition-all ${
+                className={`py-3 text-xs font-bold border-b-2 transition-all shrink-0 ${
                   activeTab === 'details' ? 'border-indigo-400 text-white' : 'border-transparent text-white/40 hover:text-white/70'
                 }`}
               >
@@ -994,7 +994,7 @@ const InternshipPage = () => {
               </button>
               <button 
                 onClick={() => setActiveTab('ats')}
-                className={`py-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${
+                className={`py-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 shrink-0 ${
                   activeTab === 'ats' ? 'border-indigo-400 text-white' : 'border-transparent text-white/40 hover:text-white/70'
                 }`}
               >
@@ -1002,7 +1002,7 @@ const InternshipPage = () => {
               </button>
               <button 
                 onClick={() => setActiveTab('prep')}
-                className={`py-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 ${
+                className={`py-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 shrink-0 ${
                   activeTab === 'prep' ? 'border-indigo-400 text-white' : 'border-transparent text-white/40 hover:text-white/70'
                 }`}
               >

@@ -474,7 +474,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
 
         <div className="w-full flex flex-col items-center mt-auto pt-4 border-t border-white/5 shrink-0">
           {/* Unified Actions Row (Settings and Logout only) */}
-          <div className="flex flex-row items-center justify-center w-full gap-4 px-1">
+          <div className="flex flex-col lg:flex-row items-center justify-center w-full gap-2.5 lg:gap-4 px-1">
             <button 
               onClick={() => navigate('/settings')}
               title="Settings"
@@ -517,6 +517,11 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
         <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
         <div className="w-full max-w-5xl mx-auto relative z-20 h-full flex flex-col">
           {children}
+          {rightPanelContent && (
+            <aside className="xl:hidden mt-8 w-full p-5 sm:p-6 strong-glass rounded-2xl border border-white/10 shadow-2xl flex flex-col gap-6 select-none shrink-0 mb-12">
+              {rightPanelContent}
+            </aside>
+          )}
         </div>
       </main>
 
@@ -534,7 +539,7 @@ const DashboardLayout = ({ children, user, onLogout, rightPanelContent }) => {
       {/* COMMAND CENTER QUICK ACTION MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-lg strong-glass p-7 shadow-2xl text-white">
+          <div className="w-full max-w-lg strong-glass p-5 sm:p-7 shadow-2xl text-white max-h-[90vh] overflow-y-auto custom-scrollbar rounded-2xl">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-2">
                 {commandAction && (

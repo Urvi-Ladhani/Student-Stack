@@ -388,7 +388,7 @@ const SettingsPage = ({ user, onUserUpdate, onLogout }) => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         
         {/* LEFT TAB BAR */}
-        <aside className="lg:col-span-1 flex flex-col gap-2 p-1.5 rounded-2xl light-glass border border-white/5 shadow-xl">
+        <aside className="lg:col-span-1 flex flex-row lg:flex-col gap-2 p-1.5 rounded-2xl light-glass border border-white/5 shadow-xl overflow-x-auto scrollbar-hide max-w-full shrink-0">
           {[
             { id: 'profile', label: 'Profile & Account', icon: User },
             { id: 'security', label: 'Security OS', icon: Lock },
@@ -404,7 +404,7 @@ const SettingsPage = ({ user, onUserUpdate, onLogout }) => {
                 }
                 setActiveTab(tab.id);
               }}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold transition-all hover-lift-scale text-left ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold transition-all hover-lift-scale text-left shrink-0 ${
                 activeTab === tab.id 
                   ? 'bg-white/10 text-white shadow border border-white/5' 
                   : 'text-white/55 hover:text-white hover:bg-white/5'

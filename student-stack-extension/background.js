@@ -1,67 +1,223 @@
-const BASE_URL = "https://student-stack-3f9j-4i1cr7t6q-urvi2.vercel.app";
+let BASE_URL = "https://student-stack-3f9j-4i1cr7t6q-urvi2.vercel.app";
 
+// Load from storage on startup
+chrome.storage.local.get(['studentStackBackendUrl'], (result) => {
+  if (result.studentStackBackendUrl) {
+    BASE_URL = result.studentStackBackendUrl;
+    console.log("🎒 Restored BASE_URL from storage:", BASE_URL);
+  }
+});
+
+// Fetch helper with timeout
+async function fetchWithTimeout(resource, options = {}) {
+  const { timeout = 15000 } = options;
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(resource, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (err) {
+    clearTimeout(id);
+    throw err;
+  }
+}
+
+// Verification helpers
+async function verifyLeetCodeUsername(username) {
+  try {
+    const res = await fetchWithTimeout('https://leetcode.com/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+      body: JSON.stringify({
+        query: `query getUserProfile($username: String!) { matchedUser(username: $username) { username } }`,
+        variables: { username }
+      }),
+      timeout: 10000
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return !!data.data?.matchedUser;
+  } catch (err) {
+    console.error("LeetCode verification error:", err);
+    return false;
+  }
+}
+
+async function verifyCodeforcesHandle(handle) {
+  try {
+    const res = await fetchWithTimeout(`https://codeforces.com/api/user.info?handles=${handle}`, {
+      timeout: 10000
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return data.status === 'OK';
+  } catch (err) {
+    console.error("Codeforces verification error:", err);
+    return false;
+  }
+}
+
+async function verifyGFGUsername(username) {
+  try {
+    const res = await fetchWithTimeout(`https://www.geeksforgeeks.org/user/${username}/`, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      timeout: 12000
+    });
+    if (!res.ok) return false;
+    const htmlText = await res.text();
+    const hasProfile = htmlText.includes("gfg_user_profile") || 
+                        htmlText.includes("profile_name") || 
+                        htmlText.includes("profile-pic") || 
+                        htmlText.includes("Problems Solved") || 
+                        htmlText.includes("score_card");
+    return hasProfile;
+  } catch (err) {
+    console.error("GFG verification error:", err);
+    return false;
+  }
+}
+
+// Primary listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  // 1. VERIFY HANDLES REQUEST
+  if (request.action === "VERIFY_HANDLES") {
+    (async () => {
+      const results = {};
+      
+      if (request.handles?.leetcode) {
+        const isValid = await verifyLeetCodeUsername(request.handles.leetcode);
+        results.leetcode = { valid: isValid, message: isValid ? "Connected" : "Invalid Username" };
+      } else {
+        results.leetcode = { valid: true, message: "Not Linked" };
+      }
+      
+      if (request.handles?.codeforces) {
+        const isValid = await verifyCodeforcesHandle(request.handles.codeforces);
+        results.codeforces = { valid: isValid, message: isValid ? "Connected" : "Invalid Username" };
+      } else {
+        results.codeforces = { valid: true, message: "Not Linked" };
+      }
+      
+      if (request.handles?.geeksforgeeks) {
+        const isValid = await verifyGFGUsername(request.handles.geeksforgeeks);
+        results.geeksforgeeks = { valid: isValid, message: isValid ? "Connected" : "Invalid Username" };
+      } else {
+        results.geeksforgeeks = { valid: true, message: "Not Linked" };
+      }
+      
+      sendResponse(results);
+    })();
+    return true; // async reply
+  }
+
+  // 2. EXECUTE HEIST REQUEST (Syncing progress)
   if (request.action === "EXECUTE_HEIST") {
     console.log("🕵️‍♂️ Background Agent: Multi-Platform Heist initialized.");
     
+    if (request.baseUrl) {
+      BASE_URL = request.baseUrl;
+      chrome.storage.local.set({ studentStackBackendUrl: request.baseUrl });
+    }
+
     (async () => {
       try {
         const solvedProblemsMap = new Map();
+        const syncedPlatforms = { leetcode: false, codeforces: false, geeksforgeeks: false };
+        const platformStatuses = {
+          leetcode: "Not Linked",
+          codeforces: "Not Linked",
+          geeksforgeeks: "Not Linked"
+        };
 
         // ==========================================
-        // 1. LEETCODE HEIST (Requires active login cookie)
+        // 1. LEETCODE HEIST
         // ==========================================
         if (request.handles?.leetcode) {
           console.log("🟠 Starting LeetCode Heist...");
+          platformStatuses.leetcode = "Verifying...";
           let offset = 0;
           let keepFetching = true;
+          let lcSuccess = false;
 
-          while (keepFetching) {
-            console.log(`🕵️‍♂️ Fetching LeetCode offset ${offset}...`);
-            
-            const lcResponse = await fetch(`https://leetcode.com/api/submissions/?offset=${offset}&limit=100`, {
-              method: 'GET',
-              credentials: 'include',
-              headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
-            });
-            
-            if (lcResponse.ok) {
-              const lcData = await lcResponse.json();
-              const dump = lcData.submissions_dump || [];
-
-              if (dump.length === 0) {
-                keepFetching = false;
-                break;
-              }
-
-              dump.forEach(sub => {
-                if (sub.status_display === "Accepted") {
-                  solvedProblemsMap.set(`LC-${sub.title}`, { title: sub.title, platform: "LeetCode", timestamp: sub.timestamp });
-                }
+          try {
+            while (keepFetching) {
+              console.log(`🕵️‍♂️ Fetching LeetCode offset ${offset}...`);
+              
+              const lcResponse = await fetchWithTimeout(`https://leetcode.com/api/submissions/?offset=${offset}&limit=100`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                timeout: 15000
               });
+              
+              if (lcResponse.ok) {
+                const contentType = lcResponse.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                  console.error("❌ LeetCode returned non-JSON. Logged out?");
+                  platformStatuses.leetcode = "Sync Failed: Logged out";
+                  keepFetching = false;
+                  break;
+                }
 
-              if (!lcData.has_next) keepFetching = false;
-              else {
-                offset += dump.length;
-                await new Promise(resolve => setTimeout(resolve, 2500));
+                const lcData = await lcResponse.json();
+                const dump = lcData.submissions_dump || [];
+
+                if (dump.length === 0) {
+                  lcSuccess = true;
+                  keepFetching = false;
+                  break;
+                }
+
+                dump.forEach(sub => {
+                  if (sub.status_display === "Accepted") {
+                    solvedProblemsMap.set(`LC-${sub.title}`, { title: sub.title, platform: "LeetCode", timestamp: sub.timestamp });
+                  }
+                });
+
+                if (!lcData.has_next) {
+                  lcSuccess = true;
+                  keepFetching = false;
+                } else {
+                  offset += dump.length;
+                  await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+              } else if (lcResponse.status === 401 || lcResponse.status === 403) {
+                console.error("❌ LeetCode Unauthorized/Logged out");
+                platformStatuses.leetcode = "Sync Failed: Logged out";
+                keepFetching = false;
+              } else if (lcResponse.status === 429) {
+                console.warn(`⚠️ LeetCode Firewall hit. Pausing...`);
+                await new Promise(resolve => setTimeout(resolve, 5000)); 
+              } else {
+                console.error("❌ LeetCode HTTP Error:", lcResponse.status);
+                platformStatuses.leetcode = `Sync Failed: HTTP ${lcResponse.status}`;
+                keepFetching = false;
               }
-            } else if (lcResponse.status === 429 || lcResponse.status === 403) {
-              console.warn(`⚠️ LeetCode Firewall hit at offset ${offset}! Pausing for 10 seconds to cool down...`);
-              await new Promise(resolve => setTimeout(resolve, 10000)); 
-            } else {
-              console.error("❌ Fatal LeetCode Error:", lcResponse.status);
-              keepFetching = false;
             }
+            if (lcSuccess) {
+              syncedPlatforms.leetcode = true;
+              platformStatuses.leetcode = "Connected";
+            }
+          } catch (err) {
+            console.error("LeetCode heist failed:", err);
+            platformStatuses.leetcode = "Sync Failed: Timeout/Network Error";
           }
         }
 
         // ==========================================
-        // 2. CODEFORCES HEIST (Public API)
+        // 2. CODEFORCES HEIST
         // ==========================================
         if (request.handles?.codeforces) {
           console.log(`🔵 Starting Codeforces Heist for ${request.handles.codeforces}...`);
+          platformStatuses.codeforces = "Verifying...";
           try {
-            const cfRes = await fetch(`https://codeforces.com/api/user.status?handle=${request.handles.codeforces}`);
+            const cfRes = await fetchWithTimeout(`https://codeforces.com/api/user.status?handle=${request.handles.codeforces}`, {
+              timeout: 15000
+            });
             if (cfRes.ok) {
               const cfData = await cfRes.json();
               if (cfData.status === "OK") {
@@ -70,18 +226,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     solvedProblemsMap.set(`CF-${sub.problem.name}`, { title: sub.problem.name, platform: "Codeforces" });
                   }
                 });
+                syncedPlatforms.codeforces = true;
+                platformStatuses.codeforces = "Connected";
+              } else {
+                platformStatuses.codeforces = "Sync Failed: Invalid User";
               }
+            } else {
+              platformStatuses.codeforces = `Sync Failed: HTTP ${cfRes.status}`;
             }
-          } catch (err) { console.error("Codeforces sync failed", err); }
+          } catch (err) {
+            console.error("Codeforces sync failed", err);
+            platformStatuses.codeforces = "Sync Failed: Timeout/Network Error";
+          }
         }
 
         // ==========================================
-        // 3. GEEKSFORGEEKS HEIST (HTML Scraper)
+        // 3. GEEKSFORGEEKS HEIST
         // ==========================================
         if (request.handles?.geeksforgeeks) {
           console.log(`🟢 Starting GFG Heist for ${request.handles.geeksforgeeks}...`);
+          platformStatuses.geeksforgeeks = "Verifying...";
           try {
-            const gfgRes = await fetch(`https://www.geeksforgeeks.org/user/${request.handles.geeksforgeeks}/`);
+            const gfgRes = await fetchWithTimeout(`https://www.geeksforgeeks.org/user/${request.handles.geeksforgeeks}/`, {
+              headers: { 'User-Agent': 'Mozilla/5.0' },
+              timeout: 15000
+            });
             if (gfgRes.ok) {
               const htmlText = await gfgRes.text();
               const regex = /<a href="https:\/\/practice\.geeksforgeeks\.org\/problems\/[^"]+">([^<]+)<\/a>/g;
@@ -90,34 +259,57 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 const problemTitle = match[1].trim();
                 solvedProblemsMap.set(`GFG-${problemTitle}`, { title: problemTitle, platform: "GeeksForGeeks" });
               }
+              syncedPlatforms.geeksforgeeks = true;
+              platformStatuses.geeksforgeeks = "Connected";
+            } else {
+              platformStatuses.geeksforgeeks = `Sync Failed: HTTP ${gfgRes.status}`;
             }
-          } catch (err) { console.error("GFG sync failed", err); }
+          } catch (err) {
+            console.error("GFG sync failed", err);
+            platformStatuses.geeksforgeeks = "Sync Failed: Timeout/Network Error";
+          }
         }
 
         // ==========================================
         // 4. SEND FINAL PAYLOAD TO LIVE BACKEND
         // ==========================================
         const finalPayload = Array.from(solvedProblemsMap.values());
-        console.log(`🚀 Multi-Heist Complete! Extracted ${finalPayload.length} total solutions. Sending to backend...`);
+        console.log(`🚀 Multi-Heist Complete! Extracted ${finalPayload.length} total solutions. Sending to backend BASE_URL: ${BASE_URL}...`);
 
-        const backendRes = await fetch(`${BASE_URL}/api/dsa/extension-sync`, {
+        const backendRes = await fetchWithTimeout(`${BASE_URL}/api/dsa/extension-sync`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${request.token}`
           },
-          body: JSON.stringify({ submissions: finalPayload })
+          body: JSON.stringify({ 
+            submissions: finalPayload,
+            syncedPlatforms: syncedPlatforms
+          }),
+          timeout: 20000
         });
 
         if (backendRes.ok) {
-          sendResponse({ type: "SYNC_SUCCESS", count: finalPayload.length });
+          sendResponse({ 
+            type: "SYNC_SUCCESS", 
+            count: finalPayload.length,
+            platformStatuses: platformStatuses
+          });
         } else {
-          sendResponse({ type: "SYNC_ERROR", message: "Backend rejected the payload." });
+          sendResponse({ 
+            type: "SYNC_ERROR", 
+            message: "Backend rejected the payload.",
+            platformStatuses: platformStatuses
+          });
         }
 
       } catch (error) {
-        console.error("🕵️‍♂️ Error:", error);
-        sendResponse({ type: "SYNC_ERROR", message: "Network error during heist." });
+        console.error("🕵️‍♂️ Heist process error:", error);
+        sendResponse({ type: "SYNC_ERROR", message: error.message || "Network error during heist.", platformStatuses: {
+          leetcode: request.handles?.leetcode ? "Sync Failed" : "Not Linked",
+          codeforces: request.handles?.codeforces ? "Sync Failed" : "Not Linked",
+          geeksforgeeks: request.handles?.geeksforgeeks ? "Sync Failed" : "Not Linked"
+        }});
       }
     })();
 
@@ -129,20 +321,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "LEETCODE_SUBMISSION_ACCEPTED") {
         
-        chrome.storage.local.get(['studentStackToken'], async (result) => {
-            if (!result.studentStackToken) {
+        chrome.storage.local.get(['studentStackToken', 'studentStackBackendUrl'], async (result) => {
+            const token = result.studentStackToken;
+            const activeBaseUrl = result.studentStackBackendUrl || BASE_URL;
+
+            if (!token) {
                 chrome.tabs.sendMessage(sender.tab.id, { type: "SERVER_ERROR", message: "❌ ERROR: No token found in extension! Refresh your StudentStack Dashboard to re-sync the token." });
                 return;
             }
 
             try {
-                const response = await fetch(`${BASE_URL}/api/dsa/problems/track-submission`, {
+                const response = await fetchWithTimeout(`${activeBaseUrl}/api/dsa/problems/track-submission`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${result.studentStackToken}`
+                        'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify(message.payload)
+                    body: JSON.stringify(message.payload),
+                    timeout: 10000
                 });
                 
                 if (response.ok) {

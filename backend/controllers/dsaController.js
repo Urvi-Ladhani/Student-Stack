@@ -278,73 +278,84 @@ exports.runAutoSync = async (req, res) => {
 // ==========================================
 exports.extensionSync = async (req, res) => {
   try {
-    const { submissions } = req.body; 
+    const { submissions, syncedPlatforms } = req.body; 
     
-    if (!submissions || submissions.length === 0) {
+    if ((!submissions || submissions.length === 0) && !syncedPlatforms) {
       return res.status(400).json({ message: "No submissions received from extension." });
     }
 
-    console.log(`📡 Backend received ${submissions.length} problems. Processing...`);
+    console.log(`📡 Backend received ${submissions ? submissions.length : 0} problems. Processing...`);
 
     let problemsUpdated = 0;
 
     // 1. UPDATE ROADMAP PROBLEMS
-    for (let sub of submissions) {
-      const problem = await DSAProblem.findOne({ 
-        userId: req.user._id, 
-        title: sub.title 
-      });
+    if (submissions && submissions.length > 0) {
+      for (let sub of submissions) {
+        const problem = await DSAProblem.findOne({ 
+          userId: req.user._id, 
+          title: sub.title 
+        });
 
-      if (problem) {
-        const exactDate = sub.timestamp ? new Date(sub.timestamp * 1000) : new Date();
-        let changed = false;
+        if (problem) {
+          const exactDate = sub.timestamp ? new Date(sub.timestamp * 1000) : new Date();
+          let changed = false;
 
-        if (problem.status !== 'solved') {
-          problem.status = 'solved';
-          problem.solvedAt = exactDate;
-          problem.attempts.push({
-            date: exactDate,
-            outcome: 'solved',
-            confidenceRating: 3, 
-            timeTakenMinutes: 0
-          });
-          changed = true;
-        } else if (!problem.solvedAt) {
-          problem.solvedAt = exactDate;
-          changed = true;
-        }
+          if (problem.status !== 'solved') {
+            problem.status = 'solved';
+            problem.solvedAt = exactDate;
+            problem.attempts.push({
+              date: exactDate,
+              outcome: 'solved',
+              confidenceRating: 3, 
+              timeTakenMinutes: 0
+            });
+            changed = true;
+          } else if (!problem.solvedAt) {
+            problem.solvedAt = exactDate;
+            changed = true;
+          }
 
-        if (changed) {
-          await problem.save();
-          problemsUpdated++;
+          if (changed) {
+            await problem.save();
+            problemsUpdated++;
+          }
         }
       }
     }
 
-    // 2. CALCULATE GLOBAL STATS
-    const leetcodeCount = submissions.filter(p => p.platform === 'LeetCode').length;
-    const codeforcesCount = submissions.filter(p => p.platform === 'Codeforces').length;
-    const gfgCount = submissions.filter(p => p.platform === 'GeeksForGeeks').length;
+    // 2. SAVE TO SYNC PROFILE
+    // We only update stats for platforms that successfully synced.
+    // If syncedPlatforms is not provided (legacy request), we update all of them.
+    const updateFields = {};
+    updateFields.lastSyncAt = new Date();
 
-    // 3. SAVE TO SYNC PROFILE
-    await DSASyncProfile.findOneAndUpdate(
+    const leetcodeCount = submissions ? submissions.filter(p => p.platform === 'LeetCode').length : 0;
+    const codeforcesCount = submissions ? submissions.filter(p => p.platform === 'Codeforces').length : 0;
+    const gfgCount = submissions ? submissions.filter(p => p.platform === 'GeeksForGeeks').length : 0;
+
+    if (!syncedPlatforms || syncedPlatforms.leetcode) {
+      updateFields['rawStats.leetcode'] = leetcodeCount;
+    }
+    if (!syncedPlatforms || syncedPlatforms.codeforces) {
+      updateFields['rawStats.codeforces'] = codeforcesCount;
+    }
+    if (!syncedPlatforms || syncedPlatforms.geeksforgeeks) {
+      updateFields['rawStats.gfg'] = gfgCount;
+    }
+
+    const updatedProfile = await DSASyncProfile.findOneAndUpdate(
       { userId: req.user._id }, 
-      { 
-        'rawStats.leetcode': leetcodeCount,
-        'rawStats.codeforces': codeforcesCount,
-        'rawStats.gfg': gfgCount,
-        lastSyncAt: new Date() 
-      },
+      { $set: updateFields },
       { new: true, upsert: true }
     );
 
     console.log(`✅ Successfully updated ${problemsUpdated} roadmap problems and saved global stats!`);
     
-    // Return the stats back to the frontend
+    // Return the fresh stats back to the frontend
     res.status(200).json({ 
       message: "Sync complete!", 
       updated: problemsUpdated,
-      stats: { leetcode: leetcodeCount, codeforces: codeforcesCount, gfg: gfgCount }
+      stats: updatedProfile.rawStats
     });
 
   } catch (error) {

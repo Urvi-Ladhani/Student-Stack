@@ -20,6 +20,7 @@ const useDSA = () => {
   const [problems, setProblems] = useState([]);
   const [syncProfile, setSyncProfile] = useState({ leetcode: '', codeforces: '', geeksforgeeks: '', lastSyncAt: null });
   const [syncStats, setSyncStats] = useState({ leetcode: 0, codeforces: 0, gfg: 0 });
+  const [platformStates, setPlatformStates] = useState({ leetcode: 'Idle', codeforces: 'Idle', geeksforgeeks: 'Idle' });
   
   const [upcomingContests, setUpcomingContests] = useState([]);
   const [contestHistory, setContestHistory] = useState([]);
@@ -245,43 +246,134 @@ const useDSA = () => {
   
   const saveSyncProfile = async (data) => {
     const success = await execute('/sync-profile', 'POST', data);
-    if (success) { triggerAutoSync(data, true); return true; }
+    if (success) { 
+      // Do not auto-trigger heist on silent save if verification just succeeded.
+      // The calling code handles the flow.
+      return true; 
+    }
     return false;
+  };
+
+  // --- EXTENSION DETECTOR ---
+  const checkExtensionAvailable = () => {
+    return new Promise((resolve) => {
+      const hasTag = document.documentElement.getAttribute('data-studentstack-extension-active') === 'true';
+      if (!hasTag) {
+        resolve(false);
+        return;
+      }
+      
+      const pongListener = (event) => {
+        if (event.data && event.data.type === "PONG_STUDENTSTACK_EXTENSION") {
+          window.removeEventListener("message", pongListener);
+          clearTimeout(timeoutId);
+          resolve(true);
+        }
+      };
+      window.addEventListener("message", pongListener);
+      
+      const timeoutId = setTimeout(() => {
+        window.removeEventListener("message", pongListener);
+        resolve(false);
+      }, 1000);
+      
+      window.postMessage({ type: "PING_STUDENTSTACK_EXTENSION" }, "*");
+    });
   };
 
   // --- FULL UNIFIED SYNC PIPELINE ---
   const triggerAutoSync = async (handles, isSilent = false) => {
     const token = localStorage.getItem('token');
+    
+    // Check if extension is active
+    const hasExtensionTag = document.documentElement.getAttribute('data-studentstack-extension-active') === 'true';
+    const isAvailable = await checkExtensionAvailable();
+    
+    if (!isAvailable) {
+      setIsSyncing(false);
+      const newState = {};
+      if (handles.leetcode) newState.leetcode = hasExtensionTag ? "SyncFailed" : "ExtensionRequired";
+      if (handles.codeforces) newState.codeforces = hasExtensionTag ? "SyncFailed" : "ExtensionRequired";
+      if (handles.geeksforgeeks) newState.geeksforgeeks = hasExtensionTag ? "SyncFailed" : "ExtensionRequired";
+      setPlatformStates(prev => ({ ...prev, ...newState }));
+      
+      if (!isSilent) {
+        alert(hasExtensionTag 
+          ? "Unable to communicate with the StudentStack extension." 
+          : "StudentStack Sync Extension is required for automatic platform synchronization."
+        );
+      }
+      return false;
+    }
+
     setIsSyncing(true); 
-    window.postMessage({ type: "START_LEETCODE_SYNC", token: token, handles: handles }, "*");
+    
+    const initialStates = {};
+    if (handles.leetcode) initialStates.leetcode = 'Verifying';
+    if (handles.codeforces) initialStates.codeforces = 'Verifying';
+    if (handles.geeksforgeeks) initialStates.geeksforgeeks = 'Verifying';
+    setPlatformStates(prev => ({ ...prev, ...initialStates }));
+
+    // Safety timeout of 30 seconds
+    const syncTimeoutId = setTimeout(() => {
+      window.removeEventListener("message", listener);
+      setIsSyncing(false);
+      
+      const timeoutStates = {};
+      if (handles.leetcode && platformStates.leetcode === 'Verifying') timeoutStates.leetcode = 'SyncFailed';
+      if (handles.codeforces && platformStates.codeforces === 'Verifying') timeoutStates.codeforces = 'SyncFailed';
+      if (handles.geeksforgeeks && platformStates.geeksforgeeks === 'Verifying') timeoutStates.geeksforgeeks = 'SyncFailed';
+      setPlatformStates(prev => ({ ...prev, ...timeoutStates }));
+      
+      if (!isSilent) alert("Sync Timed Out: The extension is not responding.");
+    }, 30000);
+
+    window.postMessage({ 
+      type: "START_LEETCODE_SYNC", 
+      token: token, 
+      handles: handles,
+      baseUrl: window.location.origin
+    }, "*");
 
     const listener = async function(event) {
-      if (event.data.type === "SYNC_SUCCESS") {
+      if (event.data.type === "SYNC_SUCCESS" || event.data.type === "SYNC_ERROR") {
+        clearTimeout(syncTimeoutId);
         window.removeEventListener("message", listener);
+        setIsSyncing(false);
+
+        const results = event.data.platformStatuses || {};
+        const finalStates = {};
+        if (handles.leetcode) {
+          finalStates.leetcode = (results.leetcode === "Connected") ? "Connected" : "SyncFailed";
+        }
+        if (handles.codeforces) {
+          finalStates.codeforces = (results.codeforces === "Connected") ? "Connected" : "SyncFailed";
+        }
+        if (handles.geeksforgeeks) {
+          finalStates.geeksforgeeks = (results.geeksforgeeks === "Connected") ? "Connected" : "SyncFailed";
+        }
+        setPlatformStates(prev => ({ ...prev, ...finalStates }));
         
-        try {
-          await fetch(`${API_BASE_URL}/api/dsa/contests/sync`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
-          });
-        } catch (err) { console.error("Contest sync failed", err); }
-        
-        // Update local state so UI reflects the exact moment sync finished
-        setSyncProfile(prev => ({ ...prev, lastSyncAt: new Date().toISOString() }));
-        
-        fetchData(); 
-        setIsSyncing(false); 
-        window.dispatchEvent(new Event('dashboard-data-updated'));
-        
-        if (!isSilent) alert(`Auto-Sync Complete! Verified ${event.data.count} solutions and updated Contest History.`);
-      } 
-      else if (event.data.type === "SYNC_ERROR") {
-        window.removeEventListener("message", listener);
-        setIsSyncing(false); 
-        if (!isSilent) alert("Sync Failed: " + event.data.message);
+        if (event.data.type === "SYNC_SUCCESS") {
+          try {
+            await fetch(`${API_BASE_URL}/api/dsa/contests/sync`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+            });
+          } catch (err) { console.error("Contest sync failed", err); }
+          
+          setSyncProfile(prev => ({ ...prev, lastSyncAt: new Date().toISOString() }));
+          fetchData(); 
+          window.dispatchEvent(new Event('dashboard-data-updated'));
+          
+          if (!isSilent) alert(`Auto-Sync Complete! Verified ${event.data.count} solutions and updated Contest History.`);
+        } else {
+          if (!isSilent) alert("Sync Failed: " + event.data.message);
+        }
       }
     };
     window.addEventListener("message", listener);
+    return true;
   };
 
   const fetchTopicsForRoadmap = async (roadmapId) => {
@@ -294,10 +386,10 @@ const useDSA = () => {
     fetchData(); 
     fetchLiveContests(); 
     
-    // 🔥 THE FIX: Blast the token to the Chrome Extension so it can talk to the backend
+    // Blast token to Extension with correct origin
     const token = localStorage.getItem('token');
     if (token) {
-      window.postMessage({ type: "SAVE_EXTENSION_TOKEN", token: token }, "*");
+      window.postMessage({ type: "SAVE_EXTENSION_TOKEN", token: token, backendUrl: window.location.origin }, "*");
     }
   }, []);
 
@@ -316,13 +408,22 @@ const useDSA = () => {
     }
   }, [syncProfile.leetcode, syncProfile.codeforces, syncProfile.geeksforgeeks]);
 
+  useEffect(() => {
+    const initialConnectedStates = {};
+    if (syncProfile.leetcode) initialConnectedStates.leetcode = 'Connected';
+    if (syncProfile.codeforces) initialConnectedStates.codeforces = 'Connected';
+    if (syncProfile.geeksforgeeks) initialConnectedStates.geeksforgeeks = 'Connected';
+    setPlatformStates(prev => ({ ...prev, ...initialConnectedStates }));
+  }, [syncProfile]);
+
   return { 
     roadmaps, topics, problems, syncProfile, syncStats, loading, isSyncing, 
     upcomingContests, contestHistory, dailyChallenges,
     replaceChallenge, skipChallenge, toggleProblem, toggleStar, 
     handleReview, fetchTopicsForRoadmap, saveSyncProfile, 
     triggerAutoSync, handleAddToCalendar, 
-    startQuestTimer
+    startQuestTimer,
+    platformStates, setPlatformStates, checkExtensionAvailable
   };
 }; // <-- This is the end of useDSA()
 
@@ -825,6 +926,108 @@ const DailyChallengePanel = ({ dailyChallenges, replaceChallenge, skipChallenge,
     </div>
   );
 };
+const renderStatusBadge = (status, onRetry) => {
+  switch (status) {
+    case 'Verifying':
+      return (
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 animate-pulse">
+          Verifying...
+        </span>
+      );
+    case 'Connected':
+      return (
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+          Connected
+        </span>
+      );
+    case 'Invalid':
+      return (
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400">
+          Invalid Username
+        </span>
+      );
+    case 'SyncFailed':
+      return (
+        <span className="flex items-center gap-1.5">
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400">
+            Sync Failed
+          </span>
+          {onRetry && (
+            <button 
+              type="button" 
+              onClick={onRetry} 
+              className="text-[10px] font-bold text-blue-400 hover:text-blue-300 underline"
+            >
+              Retry
+            </button>
+          )}
+        </span>
+      );
+    case 'ExtensionRequired':
+      return (
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400">
+          Extension Required
+        </span>
+      );
+    default:
+      return null;
+  }
+};
+
+const ExtensionInstructionsModal = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-md strong-glass p-6 border border-white/10 shadow-2xl relative rounded-2xl">
+        <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors">
+          <X className="w-5 h-5" />
+        </button>
+        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <Zap className="w-5 h-5 text-indigo-400" /> Setup StudentStack Sync Extension
+        </h3>
+        <p className="text-xs text-white/60 mb-4 leading-relaxed">
+          The StudentStack Sync Engine requires a companion Chrome extension to securely sync your submissions and bypass platform restrictions.
+        </p>
+        
+        <div className="space-y-4 text-xs">
+          <div className="flex gap-3">
+            <span className="w-6 h-6 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold shrink-0">1</span>
+            <div>
+              <p className="font-semibold text-white mb-0.5">Locate the Extension Folder</p>
+              <p className="text-white/40">The extension is located inside your project directory at <code className="bg-white/5 px-1 py-0.5 rounded text-[10px]">student-stack-extension</code>.</p>
+            </div>
+          </div>
+          
+          <div className="flex gap-3">
+            <span className="w-6 h-6 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold shrink-0">2</span>
+            <div>
+              <p className="font-semibold text-white mb-0.5">Open Chrome Extensions Settings</p>
+              <p className="text-white/40">Go to <code className="bg-white/5 px-1 py-0.5 rounded text-[10px]">chrome://extensions</code> in your address bar and enable <b>Developer mode</b> in the top right.</p>
+            </div>
+          </div>
+          
+          <div className="flex gap-3">
+            <span className="w-6 h-6 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold shrink-0">3</span>
+            <div>
+              <p className="font-semibold text-white mb-0.5">Load Unpacked Extension</p>
+              <p className="text-white/40">Click <b>Load unpacked</b> in the top left and select the <code className="bg-white/5 px-1 py-0.5 rounded text-[10px]">student-stack-extension</code> directory.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="mt-6 flex justify-end">
+          <button 
+            onClick={onClose} 
+            className="px-5 py-2 glass-btn-primary text-xs font-bold"
+          >
+            Done, I've loaded it!
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ==========================================
 // 3. MAIN PAGE COMPONENT
 // ==========================================
@@ -834,7 +1037,8 @@ const DsaPage = () => {
     upcomingContests, contestHistory, dailyChallenges,
     replaceChallenge, skipChallenge, toggleProblem, toggleStar, 
     fetchTopicsForRoadmap, saveSyncProfile, triggerAutoSync, handleAddToCalendar,
-    startQuestTimer // 🔥 ADDED THIS HERE
+    startQuestTimer,
+    platformStates, setPlatformStates, checkExtensionAvailable
   } = useDSA();
   
   const [activeTab, setActiveTab] = useState('roadmaps'); 
@@ -844,6 +1048,7 @@ const DsaPage = () => {
   const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [localSyncParams, setLocalSyncParams] = useState({ leetcode: '', codeforces: '', geeksforgeeks: '' });
   const [isEditingSync, setIsEditingSync] = useState(false);
+  const [showExtensionModal, setShowExtensionModal] = useState(false);
 
   useEffect(() => { 
     if (roadmaps.length > 0 && !activeRoadmapId) setActiveRoadmapId(roadmaps[0]._id); 
@@ -866,8 +1071,113 @@ const DsaPage = () => {
   
   const handleSaveCredentials = async (e) => { 
     e.preventDefault(); 
+    
+    // Check extension
+    const hasExtensionTag = document.documentElement.getAttribute('data-studentstack-extension-active') === 'true';
+    const isAvailable = await checkExtensionAvailable();
+    
+    if (!isAvailable) {
+      const errorMsg = hasExtensionTag 
+        ? "Unable to communicate with the StudentStack extension." 
+        : "StudentStack Sync Extension is required for automatic platform synchronization.";
+      
+      const newState = {};
+      if (localSyncParams.leetcode) newState.leetcode = hasExtensionTag ? "SyncFailed" : "ExtensionRequired";
+      if (localSyncParams.codeforces) newState.codeforces = hasExtensionTag ? "SyncFailed" : "ExtensionRequired";
+      if (localSyncParams.geeksforgeeks) newState.geeksforgeeks = hasExtensionTag ? "SyncFailed" : "ExtensionRequired";
+      setPlatformStates(prev => ({ ...prev, ...newState }));
+      
+      alert(errorMsg);
+      setShowExtensionModal(true);
+      return;
+    }
+    
+    // Set verifying states for platforms being updated
+    const verStates = {};
+    if (localSyncParams.leetcode) verStates.leetcode = 'Verifying';
+    if (localSyncParams.codeforces) verStates.codeforces = 'Verifying';
+    if (localSyncParams.geeksforgeeks) verStates.geeksforgeeks = 'Verifying';
+    setPlatformStates(prev => ({ ...prev, ...verStates }));
+
+    // Send verification request to extension
+    const verifyPromise = new Promise((resolve) => {
+      const respListener = (event) => {
+        if (event.data && event.data.type === "VERIFY_HANDLES_RESPONSE") {
+          window.removeEventListener("message", respListener);
+          resolve(event.data.results);
+        }
+      };
+      window.addEventListener("message", respListener);
+      
+      setTimeout(() => {
+        window.removeEventListener("message", respListener);
+        resolve(null);
+      }, 15000);
+      
+      window.postMessage({ type: "VERIFY_STUDENTSTACK_HANDLES", handles: localSyncParams }, "*");
+    });
+
+    const verificationResults = await verifyPromise;
+    if (!verificationResults) {
+      alert("Verification timed out. Please check that the extension is loaded and active.");
+      const resetStates = {};
+      if (localSyncParams.leetcode) resetStates.leetcode = 'SyncFailed';
+      if (localSyncParams.codeforces) resetStates.codeforces = 'SyncFailed';
+      if (localSyncParams.geeksforgeeks) resetStates.geeksforgeeks = 'SyncFailed';
+      setPlatformStates(prev => ({ ...prev, ...resetStates }));
+      return;
+    }
+
+    let allValid = true;
+    const nextStates = {};
+
+    if (localSyncParams.leetcode) {
+      if (verificationResults.leetcode?.valid) {
+        nextStates.leetcode = 'Connected';
+      } else {
+        nextStates.leetcode = 'Invalid';
+        allValid = false;
+      }
+    } else {
+      nextStates.leetcode = 'Idle';
+    }
+
+    if (localSyncParams.codeforces) {
+      if (verificationResults.codeforces?.valid) {
+        nextStates.codeforces = 'Connected';
+      } else {
+        nextStates.codeforces = 'Invalid';
+        allValid = false;
+      }
+    } else {
+      nextStates.codeforces = 'Idle';
+    }
+
+    if (localSyncParams.geeksforgeeks) {
+      if (verificationResults.geeksforgeeks?.valid) {
+        nextStates.geeksforgeeks = 'Connected';
+      } else {
+        nextStates.geeksforgeeks = 'Invalid';
+        allValid = false;
+      }
+    } else {
+      nextStates.geeksforgeeks = 'Idle';
+    }
+
+    setPlatformStates(prev => ({ ...prev, ...nextStates }));
+
+    if (!allValid) {
+      alert("One or more usernames could not be verified. Please correct invalid profiles.");
+      return;
+    }
+
     const success = await saveSyncProfile(localSyncParams); 
-    if (success) setIsEditingSync(false); 
+    if (success) {
+      setIsEditingSync(false);
+      triggerAutoSync(localSyncParams, false);
+    } else {
+      alert("Error saving sync credentials.");
+    }
   };
 
   const getPlatformStyle = (platform) => {
@@ -1042,6 +1352,21 @@ const DsaPage = () => {
 
               {(!syncProfile.leetcode && !syncProfile.codeforces && !syncProfile.geeksforgeeks) || isEditingSync ? (
                 <form onSubmit={handleSaveCredentials} className="space-y-6">
+                  {!document.documentElement.getAttribute('data-studentstack-extension-active') && (
+                    <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 mb-6 flex justify-between items-center animate-in fade-in duration-300">
+                      <div>
+                        <p className="text-xs text-purple-200 font-semibold">StudentStack Sync Extension Required</p>
+                        <p className="text-[10px] text-purple-300/70 mt-0.5 font-medium">Install the companion extension to enable automatic progress syncing.</p>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => setShowExtensionModal(true)}
+                        className="px-3 py-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300 font-bold text-[10px] hover:bg-purple-500/30 transition-all shrink-0"
+                      >
+                        Setup Extension
+                      </button>
+                    </div>
+                  )}
                   <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 mb-6">
                     <p className="text-sm text-blue-200 font-medium">Connect your handles once. The Sync Engine will automatically verify your progress silently in the background.</p>
                   </div>
@@ -1077,7 +1402,7 @@ const DsaPage = () => {
                   </div>
                   
                   <div className="pt-4 border-t border-white/5 flex justify-end gap-3">
-                    {syncProfile.leetcode || syncProfile.codeforces ? (
+                    {syncProfile.leetcode || syncProfile.codeforces || syncProfile.geeksforgeeks ? (
                       <button type="button" onClick={() => setIsEditingSync(false)} className="px-6 py-3 rounded-xl hover:bg-white/5 text-white/50 text-sm font-bold transition-all">Cancel</button>
                     ) : null}
                     <button type="submit" className="px-6 py-3 glass-btn-primary text-sm font-bold">Lock & Sync Data</button>
@@ -1085,13 +1410,29 @@ const DsaPage = () => {
                 </form>
               ) : (
                 <div className="space-y-6">
+                  {!document.documentElement.getAttribute('data-studentstack-extension-active') && (
+                    <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 flex justify-between items-center animate-in fade-in duration-300">
+                      <div>
+                        <p className="text-xs text-purple-200 font-semibold">StudentStack Sync Extension Offline</p>
+                        <p className="text-[10px] text-purple-300/70 mt-0.5 font-medium">Please enable or setup the companion extension to resume syncing.</p>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => setShowExtensionModal(true)}
+                        className="px-3 py-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300 font-bold text-[10px] hover:bg-purple-500/30 transition-all shrink-0"
+                      >
+                        Setup Extension
+                      </button>
+                    </div>
+                  )}
+
                   <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]"></div>
+                      <div className={`w-3 h-3 rounded-full ${isSyncing ? 'bg-amber-400 animate-ping' : 'bg-emerald-400 animate-pulse'} shadow-[0_0_10px_rgba(52,211,153,0.8)]`}></div>
                       <div>
-                        <h3 className="text-lg font-bold text-emerald-400">Auto-Sync Active</h3>
+                        <h3 className="text-lg font-bold text-emerald-400">{isSyncing ? "Syncing Platform Progress..." : "Auto-Sync Active"}</h3>
                         <p className="text-xs text-emerald-400/60 font-medium mt-1">
-                          {isSyncing ? "Background sync in progress..." : `Last synced: ${syncProfile.lastSyncAt ? new Date(syncProfile.lastSyncAt).toLocaleString() : 'Just now'}`}
+                          {isSyncing ? "Fetching solved solutions via extension..." : `Last synced: ${syncProfile.lastSyncAt ? new Date(syncProfile.lastSyncAt).toLocaleString() : 'Just now'}`}
                         </p>
                       </div>
                     </div>
@@ -1099,17 +1440,35 @@ const DsaPage = () => {
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="p-4 flex flex-col gap-1 light-glass shadow-sm hover-lift-scale">
+                    {/* LeetCode Card */}
+                    <div className="p-4 flex flex-col gap-2 light-glass shadow-sm hover-lift-scale relative group overflow-hidden">
                       <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest">LeetCode</span>
                       <span className="text-sm font-medium text-white truncate">{syncProfile.leetcode || 'Not Linked'}</span>
+                      {syncProfile.leetcode && (
+                        <div className="mt-1">
+                          {renderStatusBadge(platformStates.leetcode, () => triggerAutoSync(syncProfile, false))}
+                        </div>
+                      )}
                     </div>
-                    <div className="p-4 flex flex-col gap-1 light-glass shadow-sm hover-lift-scale">
+                    {/* Codeforces Card */}
+                    <div className="p-4 flex flex-col gap-2 light-glass shadow-sm hover-lift-scale relative group overflow-hidden">
                       <span className="text-[9px] font-bold text-blue-400 uppercase tracking-widest">Codeforces</span>
                       <span className="text-sm font-medium text-white truncate">{syncProfile.codeforces || 'Not Linked'}</span>
+                      {syncProfile.codeforces && (
+                        <div className="mt-1">
+                          {renderStatusBadge(platformStates.codeforces, () => triggerAutoSync(syncProfile, false))}
+                        </div>
+                      )}
                     </div>
-                    <div className="p-4 flex flex-col gap-1 light-glass shadow-sm hover-lift-scale">
+                    {/* GeeksForGeeks Card */}
+                    <div className="p-4 flex flex-col gap-2 light-glass shadow-sm hover-lift-scale relative group overflow-hidden">
                       <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">GFG</span>
                       <span className="text-sm font-medium text-white truncate">{syncProfile.geeksforgeeks || 'Not Linked'}</span>
+                      {syncProfile.geeksforgeeks && (
+                        <div className="mt-1">
+                          {renderStatusBadge(platformStates.geeksforgeeks, () => triggerAutoSync(syncProfile, false))}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1130,6 +1489,7 @@ const DsaPage = () => {
         )}
 
       </div>
+      <ExtensionInstructionsModal isOpen={showExtensionModal} onClose={() => setShowExtensionModal(false)} />
     </DashboardLayout>
   );
 };

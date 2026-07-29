@@ -1,23 +1,56 @@
 // =======================================================
 // PART 1: THE OS BRIDGE (Runs on your React Dashboard)
 // =======================================================
+// Inject marker indicating extension content script is loaded and active
+document.documentElement.setAttribute("data-studentstack-extension-active", "true");
+
 window.addEventListener("message", (event) => {
+  if (event.source === window && event.data.type === "PING_STUDENTSTACK_EXTENSION") {
+    window.postMessage({ type: "PONG_STUDENTSTACK_EXTENSION" }, "*");
+  }
+
+  if (event.source === window && event.data.type === "VERIFY_STUDENTSTACK_HANDLES") {
+    chrome.runtime.sendMessage(
+      { action: "VERIFY_HANDLES", handles: event.data.handles },
+      (response) => {
+        window.postMessage({ type: "VERIFY_HANDLES_RESPONSE", results: response }, "*");
+      }
+    );
+  }
+
   if (event.source === window && event.data.type === "START_LEETCODE_SYNC") {
     chrome.runtime.sendMessage(
-      { action: "EXECUTE_HEIST", token: event.data.token, handles: event.data.handles },
+      { 
+        action: "EXECUTE_HEIST", 
+        token: event.data.token, 
+        handles: event.data.handles,
+        baseUrl: event.data.baseUrl || window.location.origin
+      },
       (response) => {
         if (response && response.type === "SYNC_SUCCESS") {
-          window.postMessage({ type: "SYNC_SUCCESS", count: response.count }, "*");
+          window.postMessage({ 
+            type: "SYNC_SUCCESS", 
+            count: response.count,
+            platformStatuses: response.platformStatuses 
+          }, "*");
         } else {
-          window.postMessage({ type: "SYNC_ERROR", message: response?.message || "Unknown error" }, "*");
+          window.postMessage({ 
+            type: "SYNC_ERROR", 
+            message: response?.message || "Unknown error",
+            platformStatuses: response?.platformStatuses
+          }, "*");
         }
       }
     );
   }
 
   if (event.source === window && event.data.type === "SAVE_EXTENSION_TOKEN") {
-    chrome.storage.local.set({ studentStackToken: event.data.token }, () => {
-      console.log("🔐 Token securely saved to Extension Storage!");
+    const backendUrl = event.data.backendUrl || window.location.origin;
+    chrome.storage.local.set({ 
+      studentStackToken: event.data.token,
+      studentStackBackendUrl: backendUrl
+    }, () => {
+      console.log("🔐 Token and Backend URL securely saved to Extension Storage:", backendUrl);
     });
   }
 });

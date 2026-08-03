@@ -750,3 +750,90 @@ exports.trackLiveSubmission = async (req, res) => {
     res.status(500).json({ message: error.message || "Server crashed while saving" });
   }
 };
+
+// ==========================================
+// HANDLE VERIFICATION CONTROLLER
+// ==========================================
+exports.verifyHandles = async (req, res) => {
+  try {
+    const { handles } = req.body;
+    if (!handles) {
+      return res.status(400).json({ success: false, message: 'No handles provided.' });
+    }
+
+    const verificationPromises = [];
+
+    // 1. Verify LeetCode
+    if (handles.leetcode) {
+      verificationPromises.push((async () => {
+        try {
+          const response = await axios.post('https://leetcode.com/graphql', {
+            query: `
+              query getUserProfile($username: String!) {
+                matchedUser(username: $username) {
+                  username
+                }
+              }
+            `,
+            variables: { username: handles.leetcode }
+          }, { timeout: 5000 });
+
+          const user = response.data?.data?.matchedUser;
+          if (!user) {
+            throw new Error('LeetCode user not found');
+          }
+        } catch (err) {
+          console.error(`LeetCode handle verification failed for ${handles.leetcode}:`, err.message);
+          throw new Error('Invalid LeetCode handle. Please check your credentials.');
+        }
+      })());
+    }
+
+    // 2. Verify Codeforces
+    if (handles.codeforces) {
+      verificationPromises.push((async () => {
+        try {
+          const response = await axios.get(`https://codeforces.com/api/user.info?handles=${handles.codeforces}`, { timeout: 5000 });
+          if (response.data?.status !== 'OK') {
+            throw new Error('Codeforces API status not OK');
+          }
+        } catch (err) {
+          console.error(`Codeforces handle verification failed for ${handles.codeforces}:`, err.message);
+          throw new Error('Invalid Codeforces handle. Please check your credentials.');
+        }
+      })());
+    }
+
+    // 3. Verify GeeksForGeeks
+    if (handles.geeksforgeeks) {
+      verificationPromises.push((async () => {
+        try {
+          const response = await axios.get(`https://www.geeksforgeeks.org/user/${handles.geeksforgeeks}/`, {
+            timeout: 5000,
+            headers: { 'User-Agent': 'Mozilla/5.0' }
+          });
+          const html = response.data || '';
+          const isValid = html.includes('gfg_user_profile') || 
+                          html.includes('profile_name') || 
+                          html.includes('Problems Solved') || 
+                          html.includes('score_card') ||
+                          html.includes('profile-pic');
+          if (!isValid) {
+            throw new Error('GeeksforGeeks profile elements not found in page');
+          }
+        } catch (err) {
+          console.error(`GeeksforGeeks handle verification failed for ${handles.geeksforgeeks}:`, err.message);
+          throw new Error('Invalid GeeksforGeeks handle. Please check your credentials.');
+        }
+      })());
+    }
+
+    await Promise.all(verificationPromises);
+    
+    return res.status(200).json({ success: true, message: 'All handles verified successfully!' });
+
+  } catch (error) {
+    console.error("Verification endpoint caught error:", error.message);
+    return res.status(400).json({ success: false, message: error.message || 'Invalid handle. Please check your credentials.' });
+  }
+};

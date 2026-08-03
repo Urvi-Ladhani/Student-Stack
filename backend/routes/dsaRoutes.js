@@ -13,7 +13,8 @@ const {
   extensionSync,
   toggleStar,syncContests, getContests,
   trackLiveSubmission,
-  serverSync
+  serverSync,
+  verifyHandles
 } = require('../controllers/dsaController');
 
 const protect = require('../middleware/authMiddleware'); 
@@ -47,6 +48,8 @@ router.post('/extension-sync', protect, extensionSync);
 // SERVER-SIDE SYNC ROUTE
 // ==========================================
 router.post('/server-sync', protect, serverSync);
+
+router.post('/verify-handles', protect, verifyHandles);
 
 router.get('/contests', protect, getContests);
 router.post('/contests/sync', protect, syncContests);

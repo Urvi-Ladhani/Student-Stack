@@ -2,9 +2,11 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
 const protect = async (req, res, next) => {
-
     try {
-
+        if (!process.env.JWT_SECRET) {
+            console.error("Auth Error: Missing JWT_SECRET environment variable");
+            return res.status(401).json({ message: "Not Authorized" });
+        }
         let token;
 
         if (

@@ -4,6 +4,9 @@ const DSAProblem = require('../models/DSAProblem');
 const DSASyncProfile = require('../models/DSASyncProfile');
 const { problemMatrix } = require('../data/roadmapData');
 const DSAContest = require('../models/DSAContest');
+const axios = require('axios');
+const cheerio = require('cheerio');
+const mongoose = require('mongoose');
 
 // ==========================================
 // ROADMAP & TOPIC CONTROLLERS
@@ -364,100 +367,356 @@ exports.extensionSync = async (req, res) => {
   }
 };
 
+// ==========================================
+// THE NEW SERVER-SIDE SYNC ENGINE
+// ==========================================
+exports.serverSync = async (req, res) => {
+  try {
+    if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
+      return res.status(500).json({ success: false, error: 'Server misconfiguration: Missing Environment Variables' });
+    }
+    
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ success: false, error: 'Database not connected' });
+    }
+
+    const { handles } = req.body;
+    if (!handles) return res.status(400).json({ success: false, message: 'No handles provided.' });
+
+    let solvedTitles = new Set();
+    const platformStatuses = { leetcode: 'Idle', codeforces: 'Idle', geeksforgeeks: 'Idle' };
+
+    // Safety Checks: Log if handles are missing or empty
+    if (!handles.leetcode) {
+      console.log(`⚠️ User ${req.user._id}: LeetCode handle is missing or empty in request.`);
+    }
+    if (!handles.codeforces) {
+      console.log(`⚠️ User ${req.user._id}: Codeforces handle is missing or empty in request.`);
+    }
+    if (!handles.geeksforgeeks) {
+      console.log(`⚠️ User ${req.user._id}: GeeksforGeeks handle is missing or empty in request.`);
+    }
+
+    let leetcodeCount = 0;
+    let codeforcesCount = 0;
+    let gfgCount = 0;
+
+    const promises = [];
+
+    // 1. Fetch LeetCode (GraphQL)
+    if (handles.leetcode) {
+      promises.push((async () => {
+        try {
+          console.log(`📡 Fetching LeetCode solved problems for: ${handles.leetcode}`);
+          const response = await axios.post('https://leetcode.com/graphql', {
+            query: `
+              query userProblemsSolved($username: String!, $limit: Int!) {
+                matchedUser(username: $username) {
+                  submitStats {
+                    acSubmissionNum {
+                      difficulty
+                      count
+                    }
+                  }
+                }
+                recentAcSubmissionList(username: $username, limit: $limit) {
+                  title
+                  titleSlug
+                  timestamp
+                }
+              }
+            `,
+            variables: { username: handles.leetcode, limit: 20 }
+          }, { timeout: 4000 });
+          
+          console.log(`📡 GraphQL LeetCode response status: ${response.status} for handle ${handles.leetcode}`);
+          const subs = response.data?.data?.recentAcSubmissionList || [];
+          console.log(`📡 LeetCode recent submission count: ${subs.length}`);
+          console.log(`📡 LeetCode submission titles:`, subs.map(s => s.title));
+
+          const submitStats = response.data?.data?.matchedUser?.submitStats?.acSubmissionNum || [];
+          const allStat = submitStats.find(s => s.difficulty === 'All');
+          leetcodeCount = allStat ? allStat.count : 0;
+          console.log(`📡 LeetCode total solved problems count (from GraphQL): ${leetcodeCount}`);
+
+          if (leetcodeCount === 0) {
+            console.log(`⚠️ LeetCode API returned 0 solved problems for handle ${handles.leetcode}. Raw response:`, JSON.stringify(response.data));
+          }
+          
+          subs.forEach(s => solvedTitles.add(s.title));
+          platformStatuses.leetcode = 'Connected';
+        } catch (err) {
+          console.error("LC Server-Sync Error:", err.message);
+          platformStatuses.leetcode = 'SyncFailed';
+          return [];
+        }
+      })());
+    }
+
+    // 2. Fetch Codeforces (Public API)
+    if (handles.codeforces) {
+      promises.push((async () => {
+        try {
+          console.log(`📡 Fetching Codeforces solved problems for: ${handles.codeforces}`);
+          const response = await axios.get(`https://codeforces.com/api/user.status?handle=${handles.codeforces}`, { timeout: 4000 });
+          
+          console.log(`📡 Codeforces response status: ${response.status} (api status: ${response.data.status}) for handle ${handles.codeforces}`);
+          if (response.data.status === 'OK') {
+            const subs = response.data.result.filter(s => s.verdict === 'OK');
+            console.log(`📡 Codeforces OK submission count: ${subs.length}`);
+            console.log(`📡 Codeforces problem names:`, subs.map(s => s.problem.name));
+
+            const cfUniqueSolved = new Set(subs.map(s => s.problem.name));
+            codeforcesCount = cfUniqueSolved.size;
+            console.log(`📡 Codeforces total solved count: ${codeforcesCount}`);
+
+            if (codeforcesCount === 0) {
+              console.log(`⚠️ Codeforces API returned 0 solved problems for handle ${handles.codeforces}. Raw response:`, JSON.stringify(response.data));
+            }
+            
+            subs.forEach(s => solvedTitles.add(s.problem.name));
+            platformStatuses.codeforces = 'Connected';
+          } else {
+            console.log(`⚠️ Codeforces API returned non-OK status:`, response.data.status);
+            platformStatuses.codeforces = 'SyncFailed';
+          }
+        } catch (err) {
+          console.error("CF Server-Sync Error:", err.message);
+          platformStatuses.codeforces = 'SyncFailed';
+          return [];
+        }
+      })());
+    }
+
+    // 3. Fetch GeeksForGeeks (Scrape Public Profile)
+    if (handles.geeksforgeeks) {
+      promises.push((async () => {
+        try {
+          console.log(`📡 Fetching GeeksForGeeks solved problems for: ${handles.geeksforgeeks}`);
+          const response = await axios.get(`https://www.geeksforgeeks.org/user/${handles.geeksforgeeks}/`, { timeout: 4000 });
+          
+          console.log(`📡 GeeksForGeeks profile HTML fetched for ${handles.geeksforgeeks}. Length: ${response.data ? response.data.length : 0}`);
+          const $ = cheerio.load(response.data);
+          
+          const gfgLengthBefore = solvedTitles.size;
+          $('a').each((i, el) => {
+            const href = $(el).attr('href') || '';
+            if (href.includes('/problems/')) {
+              solvedTitles.add($(el).text().trim());
+            }
+          });
+          gfgCount = solvedTitles.size - gfgLengthBefore;
+          console.log(`📡 GeeksForGeeks parsed solved problems: ${gfgCount}`);
+
+          if (gfgCount === 0) {
+            console.log(`⚠️ GeeksforGeeks scraper found 0 solved problems for handle ${handles.geeksforgeeks}. Raw HTML sample (first 1000 chars):`, response.data ? response.data.substring(0, 1000) : "empty response");
+          }
+
+          platformStatuses.geeksforgeeks = 'Connected';
+        } catch (err) {
+          console.error("GFG Server-Sync Error:", err.message);
+          platformStatuses.geeksforgeeks = 'SyncFailed';
+          return [];
+        }
+      })());
+    }
+
+    await Promise.allSettled(promises);
+
+    let problemsUpdated = 0;
+    const exactDate = new Date();
+    const titlesArray = Array.from(solvedTitles);
+    console.log(`🎯 Raw solved titles set from all platforms:`, titlesArray);
+
+    if (titlesArray.length > 0) {
+      const problemsToUpdate = await DSAProblem.find({
+        userId: req.user._id,
+        title: { $in: titlesArray }
+      });
+      console.log(`🎯 Found ${problemsToUpdate.length} matching roadmap problems in DB to update out of ${titlesArray.length} solved profile titles.`);
+      console.log(`🎯 Matching problem titles in DB:`, problemsToUpdate.map(p => p.title));
+
+      for (let problem of problemsToUpdate) {
+        let changed = false;
+
+        if (problem.status !== 'solved') {
+          problem.status = 'solved';
+          problem.solvedAt = exactDate;
+          if (!problem.attempts) problem.attempts = [];
+          problem.attempts.push({
+            date: exactDate,
+            outcome: 'solved',
+            confidenceRating: 3, 
+            timeTakenMinutes: 0
+          });
+          changed = true;
+        } else if (!problem.solvedAt) {
+          problem.solvedAt = exactDate;
+          changed = true;
+        }
+
+        if (changed) {
+          await problem.save();
+          problemsUpdated++;
+        }
+      }
+    }
+
+    console.log(`🎯 Server-side solved problems count successfully updated/changed in this run: ${problemsUpdated}`);
+
+    // Update Profile Stats based on connected platforms
+    const updateFields = { lastSyncAt: exactDate };
+    if (handles.leetcode) {
+      updateFields['rawStats.leetcode'] = leetcodeCount;
+    }
+    if (handles.codeforces) {
+      updateFields['rawStats.codeforces'] = codeforcesCount;
+    }
+    if (handles.geeksforgeeks) {
+      updateFields['rawStats.gfg'] = gfgCount;
+    }
+
+    await require('../models/DSASyncProfile').findOneAndUpdate(
+      { userId: req.user._id },
+      { $set: updateFields },
+      { new: true, upsert: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Server-side sync complete!",
+      count: problemsUpdated,
+      data: titlesArray,
+      platformStatuses
+    });
+
+  } catch (error) {
+    console.error("Server-Sync Critical Error:", error);
+    res.status(500).json({ success: false, message: "Server error during server sync.", error: error.message });
+  }
+};
+
 exports.syncContests = async (req, res) => {
   try {
+    if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
+      return res.status(500).json({ success: false, error: 'Server misconfiguration: Missing Environment Variables' });
+    }
+    
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ success: false, error: 'Database not connected' });
+    }
+
     console.log("🚀 CONTEST SYNC STARTED FOR USER:", req.user._id);
     const profile = await DSASyncProfile.findOne({ userId: req.user._id });
-    if (!profile) return res.status(400).json({ message: 'No sync profile found.' });
+    if (!profile) return res.status(400).json({ success: false, message: 'No sync profile found.' });
     
+    // Safety Checks: Log if handles are missing in the sync profile
+    if (!profile.leetcode) {
+      console.log(`⚠️ User ${req.user._id}: LeetCode handle is missing or empty in sync profile.`);
+    }
+    if (!profile.codeforces) {
+      console.log(`⚠️ User ${req.user._id}: Codeforces handle is missing or empty in sync profile.`);
+    }
+
     let contestsAdded = 0;
+    const promises = [];
 
     // 1. SYNC LEETCODE CONTESTS
     if (profile.leetcode) {
-      try {
-        const lcRes = await fetch('https://leetcode.com/graphql', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0' },
-          body: JSON.stringify({
+      promises.push((async () => {
+        try {
+          console.log(`📡 Fetching LeetCode contest ranking history for: ${profile.leetcode}`);
+          const lcRes = await axios.post('https://leetcode.com/graphql', {
             query: `query userContestRankingHistory($username: String!) { userContestRankingHistory(username: $username) { attended trendDirection problemsSolved contest { title startTime } rating ranking } }`,
             variables: { username: profile.leetcode }
-          })
-        });
-        const lcData = await lcRes.json();
-        
-        if (lcData.data?.userContestRankingHistory) {
-          const attended = lcData.data.userContestRankingHistory.filter(c => c.attended);
-          console.log(`🎯 Found ${attended.length} attended LC contests!`);
+          }, { timeout: 4000, headers: { 'User-Agent': 'Mozilla/5.0' } });
           
-          for (let i = 0; i < attended.length; i++) {
-            const contest = attended[i];
-            const prevRating = i > 0 ? attended[i-1].rating : 1500; 
+          console.log(`📡 GraphQL LeetCode contest rank history response status: ${lcRes.status} for handle ${profile.leetcode}`);
+          const lcData = lcRes.data;
+          
+          if (lcData.data?.userContestRankingHistory) {
+            const attended = lcData.data.userContestRankingHistory.filter(c => c.attended);
+            console.log(`📡 LeetCode attended contest count: ${attended.length}`);
             
-            try {
-              await DSAContest.updateOne(
-                { userId: req.user._id, platform: 'LeetCode', contestName: contest.contest.title },
-                {
-                  $set: {
-                    date: new Date(contest.contest.startTime * 1000),
-                    rank: contest.ranking,
-                    ratingChange: Math.round(contest.rating - prevRating),
-                    newRating: Math.round(contest.rating)
-                  }
-                },
-                { upsert: true }
-              );
-              contestsAdded++;
-              console.log(`✅ Saved LeetCode Contest: ${contest.contest.title}`);
-            } catch (dbErr) {
-              console.error(`❌ DB REJECTED LEETCODE CONTEST:`, dbErr.message);
+            for (let i = 0; i < attended.length; i++) {
+              const contest = attended[i];
+              const prevRating = i > 0 ? attended[i-1].rating : 1500; 
+              
+              try {
+                await DSAContest.updateOne(
+                  { userId: req.user._id, platform: 'LeetCode', contestName: contest.contest.title },
+                  {
+                    $set: {
+                      date: new Date(contest.contest.startTime * 1000),
+                      rank: contest.ranking,
+                      ratingChange: Math.round(contest.rating - prevRating),
+                      newRating: Math.round(contest.rating)
+                    }
+                  },
+                  { upsert: true }
+                );
+                contestsAdded++;
+              } catch (dbErr) {
+                console.error(`❌ DB REJECTED LEETCODE CONTEST:`, dbErr.message);
+              }
             }
+          } else {
+            console.log(`📡 LeetCode contest ranking history was empty or failed. Response:`, JSON.stringify(lcData));
           }
-        }
-      } catch (err) { console.error('🚨 LC Sync Error:', err.message); }
+        } catch (err) { console.error('🚨 LC Sync Error:', err.message); return []; }
+      })());
     }
 
     // 2. SYNC CODEFORCES CONTESTS
     if (profile.codeforces) {
-      try {
-        const cfRes = await fetch(`https://codeforces.com/api/user.rating?handle=${profile.codeforces}`);
-        const cfData = await cfRes.json();
-        
-        if (cfData.status === 'OK') {
-          console.log(`🎯 Found ${cfData.result.length} CF contests!`);
-          for (let contest of cfData.result) {
-            // 🔥 DB SAVE TRACKER
-            try {
-              await DSAContest.updateOne(
-                { userId: req.user._id, platform: 'Codeforces', contestName: contest.contestName },
-                {
-                  $set: {
-                    date: new Date(contest.ratingUpdateTimeSeconds * 1000),
-                    rank: contest.rank,
-                    ratingChange: contest.newRating - contest.oldRating,
-                    newRating: contest.newRating
-                  }
-                },
-                { upsert: true }
-              );
-              contestsAdded++;
-              console.log(`✅ Saved Codeforces Contest: ${contest.contestName}`);
-            } catch (dbErr) {
-              console.error(`❌ DB REJECTED CODEFORCES CONTEST:`, dbErr.message);
+      promises.push((async () => {
+        try {
+          console.log(`📡 Fetching Codeforces contest rating history for: ${profile.codeforces}`);
+          const cfRes = await axios.get(`https://codeforces.com/api/user.rating?handle=${profile.codeforces}`, { timeout: 4000 });
+          const cfData = cfRes.data;
+          
+          console.log(`📡 Codeforces contest rating response status: ${cfRes.status} (api status: ${cfData.status}) for handle ${profile.codeforces}`);
+          if (cfData.status === 'OK') {
+            console.log(`📡 Codeforces contest history count: ${cfData.result.length}`);
+            for (let contest of cfData.result) {
+              try {
+                await DSAContest.updateOne(
+                  { userId: req.user._id, platform: 'Codeforces', contestName: contest.contestName },
+                  {
+                    $set: {
+                      date: new Date(contest.ratingUpdateTimeSeconds * 1000),
+                      rank: contest.rank,
+                      ratingChange: contest.newRating - contest.oldRating,
+                      newRating: contest.newRating
+                    }
+                  },
+                  { upsert: true }
+                );
+                contestsAdded++;
+              } catch (dbErr) {
+                console.error(`❌ DB REJECTED CODEFORCES CONTEST:`, dbErr.message);
+              }
             }
+          } else {
+            console.log(`⚠️ Codeforces API returned non-OK status:`, cfData.status);
           }
-        }
-      } catch (err) { console.error('🚨 CF Sync Error:', err.message); }
+        } catch (err) { console.error('🚨 CF Sync Error:', err.message); return []; }
+      })());
     }
 
-    const DSASyncProfile = require('../models/DSASyncProfile'); // Ensure this is imported at the top!
+    await Promise.allSettled(promises);
+
     await DSASyncProfile.updateOne(
       { userId: req.user._id },
       { $set: { lastSyncAt: new Date() } }
     );
 
-    console.log(`🎉 Sync Complete! Processed ${contestsAdded} contests into the database.`);
-    res.status(200).json({ message: "Contest Sync Complete!", newContests: contestsAdded });
-  } catch (error) { res.status(500).json({ message: "Server error during contest sync." }); }
+    console.log(`🎉 Sync Complete! Processed ${contestsAdded} total contests scanned/upserted into database.`);
+    res.status(200).json({ success: true, message: "Contest Sync Complete!", newContests: contestsAdded, data: [] });
+  } catch (error) { 
+    console.error("Contest Sync Critical Error:", error);
+    res.status(500).json({ success: false, message: "Server error during contest sync.", error: error.message });
+  }
 };
 
 // ==========================================
@@ -534,5 +793,92 @@ exports.trackLiveSubmission = async (req, res) => {
   } catch (error) {
     console.error("🔥 BACKEND CRASH in trackLiveSubmission:", error);
     res.status(500).json({ message: error.message || "Server crashed while saving" });
+  }
+};
+
+// ==========================================
+// HANDLE VERIFICATION CONTROLLER
+// ==========================================
+exports.verifyHandles = async (req, res) => {
+  try {
+    const { handles } = req.body;
+    if (!handles) {
+      return res.status(400).json({ success: false, message: 'No handles provided.' });
+    }
+
+    const verificationPromises = [];
+
+    // 1. Verify LeetCode
+    if (handles.leetcode) {
+      verificationPromises.push((async () => {
+        try {
+          const response = await axios.post('https://leetcode.com/graphql', {
+            query: `
+              query getUserProfile($username: String!) {
+                matchedUser(username: $username) {
+                  username
+                }
+              }
+            `,
+            variables: { username: handles.leetcode }
+          }, { timeout: 5000 });
+
+          const user = response.data?.data?.matchedUser;
+          if (!user) {
+            throw new Error('LeetCode user not found');
+          }
+        } catch (err) {
+          console.error(`LeetCode handle verification failed for ${handles.leetcode}:`, err.message);
+          throw new Error('Invalid LeetCode handle. Please check your credentials.');
+        }
+      })());
+    }
+
+    // 2. Verify Codeforces
+    if (handles.codeforces) {
+      verificationPromises.push((async () => {
+        try {
+          const response = await axios.get(`https://codeforces.com/api/user.info?handles=${handles.codeforces}`, { timeout: 5000 });
+          if (response.data?.status !== 'OK') {
+            throw new Error('Codeforces API status not OK');
+          }
+        } catch (err) {
+          console.error(`Codeforces handle verification failed for ${handles.codeforces}:`, err.message);
+          throw new Error('Invalid Codeforces handle. Please check your credentials.');
+        }
+      })());
+    }
+
+    // 3. Verify GeeksForGeeks
+    if (handles.geeksforgeeks) {
+      verificationPromises.push((async () => {
+        try {
+          const response = await axios.get(`https://www.geeksforgeeks.org/user/${handles.geeksforgeeks}/`, {
+            timeout: 5000,
+            headers: { 'User-Agent': 'Mozilla/5.0' }
+          });
+          const html = response.data || '';
+          const isValid = html.includes('gfg_user_profile') || 
+                          html.includes('profile_name') || 
+                          html.includes('Problems Solved') || 
+                          html.includes('score_card') ||
+                          html.includes('profile-pic');
+          if (!isValid) {
+            throw new Error('GeeksforGeeks profile elements not found in page');
+          }
+        } catch (err) {
+          console.error(`GeeksforGeeks handle verification failed for ${handles.geeksforgeeks}:`, err.message);
+          throw new Error('Invalid GeeksforGeeks handle. Please check your credentials.');
+        }
+      })());
+    }
+
+    await Promise.all(verificationPromises);
+    
+    return res.status(200).json({ success: true, message: 'All handles verified successfully!' });
+
+  } catch (error) {
+    console.error("Verification endpoint caught error:", error.message);
+    return res.status(400).json({ success: false, message: error.message || 'Invalid handle. Please check your credentials.' });
   }
 };

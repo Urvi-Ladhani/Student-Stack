@@ -129,29 +129,37 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "VERIFY_HANDLES") {
     (async () => {
       const results = {};
-      
-      if (request.handles?.leetcode) {
-        const isValid = await verifyLeetCodeUsername(request.handles.leetcode);
-        results.leetcode = { valid: isValid, message: isValid ? "Connected" : "Invalid Username" };
-      } else {
-        results.leetcode = { valid: true, message: "Not Linked" };
+      try {
+        if (request.handles?.leetcode) {
+          const isValid = await verifyLeetCodeUsername(request.handles.leetcode);
+          results.leetcode = { valid: isValid, message: isValid ? "Connected" : "Invalid Username" };
+        } else {
+          results.leetcode = { valid: true, message: "Not Linked" };
+        }
+        
+        if (request.handles?.codeforces) {
+          const isValid = await verifyCodeforcesHandle(request.handles.codeforces);
+          results.codeforces = { valid: isValid, message: isValid ? "Connected" : "Invalid Username" };
+        } else {
+          results.codeforces = { valid: true, message: "Not Linked" };
+        }
+        
+        if (request.handles?.geeksforgeeks) {
+          const isValid = await verifyGFGUsername(request.handles.geeksforgeeks);
+          results.geeksforgeeks = { valid: isValid, message: isValid ? "Connected" : "Invalid Username" };
+        } else {
+          results.geeksforgeeks = { valid: true, message: "Not Linked" };
+        }
+        
+        sendResponse(results);
+      } catch (err) {
+        console.error("Verification handler error:", err);
+        sendResponse({
+          leetcode: { valid: false, message: "Error" },
+          codeforces: { valid: false, message: "Error" },
+          geeksforgeeks: { valid: false, message: "Error" }
+        });
       }
-      
-      if (request.handles?.codeforces) {
-        const isValid = await verifyCodeforcesHandle(request.handles.codeforces);
-        results.codeforces = { valid: isValid, message: isValid ? "Connected" : "Invalid Username" };
-      } else {
-        results.codeforces = { valid: true, message: "Not Linked" };
-      }
-      
-      if (request.handles?.geeksforgeeks) {
-        const isValid = await verifyGFGUsername(request.handles.geeksforgeeks);
-        results.geeksforgeeks = { valid: isValid, message: isValid ? "Connected" : "Invalid Username" };
-      } else {
-        results.geeksforgeeks = { valid: true, message: "Not Linked" };
-      }
-      
-      sendResponse(results);
     })();
     return true; // async reply
   }
@@ -446,13 +454,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Real-time Single Submission Tracking
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "LEETCODE_SUBMISSION_ACCEPTED") {
-        
         chrome.storage.local.get(['studentStackToken', 'studentStackBackendUrl'], async (result) => {
             const token = result.studentStackToken;
             const activeBaseUrl = result.studentStackBackendUrl || BASE_URL;
 
             if (!token) {
                 chrome.tabs.sendMessage(sender.tab.id, { type: "SERVER_ERROR", message: "❌ ERROR: No token found in extension! Refresh your StudentStack Dashboard to re-sync the token." });
+                sendResponse({ success: false, error: "No token found" });
                 return;
             }
 
@@ -470,13 +478,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 if (response.ok) {
                     const data = await response.json();
                     chrome.tabs.sendMessage(sender.tab.id, { type: "SERVER_REPLY", message: `✅ SUCCESS: StudentStack Server saved [${data.title}]!` });
+                    sendResponse({ success: true, data });
                 } else {
                     const errData = await response.json();
                     chrome.tabs.sendMessage(sender.tab.id, { type: "SERVER_ERROR", message: `⚠️ SERVER REJECTED (${response.status}): ${errData.message}` });
+                    sendResponse({ success: false, error: errData.message });
                 }
             } catch (err) {
                 chrome.tabs.sendMessage(sender.tab.id, { type: "SERVER_ERROR", message: `❌ FETCH FAILED: Is your server running?` });
+                sendResponse({ success: false, error: err.message });
             }
         });
+        return true; // Keep message channel open for async response
     }
 });

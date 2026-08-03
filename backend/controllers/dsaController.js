@@ -397,6 +397,10 @@ exports.serverSync = async (req, res) => {
       console.log(`⚠️ User ${req.user._id}: GeeksforGeeks handle is missing or empty in request.`);
     }
 
+    let leetcodeCount = 0;
+    let codeforcesCount = 0;
+    let gfgCount = 0;
+
     const promises = [];
 
     // 1. Fetch LeetCode (GraphQL)
@@ -406,7 +410,15 @@ exports.serverSync = async (req, res) => {
           console.log(`📡 Fetching LeetCode solved problems for: ${handles.leetcode}`);
           const response = await axios.post('https://leetcode.com/graphql', {
             query: `
-              query recentAcSubmissions($username: String!, $limit: Int!) {
+              query userProblemsSolved($username: String!, $limit: Int!) {
+                matchedUser(username: $username) {
+                  submitStats {
+                    acSubmissionNum {
+                      difficulty
+                      count
+                    }
+                  }
+                }
                 recentAcSubmissionList(username: $username, limit: $limit) {
                   title
                   titleSlug
@@ -421,6 +433,15 @@ exports.serverSync = async (req, res) => {
           const subs = response.data?.data?.recentAcSubmissionList || [];
           console.log(`📡 LeetCode recent submission count: ${subs.length}`);
           console.log(`📡 LeetCode submission titles:`, subs.map(s => s.title));
+
+          const submitStats = response.data?.data?.matchedUser?.submitStats?.acSubmissionNum || [];
+          const allStat = submitStats.find(s => s.difficulty === 'All');
+          leetcodeCount = allStat ? allStat.count : 0;
+          console.log(`📡 LeetCode total solved problems count (from GraphQL): ${leetcodeCount}`);
+
+          if (leetcodeCount === 0) {
+            console.log(`⚠️ LeetCode API returned 0 solved problems for handle ${handles.leetcode}. Raw response:`, JSON.stringify(response.data));
+          }
           
           subs.forEach(s => solvedTitles.add(s.title));
           platformStatuses.leetcode = 'Connected';
@@ -444,6 +465,14 @@ exports.serverSync = async (req, res) => {
             const subs = response.data.result.filter(s => s.verdict === 'OK');
             console.log(`📡 Codeforces OK submission count: ${subs.length}`);
             console.log(`📡 Codeforces problem names:`, subs.map(s => s.problem.name));
+
+            const cfUniqueSolved = new Set(subs.map(s => s.problem.name));
+            codeforcesCount = cfUniqueSolved.size;
+            console.log(`📡 Codeforces total solved count: ${codeforcesCount}`);
+
+            if (codeforcesCount === 0) {
+              console.log(`⚠️ Codeforces API returned 0 solved problems for handle ${handles.codeforces}. Raw response:`, JSON.stringify(response.data));
+            }
             
             subs.forEach(s => solvedTitles.add(s.problem.name));
             platformStatuses.codeforces = 'Connected';
@@ -476,7 +505,13 @@ exports.serverSync = async (req, res) => {
               solvedTitles.add($(el).text().trim());
             }
           });
-          console.log(`📡 GeeksForGeeks parsed solved problems: ${solvedTitles.size - gfgLengthBefore}`);
+          gfgCount = solvedTitles.size - gfgLengthBefore;
+          console.log(`📡 GeeksForGeeks parsed solved problems: ${gfgCount}`);
+
+          if (gfgCount === 0) {
+            console.log(`⚠️ GeeksforGeeks scraper found 0 solved problems for handle ${handles.geeksforgeeks}. Raw HTML sample (first 1000 chars):`, response.data ? response.data.substring(0, 1000) : "empty response");
+          }
+
           platformStatuses.geeksforgeeks = 'Connected';
         } catch (err) {
           console.error("GFG Server-Sync Error:", err.message);
@@ -531,6 +566,16 @@ exports.serverSync = async (req, res) => {
 
     // Update Profile Stats based on connected platforms
     const updateFields = { lastSyncAt: exactDate };
+    if (handles.leetcode) {
+      updateFields['rawStats.leetcode'] = leetcodeCount;
+    }
+    if (handles.codeforces) {
+      updateFields['rawStats.codeforces'] = codeforcesCount;
+    }
+    if (handles.geeksforgeeks) {
+      updateFields['rawStats.gfg'] = gfgCount;
+    }
+
     await require('../models/DSASyncProfile').findOneAndUpdate(
       { userId: req.user._id },
       { $set: updateFields },

@@ -616,7 +616,6 @@ exports.syncContests = async (req, res) => {
 
     await Promise.allSettled(promises);
 
-    const DSASyncProfile = require('../models/DSASyncProfile'); // Ensure this is imported at the top!
     await DSASyncProfile.updateOne(
       { userId: req.user._id },
       { $set: { lastSyncAt: new Date() } }

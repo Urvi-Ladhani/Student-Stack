@@ -350,7 +350,7 @@ const useDSA = () => {
         if (handles.codeforces) failedStates.codeforces = "SyncFailed";
         if (handles.geeksforgeeks) failedStates.geeksforgeeks = "SyncFailed";
         setPlatformStates(prev => ({ ...prev, ...failedStates }));
-        if (!isSilent) alert("Sync Failed: " + (data.message || "Unknown error"));
+        if (!isSilent) alert("Sync Failed: " + (data.error || data.message || "Unknown error"));
       }
     } catch (err) {
       const failedStates = {};
@@ -358,7 +358,7 @@ const useDSA = () => {
       if (handles.codeforces) failedStates.codeforces = "SyncFailed";
       if (handles.geeksforgeeks) failedStates.geeksforgeeks = "SyncFailed";
       setPlatformStates(prev => ({ ...prev, ...failedStates }));
-      if (!isSilent) alert("Sync Failed: Could not connect to server.");
+      if (!isSilent) alert("Sync Failed: " + err.message);
     } finally {
       setIsSyncing(false);
       setCurrentSyncPlatform(null);

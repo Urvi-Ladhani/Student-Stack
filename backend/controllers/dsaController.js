@@ -6,6 +6,7 @@ const { problemMatrix } = require('../data/roadmapData');
 const DSAContest = require('../models/DSAContest');
 const axios = require('axios');
 const cheerio = require('cheerio');
+const mongoose = require('mongoose');
 
 // ==========================================
 // ROADMAP & TOPIC CONTROLLERS
@@ -371,6 +372,14 @@ exports.extensionSync = async (req, res) => {
 // ==========================================
 exports.serverSync = async (req, res) => {
   try {
+    if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
+      return res.status(500).json({ success: false, error: 'Server misconfiguration: Missing Environment Variables' });
+    }
+    
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ success: false, error: 'Database not connected' });
+    }
+
     const { handles } = req.body;
     if (!handles) return res.status(400).json({ success: false, message: 'No handles provided.' });
 
@@ -515,6 +524,14 @@ exports.serverSync = async (req, res) => {
 
 exports.syncContests = async (req, res) => {
   try {
+    if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
+      return res.status(500).json({ success: false, error: 'Server misconfiguration: Missing Environment Variables' });
+    }
+    
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ success: false, error: 'Database not connected' });
+    }
+
     console.log("🚀 CONTEST SYNC STARTED FOR USER:", req.user._id);
     const profile = await DSASyncProfile.findOne({ userId: req.user._id });
     if (!profile) return res.status(400).json({ success: false, message: 'No sync profile found.' });

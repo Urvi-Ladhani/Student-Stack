@@ -4,6 +4,8 @@ const DSAProblem = require('../models/DSAProblem');
 const DSASyncProfile = require('../models/DSASyncProfile');
 const { problemMatrix } = require('../data/roadmapData');
 const DSAContest = require('../models/DSAContest');
+const axios = require('axios');
+const cheerio = require('cheerio');
 
 // ==========================================
 // ROADMAP & TOPIC CONTROLLERS
@@ -361,6 +363,146 @@ exports.extensionSync = async (req, res) => {
   } catch (error) {
     console.error("❌ Extension Sync Error:", error);
     res.status(500).json({ message: "Server error during sync." });
+  }
+};
+
+// ==========================================
+// THE NEW SERVER-SIDE SYNC ENGINE
+// ==========================================
+exports.serverSync = async (req, res) => {
+  try {
+    const { handles } = req.body;
+    if (!handles) return res.status(400).json({ message: 'No handles provided.' });
+
+    let solvedTitles = new Set();
+    const platformStatuses = { leetcode: 'Idle', codeforces: 'Idle', geeksforgeeks: 'Idle' };
+
+    const promises = [];
+
+    // 1. Fetch LeetCode (GraphQL)
+    if (handles.leetcode) {
+      promises.push((async () => {
+        try {
+          const response = await axios.post('https://leetcode.com/graphql', {
+            query: `
+              query recentAcSubmissions($username: String!, $limit: Int!) {
+                recentAcSubmissionList(username: $username, limit: $limit) {
+                  title
+                }
+              }
+            `,
+            variables: { username: handles.leetcode, limit: 50 }
+          });
+          const subs = response.data?.data?.recentAcSubmissionList || [];
+          subs.forEach(s => solvedTitles.add(s.title));
+          platformStatuses.leetcode = 'Connected';
+        } catch (err) {
+          console.error("LC Server-Sync Error:", err.message);
+          platformStatuses.leetcode = 'SyncFailed';
+        }
+      })());
+    }
+
+    // 2. Fetch Codeforces (Public API)
+    if (handles.codeforces) {
+      promises.push((async () => {
+        try {
+          const response = await axios.get(`https://codeforces.com/api/user.status?handle=${handles.codeforces}`);
+          if (response.data.status === 'OK') {
+            const subs = response.data.result.filter(s => s.verdict === 'OK');
+            subs.forEach(s => solvedTitles.add(s.problem.name));
+            platformStatuses.codeforces = 'Connected';
+          } else {
+            platformStatuses.codeforces = 'SyncFailed';
+          }
+        } catch (err) {
+          console.error("CF Server-Sync Error:", err.message);
+          platformStatuses.codeforces = 'SyncFailed';
+        }
+      })());
+    }
+
+    // 3. Fetch GeeksForGeeks (Scrape Public Profile)
+    if (handles.geeksforgeeks) {
+      promises.push((async () => {
+        try {
+          const response = await axios.get(`https://www.geeksforgeeks.org/user/${handles.geeksforgeeks}/`);
+          const $ = cheerio.load(response.data);
+          // GfG user profiles usually list solved problems in elements.
+          // Note: The specific selector may vary depending on GfG's current HTML structure.
+          // Typically, solved problems are links in a specific section.
+          // For safety, let's look for any 'a' tags that look like problem links
+          $('a').each((i, el) => {
+            const href = $(el).attr('href') || '';
+            if (href.includes('/problems/')) {
+              solvedTitles.add($(el).text().trim());
+            }
+          });
+          platformStatuses.geeksforgeeks = 'Connected';
+        } catch (err) {
+          console.error("GFG Server-Sync Error:", err.message);
+          platformStatuses.geeksforgeeks = 'SyncFailed';
+        }
+      })());
+    }
+
+    await Promise.allSettled(promises);
+
+    let problemsUpdated = 0;
+    const exactDate = new Date();
+
+    if (solvedTitles.size > 0) {
+      const titlesArray = Array.from(solvedTitles);
+      
+      const problemsToUpdate = await DSAProblem.find({
+        userId: req.user._id,
+        title: { $in: titlesArray }
+      });
+
+      for (let problem of problemsToUpdate) {
+        let changed = false;
+
+        if (problem.status !== 'solved') {
+          problem.status = 'solved';
+          problem.solvedAt = exactDate;
+          problem.attempts.push({
+            date: exactDate,
+            outcome: 'solved',
+            confidenceRating: 3, 
+            timeTakenMinutes: 0
+          });
+          changed = true;
+        } else if (!problem.solvedAt) {
+          problem.solvedAt = exactDate;
+          changed = true;
+        }
+
+        if (changed) {
+          await problem.save();
+          problemsUpdated++;
+        }
+      }
+    }
+
+    // Update Profile Stats based on connected platforms
+    const updateFields = { lastSyncAt: exactDate };
+    // Optionally update raw stats if needed, or rely on existing stats
+    // We'll update the sync time so the UI knows it worked
+    await require('../models/DSASyncProfile').findOneAndUpdate(
+      { userId: req.user._id },
+      { $set: updateFields },
+      { new: true, upsert: true }
+    );
+
+    res.status(200).json({
+      message: "Server-side sync complete!",
+      count: problemsUpdated,
+      platformStatuses
+    });
+
+  } catch (error) {
+    console.error("Server-Sync Critical Error:", error);
+    res.status(500).json({ message: "Server error during server sync." });
   }
 };
 

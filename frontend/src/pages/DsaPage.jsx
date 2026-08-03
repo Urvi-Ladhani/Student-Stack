@@ -298,27 +298,6 @@ const useDSA = () => {
   const triggerAutoSync = async (handles, isSilent = false) => {
     const token = localStorage.getItem('token');
     
-    // Check if extension is active
-    const hasExtensionTag = document.documentElement.getAttribute('data-studentstack-extension-active') === 'true';
-    const isAvailable = await checkExtensionAvailable();
-    
-    if (!isAvailable) {
-      setIsSyncing(false);
-      const newState = {};
-      if (handles.leetcode) newState.leetcode = hasExtensionTag ? "SyncFailed" : "ExtensionRequired";
-      if (handles.codeforces) newState.codeforces = hasExtensionTag ? "SyncFailed" : "ExtensionRequired";
-      if (handles.geeksforgeeks) newState.geeksforgeeks = hasExtensionTag ? "SyncFailed" : "ExtensionRequired";
-      setPlatformStates(prev => ({ ...prev, ...newState }));
-      
-      if (!isSilent) {
-        alert(hasExtensionTag 
-          ? "Unable to communicate with the StudentStack extension." 
-          : "StudentStack Sync Extension is required for automatic platform synchronization."
-        );
-      }
-      return false;
-    }
-
     setIsSyncing(true); 
     
     const initialStates = {};
@@ -327,38 +306,20 @@ const useDSA = () => {
     if (handles.geeksforgeeks) initialStates.geeksforgeeks = 'Verifying';
     setPlatformStates(prev => ({ ...prev, ...initialStates }));
 
-    // Safety timeout of 30 seconds
-    const syncTimeoutId = setTimeout(() => {
-      window.removeEventListener("message", listener);
-      setIsSyncing(false);
-      setCurrentSyncPlatform(null);
-      setSyncPaused(false);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/dsa/server-sync`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ handles })
+      });
+
+      const data = await response.json();
       
-      const timeoutStates = {};
-      if (handles.leetcode && platformStates.leetcode === 'Verifying') timeoutStates.leetcode = 'SyncFailed';
-      if (handles.codeforces && platformStates.codeforces === 'Verifying') timeoutStates.codeforces = 'SyncFailed';
-      if (handles.geeksforgeeks && platformStates.geeksforgeeks === 'Verifying') timeoutStates.geeksforgeeks = 'SyncFailed';
-      setPlatformStates(prev => ({ ...prev, ...timeoutStates }));
-      
-      if (!isSilent) alert("Sync Timed Out: The extension is not responding.");
-    }, 30000);
-
-    window.postMessage({ 
-      type: "START_LEETCODE_SYNC", 
-      token: token, 
-      handles: handles,
-      baseUrl: window.location.origin
-    }, "*");
-
-    const listener = async function(event) {
-      if (event.data.type === "SYNC_SUCCESS" || event.data.type === "SYNC_ERROR") {
-        clearTimeout(syncTimeoutId);
-        window.removeEventListener("message", listener);
-        setIsSyncing(false);
-        setCurrentSyncPlatform(null);
-        setSyncPaused(false);
-
-        const results = event.data.platformStatuses || {};
+      if (response.ok) {
+        const results = data.platformStatuses || {};
         const finalStates = {};
         if (handles.leetcode) {
           finalStates.leetcode = (results.leetcode === "Connected") ? "Connected" : "SyncFailed";
@@ -371,25 +332,39 @@ const useDSA = () => {
         }
         setPlatformStates(prev => ({ ...prev, ...finalStates }));
         
-        if (event.data.type === "SYNC_SUCCESS") {
-          try {
-            await fetch(`${API_BASE_URL}/api/dsa/contests/sync`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
-            });
-          } catch (err) { console.error("Contest sync failed", err); }
-          
-          setSyncProfile(prev => ({ ...prev, lastSyncAt: new Date().toISOString() }));
-          fetchData(); 
-          window.dispatchEvent(new Event('dashboard-data-updated'));
-          
-          if (!isSilent) alert(`Auto-Sync Complete! Verified ${event.data.count} solutions and updated Contest History.`);
-        } else {
-          if (!isSilent) alert("Sync Failed: " + event.data.message);
-        }
+        try {
+          await fetch(`${API_BASE_URL}/api/dsa/contests/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+          });
+        } catch (err) { console.error("Contest sync failed", err); }
+        
+        setSyncProfile(prev => ({ ...prev, lastSyncAt: new Date().toISOString() }));
+        fetchData(); 
+        window.dispatchEvent(new Event('dashboard-data-updated'));
+        
+        if (!isSilent) alert(`Auto-Sync Complete! Verified ${data.count} solutions and updated Contest History.`);
+      } else {
+        const failedStates = {};
+        if (handles.leetcode) failedStates.leetcode = "SyncFailed";
+        if (handles.codeforces) failedStates.codeforces = "SyncFailed";
+        if (handles.geeksforgeeks) failedStates.geeksforgeeks = "SyncFailed";
+        setPlatformStates(prev => ({ ...prev, ...failedStates }));
+        if (!isSilent) alert("Sync Failed: " + (data.message || "Unknown error"));
       }
-    };
-    window.addEventListener("message", listener);
+    } catch (err) {
+      const failedStates = {};
+      if (handles.leetcode) failedStates.leetcode = "SyncFailed";
+      if (handles.codeforces) failedStates.codeforces = "SyncFailed";
+      if (handles.geeksforgeeks) failedStates.geeksforgeeks = "SyncFailed";
+      setPlatformStates(prev => ({ ...prev, ...failedStates }));
+      if (!isSilent) alert("Sync Failed: Could not connect to server.");
+    } finally {
+      setIsSyncing(false);
+      setCurrentSyncPlatform(null);
+      setSyncPaused(false);
+    }
+    
     return true;
   };
 

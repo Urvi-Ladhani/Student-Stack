@@ -3,11 +3,13 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm --prefix frontend run dev\" \"npm --prefix backend run dev\"",
-    "build": "npm install --prefix frontend && npm run build --prefix frontend",
+    "build": "npx vite build",
     "install-all": "npm install && npm --prefix frontend install && npm --prefix backend install"
   },
   "devDependencies": {
-    "concurrently": "^9.0.0"
+    "concurrently": "^9.0.0",
+    "vite": "^8.0.12",
+    "@vitejs/plugin-react": "^6.0.1"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -19,6 +21,13 @@
     "multer": "^2.2.0",
     "nodemailer": "^9.0.3",
     "react-pdf-highlighter-plus": "^1.2.0",
-    "tldraw": "^5.1.1"
+    "tldraw": "^5.1.1",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-router-dom": "^7.18.0",
+    "lucide-react": "^1.21.0",
+    "@tailwindcss/postcss": "^4.3.1",
+    "@tailwindcss/vite": "^4.3.1",
+    "tailwindcss": "^4.3.1"
   }
 }

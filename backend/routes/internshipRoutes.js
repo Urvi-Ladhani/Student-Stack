@@ -5,13 +5,17 @@ const {
     getInternships, 
     createInternship, 
     updateInternship, 
-    deleteInternship 
+    deleteInternship,
+    scrapeLinkedInJobs
 } = require('../controllers/internshipController');
 
 // Routes for /api/internships
 router.route('/')
   .get(protect, getInternships)
   .post(protect, createInternship);
+
+// Route for LinkedIn scraping
+router.post('/linkedin/scrape', protect, scrapeLinkedInJobs);
 
 // Routes for /api/internships/:id
 router.route('/:id')

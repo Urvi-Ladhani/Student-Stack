@@ -492,3 +492,53 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true; // Keep message channel open for async response
     }
 });
+
+// ==========================================
+// 6. SCRAPE LINKEDIN JOBS REQUEST
+// ==========================================
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "SCRAPE_LINKEDIN_JOBS") {
+        (async () => {
+            try {
+                console.log("🕵️‍♂️ Extension scraping LinkedIn URL:", request.url);
+                
+                chrome.storage.local.get(['studentStackToken', 'studentStackBackendUrl'], async (result) => {
+                    const token = result.studentStackToken;
+                    const activeBaseUrl = result.studentStackBackendUrl || BASE_URL;
+
+                    if (!token) {
+                        sendResponse({ success: false, message: "❌ ERROR: No token found in extension!" });
+                        return;
+                    }
+
+                    try {
+                        const response = await fetchWithTimeout(`${activeBaseUrl}/api/internships/linkedin/scrape`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ url: request.url }),
+                            timeout: 10000
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            sendResponse({ success: true, jobs: data.jobs || [] });
+                        } else {
+                            const errData = await response.json().catch(() => ({}));
+                            sendResponse({ success: false, message: errData.message || `LinkedIn returned HTTP ${response.status}`, jobs: [] });
+                        }
+                    } catch (err) {
+                        console.error("LinkedIn scraper connection/fetch error:", err);
+                        sendResponse({ success: false, message: `Failed to connect to backend: ${err.message}`, jobs: [] });
+                    }
+                });
+            } catch (err) {
+                console.error("LinkedIn scraper outer handler error:", err);
+                sendResponse({ success: false, message: err.message || "Failed to scrape LinkedIn jobs", jobs: [] });
+            }
+        })();
+        return true; // Keep message channel open for async response
+    }
+});
